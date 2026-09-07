@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import {
   ArrowRight,
+  Building2,
   CircleCheck,
   FileText,
   Leaf,
@@ -19,6 +20,8 @@ import {
   Sparkles,
   TrendingDown,
   Truck,
+  UserRound,
+  Users,
   X,
   Zap,
 } from "lucide-react";
@@ -58,18 +61,18 @@ export default function Landing() {
   const outcomes = [
     {
       value: data?.impact.routesScored ? `${data.impact.avgSavedPercent.toFixed(1)}%` : "—",
-      label: "less collection distance",
-      copy: "measured against the fixed schedule",
+      label: t("landing.outcome1"),
+      copy: t("landing.outcome1sub"),
     },
     {
       value: data ? String(data.bins.total) : "—",
-      label: "bins monitored live",
-      copy: "across four Dhaka North wards",
+      label: t("landing.outcome2"),
+      copy: t("landing.outcome2sub"),
     },
     {
       value: data ? `${data.complaints.avgResolutionHours}h` : "—",
-      label: "average resolution time",
-      copy: "from citizen report to closed",
+      label: t("landing.outcome3"),
+      copy: t("landing.outcome3sub"),
     },
   ];
 
@@ -97,6 +100,9 @@ export default function Landing() {
         </Link>
 
         <nav className={`public-links ${mobileOpen ? "open" : ""}`}>
+          <Link href="/about" onClick={() => setMobileOpen(false)}>
+            {t("nav.problem")}
+          </Link>
           <a href="#how-it-works" onClick={() => setMobileOpen(false)}>
             {t("nav.howItWorks")}
           </a>
@@ -149,7 +155,7 @@ export default function Landing() {
               </Link>
             </div>
             <p className="ambient-hint">
-              <b>Click anywhere</b> — run a collection sweep
+              <b>{t("hero.hint")}</b> {t("hero.hintRest")}
             </p>
             <div className="hero-trust">
               <div className="mini-avatars">
@@ -158,7 +164,7 @@ export default function Landing() {
                 <span>SM</span>
                 <b>+</b>
               </div>
-              <span>Built for ward teams, drivers and citizens</span>
+              <span>{t("hero.trust")}</span>
             </div>
           </div>
 
@@ -166,19 +172,19 @@ export default function Landing() {
             <div className="visual-orbit orbit-one" />
             <div className="visual-orbit orbit-two" />
             <div className="ambient-chip chip-online">
-              <span className="chip-pulse" /> {data?.bins.total ?? 0} bins online
+              <span className="chip-pulse" /> {data?.bins.total ?? 0} {t("card.binsOnline")}
             </div>
             <div className="ambient-chip chip-ward">
               <MapPin size={12} /> DNCC Ward 27
             </div>
             <div className="ambient-chip chip-signal">
-              <Sparkles size={12} /> Forecast active
+              <Sparkles size={12} /> {t("card.forecastActive")}
             </div>
 
             <div className="city-card">
               <div className="city-card-top">
                 <span>
-                  <i className="public-live-dot" /> LIVE WARD VIEW
+                  <i className="public-live-dot" /> {t("card.liveWardView")}
                 </span>
                 <span>
                   {new Date()
@@ -188,12 +194,12 @@ export default function Landing() {
               </div>
               <div className="city-card-title">
                 <div>
-                  <small>Today across</small>
-                  <strong>Dhanmondi cluster</strong>
+                  <small>{t("card.todayAcross")}</small>
+                  <strong>{t("card.cluster")}</strong>
                 </div>
                 <div className="city-score">
                   <b>{Math.round(data?.impact.avgSavedPercent ?? 0)}</b>
-                  <small>% saved</small>
+                  <small>{t("card.saved")}</small>
                 </div>
               </div>
               <div className="mini-map">
@@ -209,15 +215,15 @@ export default function Landing() {
               </div>
               <div className="city-card-foot">
                 <div>
-                  <span>Bins monitored</span>
+                  <span>{t("card.binsMonitored")}</span>
                   <b>{data?.bins.total ?? 0}</b>
                 </div>
                 <div>
-                  <span>Need attention</span>
+                  <span>{t("card.needAttention")}</span>
                   <b className="coral-text">{data?.bins.critical ?? 0}</b>
                 </div>
                 <div>
-                  <span>Active routes</span>
+                  <span>{t("card.activeRoutes")}</span>
                   <b>{data?.routes.active ?? 0}</b>
                 </div>
               </div>
@@ -228,11 +234,11 @@ export default function Landing() {
                 <Zap size={15} fill="currentColor" />
               </span>
               <div>
-                <strong>Route optimized</strong>
+                <strong>{t("card.routeOptimized")}</strong>
                 <small>
                   {data?.impact.routesScored
-                    ? `${bdt(data.impact.costSavedBdt)} saved so far`
-                    : "Generate one to see the saving"}
+                    ? `${bdt(data.impact.costSavedBdt)} ${t("card.savedSoFar")}`
+                    : t("card.generateToSee")}
                 </small>
               </div>
               <CircleCheck size={18} className="alert-check" />
@@ -243,8 +249,8 @@ export default function Landing() {
                 <Radio size={14} />
               </span>
               <div>
-                <strong>SMS report received</strong>
-                <small>No smartphone needed</small>
+                <strong>{t("card.smsReceived")}</strong>
+                <small>{t("card.noSmartphone")}</small>
               </div>
             </div>
           </div>
@@ -265,17 +271,13 @@ export default function Landing() {
 
         <section className="story-section" id="how-it-works">
           <div className="story-intro reveal">
-            <p className="public-kicker">ONE SYSTEM, EVERY SIGNAL</p>
+            <p className="public-kicker">{t("story.kicker")}</p>
             <h2>
-              From overflow
+              {t("story.title1")}
               <br />
-              to <em>action.</em>
+              <em>{t("story.title2")}</em>
             </h2>
-            <p>
-              Collection should respond to what is happening now — not to a schedule written years
-              ago. SafaiTrack closes that loop in four steps, without a single piece of new hardware
-              in the field.
-            </p>
+            <p>{t("story.body")}</p>
           </div>
 
           <div className="story-grid reveal reveal-stagger">
@@ -284,12 +286,8 @@ export default function Landing() {
                 <Radio size={18} />
               </div>
               <span className="story-number">01</span>
-              <h3>Signals arrive</h3>
-              <p>
-                Bin fill data comes from a simulated sensor feed and from residents reporting by web,
-                SMS or USSD. Both are written to the same table a real ultrasonic sensor would use,
-                so a hardware retrofit needs no redesign.
-              </p>
+              <h3>{t("story.step1")}</h3>
+              <p>{t("story.step1body")}</p>
             </div>
 
             <div className="story-card story-lime">
@@ -297,12 +295,8 @@ export default function Landing() {
                 <TrendingDown size={18} />
               </div>
               <span className="story-number">02</span>
-              <h3>The system predicts</h3>
-              <p>
-                Each bin's own fill rate is fitted from its reading history, projecting the hour it
-                will overflow. Routes get planned before waste hits the street, not after someone
-                complains about it.
-              </p>
+              <h3>{t("story.step2")}</h3>
+              <p>{t("story.step2body")}</p>
             </div>
 
             <div className="story-card story-paper">
@@ -310,12 +304,8 @@ export default function Landing() {
                 <RouteIcon size={18} />
               </div>
               <span className="story-number">03</span>
-              <h3>Routes optimize</h3>
-              <p>
-                Dijkstra shortest paths over the ward's road graph, a priority-weighted nearest
-                neighbour construction, then a 2-opt refinement. Full bins come first; near-empty
-                bins are skipped entirely.
-              </p>
+              <h3>{t("story.step3")}</h3>
+              <p>{t("story.step3body")}</p>
             </div>
 
             <div className="story-card story-ink">
@@ -323,12 +313,8 @@ export default function Landing() {
                 <ShieldCheck size={18} />
               </div>
               <span className="story-number">04</span>
-              <h3>Everyone is accountable</h3>
-              <p>
-                Drivers log each collection. Every complaint status change is appended, never
-                overwritten, and attributed to a named officer. Residents watch their own report
-                move from filed to resolved.
-              </p>
+              <h3>{t("story.step4")}</h3>
+              <p>{t("story.step4body")}</p>
             </div>
           </div>
         </section>
@@ -336,30 +322,25 @@ export default function Landing() {
         <section className="city-section" id="for-cities">
           <div className="city-section-glow" />
           <div className="city-section-copy reveal">
-            <p className="public-kicker">FOR CITY TEAMS</p>
+            <p className="public-kicker">{t("cities.kicker")}</p>
             <h2>
-              Smart-city results on a
+              {t("cities.title1")}
               <br />
-              <em>city-corporation budget.</em>
+              <em>{t("cities.title2")}</em>
             </h2>
-            <p>
-              Commercial platforms deliver this by putting a sensor in every bin — which is exactly
-              the cost most Bangladeshi city corporations cannot carry. SafaiTrack keeps the routing
-              intelligence and drops the hardware bill, while leaving the schema ready for real
-              sensors whenever they can be afforded.
-            </p>
+            <p>{t("cities.body")}</p>
             <div className="check-list">
               <span>
-                <CircleCheck size={16} /> No per-bin hardware, no connectivity contracts
+                <CircleCheck size={16} /> {t("cities.check1")}
               </span>
               <span>
-                <CircleCheck size={16} /> Runs offline on a single laptop when the network drops
+                <CircleCheck size={16} /> {t("cities.check2")}
               </span>
               <span>
-                <CircleCheck size={16} /> Every saving figure is auditable, with stated constants
+                <CircleCheck size={16} /> {t("cities.check3")}
               </span>
               <span>
-                <CircleCheck size={16} /> Bengali interface and an SMS channel for every resident
+                <CircleCheck size={16} /> {t("cities.check4")}
               </span>
             </div>
           </div>
@@ -367,8 +348,10 @@ export default function Landing() {
           <div className="city-section-data reveal glow">
             <div className="data-top">
               <div>
-                <small>Measured to date</small>
-                <strong>{data?.impact.routesScored ?? 0} routes scored</strong>
+                <small>{t("cities.measured")}</small>
+                <strong>
+                  {data?.impact.routesScored ?? 0} {t("cities.routesScored")}
+                </strong>
               </div>
               <span className="route-pill">
                 <Truck size={13} /> live
@@ -377,15 +360,15 @@ export default function Landing() {
             <div className="data-chart">
               <div className="chart-grid">
                 <div className="chart-bubble">
-                  <span>Distance saved</span>
+                  <span>{t("cities.distanceSaved")}</span>
                   <b>{(data?.impact.avgSavedPercent ?? 0).toFixed(1)}%</b>
                 </div>
                 <div className="chart-bubble">
-                  <span>Cost avoided</span>
+                  <span>{t("cities.costAvoided")}</span>
                   <b>{bdt(data?.impact.costSavedBdt ?? 0)}</b>
                 </div>
                 <div className="chart-bubble">
-                  <span>CO₂ avoided</span>
+                  <span>{t("cities.co2Avoided")}</span>
                   <b>{(data?.impact.co2SavedKg ?? 0).toFixed(1)} kg</b>
                 </div>
               </div>
@@ -393,12 +376,68 @@ export default function Landing() {
           </div>
         </section>
 
+        <section className="roles-section reveal" id="roles">
+          <div className="story-intro reveal">
+            <p className="public-kicker">{t("auth.chooseRole")}</p>
+            <h2>
+              {t("roles.title1")}
+              <br />
+              <em>{t("roles.title2")}</em>
+            </h2>
+            <p>{t("roles.body")}</p>
+          </div>
+
+          <div className="roles-grid reveal reveal-stagger">
+            {[
+              { role: "staff", icon: Building2, whatKey: "auth.roleStaffWhat", tone: "lime" },
+              { role: "officer", icon: Users, whatKey: "auth.roleOfficerWhat", tone: "blue" },
+              { role: "driver", icon: Truck, whatKey: "auth.roleDriverWhat", tone: "amber" },
+              { role: "citizen", icon: UserRound, whatKey: "auth.roleCitizenWhat", tone: "violet" },
+            ].map((r, i) => (
+              <div
+                className="role-panel glow lift"
+                key={r.role}
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                <span className={`role-icon ${r.tone}`}>
+                  <r.icon size={19} />
+                </span>
+                <strong>{t(`role.${r.role}` as never)}</strong>
+                <p>{t(r.whatKey as never)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="numbers-band reveal">
+          <div>
+            <strong>{data?.bins.total ?? 0}</strong>
+            <span>{t("common.bins")}</span>
+          </div>
+          <div>
+            <strong>4</strong>
+            <span>{t("common.wards")}</span>
+          </div>
+          <div>
+            <strong>{data?.impact.routesScored ?? 0}</strong>
+            <span>{t("cities.routesScored")}</span>
+          </div>
+          <div>
+            <strong>{(data?.impact.co2SavedKg ?? 0).toFixed(1)} kg</strong>
+            <span>{t("cities.co2Avoided")}</span>
+          </div>
+          <div>
+            <strong>0</strong>
+            <span>{t("roles.noSensors")}</span>
+          </div>
+        </section>
+
         <section className="final-cta reveal">
-          <p className="public-kicker">READY WHEN YOU ARE</p>
+          <p className="public-kicker">{t("final.kicker")}</p>
           <h2>
-            Aligned with <em>SDG 11</em> — and with
+            {t("final.title")} <em>SDG 11</em>
             <br />
-            the street outside your window.
+            {t("final.title2")}
           </h2>
           <div className="hero-buttons" style={{ justifyContent: "center" }}>
             <Link href={home} className="public-primary">
@@ -418,8 +457,8 @@ export default function Landing() {
           </span>
           <b>SafaiTrack</b>
         </div>
-        <span>Smart waste collection and route optimization for Dhaka neighbourhoods</span>
-        <span>SDG 11 · Sustainable Cities and Communities</span>
+        <span>{t("footer.tagline")}</span>
+        <span>{t("footer.sdg")}</span>
       </footer>
     </div>
   );

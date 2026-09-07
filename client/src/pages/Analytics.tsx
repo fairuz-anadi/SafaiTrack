@@ -17,6 +17,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { titleCase } from "@/lib/format";
 
 interface TrendPoint {
@@ -53,6 +54,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 };
 
 export default function Analytics() {
+  const { t } = useI18n();
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [byType, setByType] = useState<TypeRow[]>([]);
   const [byChannel, setByChannel] = useState<ChannelRow[]>([]);
@@ -90,17 +92,16 @@ export default function Analytics() {
       : 0;
 
   return (
-    <AppShell title="Analytics" eyebrow="OPERATIONAL TRENDS">
+    <AppShell title={t("an.title")} eyebrow={t("an.eyebrow")}>
       <div className="panel-card padded" style={{ marginBottom: 18 }}>
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">FILL TREND</p>
-            <h3>How the network filled over 72 hours</h3>
+            <p className="section-kicker">{t("an.fillTrend")}</p>
+            <h3>{t("an.filled72")}</h3>
           </div>
         </div>
         <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
-          Every point is an hourly aggregate of real sensor readings. The morning and evening peaks
-          are the market and meal-prep cycles the simulation models.
+          {t("an.trendNote")}
         </p>
         <div style={{ height: 280 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -161,8 +162,8 @@ export default function Analytics() {
         <div className="panel-card padded">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">COMPLAINTS</p>
-              <h3>Volume and resolution time by type</h3>
+              <p className="section-kicker">{t("an.complaintsKicker")}</p>
+              <h3>{t("an.volumeByType")}</h3>
             </div>
           </div>
           <div style={{ height: 250, marginTop: 6 }}>
@@ -196,10 +197,10 @@ export default function Analytics() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Type</th>
-                  <th className="num">Filed</th>
-                  <th className="num">Resolved</th>
-                  <th className="num">Avg. resolution</th>
+                  <th>{t("an.type")}</th>
+                  <th className="num">{t("common.filed")}</th>
+                  <th className="num">{t("common.resolved")}</th>
+                  <th className="num">{t("an.avgResolution")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,8 +221,8 @@ export default function Analytics() {
           <div className="panel-card padded">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">REPORTING CHANNEL</p>
-                <h3>How residents reach us</h3>
+                <p className="section-kicker">{t("an.channelKicker")}</p>
+                <h3>{t("an.howReach")}</h3>
               </div>
             </div>
             <div style={{ height: 190 }}>
@@ -260,8 +261,8 @@ export default function Analytics() {
             </div>
             <div className="coverage-footer">
               <span>
-                <strong style={{ color: "var(--ink)" }}>{smsShare}%</strong>&nbsp;arrived without a
-                smartphone
+                <strong style={{ color: "var(--ink)" }}>{smsShare}%</strong>&nbsp;
+                {t("an.withoutSmartphone")}
               </span>
             </div>
           </div>
@@ -271,21 +272,21 @@ export default function Analytics() {
       <div className="panel-card padded" style={{ marginTop: 18 }}>
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">WARD LEAGUE TABLE</p>
-            <h3>Service pressure by ward</h3>
+            <p className="section-kicker">{t("an.leagueKicker")}</p>
+            <h3>{t("an.pressureByWard")}</h3>
           </div>
         </div>
         <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Ward</th>
-                <th className="num">Bins</th>
-                <th className="num">Avg. fill</th>
-                <th className="num">Critical</th>
-                <th className="num">Overflow hours</th>
-                <th className="num">Complaints</th>
-                <th className="num">Open</th>
+                <th>{t("common.ward")}</th>
+                <th className="num">{t("common.bins")}</th>
+                <th className="num">{t("an.avgFill")}</th>
+                <th className="num">{t("common.critical")}</th>
+                <th className="num">{t("an.overflowHours")}</th>
+                <th className="num">{t("nav.complaints")}</th>
+                <th className="num">{t("an.open")}</th>
               </tr>
             </thead>
             <tbody>

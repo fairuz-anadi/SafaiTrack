@@ -20,6 +20,7 @@ import { SimulationBar } from "@/components/SimulationBar";
 import { BinMap, type MapBin } from "@/components/map/BinMap";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 import { bdt, hoursUntil, km, pct, relativeTime } from "@/lib/format";
 import { binTone, type BinView } from "@shared/types";
 
@@ -114,6 +115,7 @@ function StatCard({
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [, navigate] = useLocation();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [bins, setBins] = useState<BinView[]>([]);
@@ -195,26 +197,24 @@ export default function Dashboard() {
   const coverage = overview ? Math.max(0, Math.round(100 - overview.bins.avgFill)) : 0;
 
   return (
-    <AppShell title={`Good day, ${user?.fullName.split(" ")[0] ?? "there"}`}>
+    <AppShell title={`${t("dash.greeting")}, ${user?.fullName.split(" ")[0] ?? ""}`}>
       <SimulationBar state={overview?.simulation ?? null} onAdvanced={() => void load()} />
 
       <section className="hero-row ambient-host">
         <AmbientNetwork className="feather" intensity={0.5} density={0.6} showTruck={false} />
         <div>
           <p className="section-kicker">
-            <span className="live-dot" /> LIVE OPERATIONS
+            <span className="live-dot" /> {t("dash.liveOps")}
           </p>
           <h2>
-            Your wards, <em>in motion.</em>
+            {t("dash.title1")} <em>{t("dash.title2")}</em>
           </h2>
-          <p className="hero-copy">
-            A live view of the waste network across Dhaka North. Prioritise what matters, then move.
-          </p>
+          <p className="hero-copy">{t("dash.sub")}</p>
         </div>
         <div className="hero-actions">
           <button className="primary-button" onClick={() => void optimizeWorstWard()} disabled={generating}>
             {generating ? <span className="spinner" /> : <Zap size={16} fill="currentColor" />}
-            {generating ? "Optimizing…" : "Optimize worst ward"}
+            {generating ? t("dash.optimizing") : t("dash.optimizeWorst")}
           </button>
         </div>
       </section>
@@ -222,34 +222,34 @@ export default function Dashboard() {
       <section className="stats-grid reveal-stagger" ref={glowRef}>
         <StatCard
           icon={Boxes}
-          label="Bins monitored"
+          label={t("dash.binsMonitored")}
           value={overview?.bins.total ?? 0}
-          detail={`average fill across ${wards.length} wards`}
+          detail={`${t("dash.binsMonitoredSub")} ${wards.length} ${t("common.wards")}`}
           trend={`${overview?.bins.avgFill ?? 0}%`}
         />
         <StatCard
           icon={AlertCircle}
-          label="Need attention"
+          label={t("dash.needAttention")}
           value={overview?.bins.critical ?? 0}
-          detail="of them already overflowing"
+          detail={t("dash.needAttentionSub")}
           trend={String(overview?.bins.overflowing ?? 0)}
           tone="coral"
         />
         <StatCard
           icon={Navigation}
-          label="Active routes"
+          label={t("dash.activeRoutes")}
           value={overview?.routes.active ?? 0}
           pad={2}
-          detail="planned in total"
+          detail={t("dash.activeRoutesSub")}
           trend={km(overview?.routes.distanceKm ?? 0)}
           tone="blue"
         />
         <StatCard
           icon={ShieldCheck}
-          label="Avg. resolution"
+          label={t("dash.avgResolution")}
           value={overview?.complaints.avgResolutionHours ?? 0}
           suffix="h"
-          detail="complaints still open"
+          detail={t("dash.avgResolutionSub")}
           trend={String(overview?.complaints.open ?? 0)}
           tone="violet"
         />
@@ -259,23 +259,31 @@ export default function Dashboard() {
         <div className="map-card panel-card padded lift">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">WARD NETWORK</p>
-              <h3>Live bin intelligence</h3>
+              <p className="section-kicker">{t("dash.wardNetwork")}</p>
+              <h3>{t("dash.liveBinIntel")}</h3>
             </div>
             <button className="ghost-button" onClick={() => navigate("/bins")}>
-              <Filter size={15} /> All bins
+              <Filter size={15} /> {t("dash.allBins")}
             </button>
           </div>
 
           <div className="map-toolbar">
             <div className="tabs">
-              {(["All bins", "Critical", "Watch"] as const).map(t => (
-                <button key={t} className={tab === t ? "active" : ""} onClick={() => setTab(t)}>
-                  {t}
+              {(["All bins", "Critical", "Watch"] as const).map(tabKey => (
+                <button
+                  key={tabKey}
+                  className={tab === tabKey ? "active" : ""}
+                  onClick={() => setTab(tabKey)}
+                >
+                  {tabKey === "All bins"
+                    ? t("dash.allBins")
+                    : tabKey === "Critical"
+                      ? t("common.critical")
+                      : t("common.watch")}
                   <span>
-                    {t === "All bins"
+                    {tabKey === "All bins"
                       ? bins.length
-                      : t === "Critical"
+                      : tabKey === "Critical"
                         ? bins.filter(b => b.currentFillPercent >= 85).length
                         : bins.filter(b => b.currentFillPercent >= 65 && b.currentFillPercent < 85).length}
                   </span>
@@ -283,7 +291,7 @@ export default function Dashboard() {
               ))}
             </div>
             <span className="map-updated">
-              <span className="live-dot" /> Real Dhaka coordinates
+              <span className="live-dot" /> {t("dash.realCoords")}
             </span>
           </div>
 
@@ -304,12 +312,12 @@ export default function Dashboard() {
                 <div className="selected-bin-info">
                   <strong>{selectedBin.landmark}</strong>
                   <span>
-                    {selectedBin.binCode} · {selectedBin.wardName} · emptied{" "}
+                    {selectedBin.binCode} · {selectedBin.wardName} · {t("dash.emptied")}{" "}
                     {relativeTime(selectedBin.lastCollectedAt)}
                   </span>
                 </div>
                 <div className="selected-bin-fill">
-                  <small>Fill level</small>
+                  <small>{t("dash.fillLevel")}</small>
                   <b>{selectedBin.currentFillPercent}%</b>
                   <div className="fill-wrap">
                     <div
@@ -321,13 +329,13 @@ export default function Dashboard() {
                 </div>
                 {selectedBin.hoursToOverflow !== null && (
                   <div className="selected-bin-fill">
-                    <small>Overflows in</small>
+                    <small>{t("dash.overflowsIn")}</small>
                     <b>{hoursUntil(selectedBin.hoursToOverflow)}</b>
                   </div>
                 )}
               </>
             ) : (
-              <span>Select a bin to inspect details</span>
+              <span>{t("dash.selectBin")}</span>
             )}
           </div>
         </div>
@@ -337,8 +345,8 @@ export default function Dashboard() {
           <div className="panel-card route-card padded lift glow">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">MEASURED IMPACT</p>
-                <h3>Versus fixed schedule</h3>
+                <p className="section-kicker">{t("dash.measuredImpact")}</p>
+                <h3>{t("dash.vsFixed")}</h3>
               </div>
               <button className="more-button" onClick={() => navigate("/impact")}>
                 <ArrowUpRight size={18} />
@@ -347,34 +355,34 @@ export default function Dashboard() {
             <div className="route-score">
               <div className="score-ring">
                 <span>{Math.round(overview?.impact.avgSavedPercent ?? 0)}</span>
-                <small>% less</small>
+                <small>%</small>
               </div>
               <div>
-                <strong>Distance saved</strong>
+                <strong>{t("dash.distanceSaved")}</strong>
                 <p>
-                  averaged over {overview?.impact.routesScored ?? 0} scored
+                  {t("dash.averagedOver")} {overview?.impact.routesScored ?? 0}
                   <br />
-                  route{overview?.impact.routesScored === 1 ? "" : "s"}
+                  {t("dash.scoredRoutes")}
                 </p>
               </div>
             </div>
             <div className="mini-bars">
               <div>
-                <span>Fuel not burned</span>
+                <span>{t("dash.fuelNotBurned")}</span>
                 <b>{(overview?.impact.fuelSavedLitres ?? 0).toFixed(1)} L</b>
                 <i>
                   <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
                 </i>
               </div>
               <div>
-                <span>Cost avoided</span>
+                <span>{t("dash.costAvoided")}</span>
                 <b>{bdt(overview?.impact.costSavedBdt ?? 0)}</b>
                 <i>
                   <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
                 </i>
               </div>
               <div>
-                <span>CO₂ avoided</span>
+                <span>{t("dash.co2Avoided")}</span>
                 <b>{(overview?.impact.co2SavedKg ?? 0).toFixed(1)} kg</b>
                 <i>
                   <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
@@ -382,7 +390,7 @@ export default function Dashboard() {
               </div>
             </div>
             <button className="text-button" onClick={() => navigate("/impact")}>
-              See the full proof <ArrowUpRight size={15} />
+              {t("dash.seeProof")} <ArrowUpRight size={15} />
             </button>
           </div>
 
@@ -390,15 +398,16 @@ export default function Dashboard() {
           <div className="panel-card coverage-card padded lift glow">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">OVERFLOW FORECAST</p>
-                <h3>Next 8 hours</h3>
+                <p className="section-kicker">{t("dash.forecastKicker")}</p>
+                <h3>{t("dash.next8")}</h3>
               </div>
-              <span className="soft-badge">{forecasts.length} bins</span>
+              <span className="soft-badge">
+                {forecasts.length} {t("common.bins")}
+              </span>
             </div>
             {forecasts.length === 0 ? (
               <p style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0 4px", lineHeight: 1.6 }}>
-                No bin is projected to overflow in the next 8 hours. Run the simulation forward to
-                see the forecast react.
+                {t("dash.noForecast")}
               </p>
             ) : (
               <div style={{ display: "grid", gap: 7, marginTop: 4 }}>
@@ -410,7 +419,7 @@ export default function Dashboard() {
                       }`}
                     >
                       {hoursUntil(f.hoursToOverflow)}
-                      <small>left</small>
+                      <small>{t("dash.left")}</small>
                     </div>
                     <div className="forecast-info">
                       <strong>{f.binCode}</strong>
@@ -430,7 +439,7 @@ export default function Dashboard() {
             )}
             <div className="coverage-footer">
               <span>
-                <TrendingDown size={14} /> Predicted from each bin's own fill rate
+                <TrendingDown size={14} /> {t("dash.predictedFrom")}
               </span>
             </div>
           </div>
@@ -441,15 +450,15 @@ export default function Dashboard() {
         <div className="panel-card complaints-card padded lift">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">CITIZEN SIGNALS</p>
-              <h3>Latest complaints</h3>
+              <p className="section-kicker">{t("dash.citizenSignals")}</p>
+              <h3>{t("dash.latestComplaints")}</h3>
             </div>
             <button className="text-button" onClick={() => navigate("/complaints")}>
-              View all <ArrowUpRight size={15} />
+              {t("common.viewAll")} <ArrowUpRight size={15} />
             </button>
           </div>
           <div className="complaints-list">
-            {complaints.length === 0 && <p className="empty-state">No complaints filed yet.</p>}
+            {complaints.length === 0 && <p className="empty-state">{t("dash.noComplaints")}</p>}
             {complaints.map(item => {
               const tone =
                 item.priority === "urgent"
@@ -483,8 +492,8 @@ export default function Dashboard() {
         <div className="panel-card activity-card padded lift">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">WARD LEAGUE TABLE</p>
-              <h3>Where the pressure is</h3>
+              <p className="section-kicker">{t("dash.leagueKicker")}</p>
+              <h3>{t("dash.wherePressure")}</h3>
             </div>
           </div>
           <div className="activity-list">
@@ -502,7 +511,7 @@ export default function Dashboard() {
                   <div>
                     <strong>{w.name}</strong>
                     <span>
-                      {w.binCount} bins · {w.criticalCount} critical
+                      {w.binCount} {t("common.bins")} · {w.criticalCount} {t("common.critical")}
                     </span>
                   </div>
                   <time>{pct(w.avgFill, 0)}</time>

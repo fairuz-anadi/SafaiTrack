@@ -4,6 +4,7 @@ import { Truck, UserRound } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { titleCase } from "@/lib/format";
 
 interface FleetData {
@@ -36,6 +37,7 @@ const TRUCK_TONE: Record<string, string> = {
 };
 
 export default function Fleet() {
+  const { t } = useI18n();
   const [data, setData] = useState<FleetData | null>(null);
 
   useEffect(() => {
@@ -46,29 +48,31 @@ export default function Fleet() {
   }, []);
 
   return (
-    <AppShell title="Fleet" eyebrow="TRUCKS AND DRIVERS">
+    <AppShell title={t("fleet.title")} eyebrow={t("fleet.eyebrow")}>
       <section className="dashboard-grid">
         <div className="panel-card padded">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">VEHICLES</p>
-              <h3>{data?.trucks.length ?? 0} trucks</h3>
+              <p className="section-kicker">{t("fleet.vehicles")}</p>
+              <h3>
+                {data?.trucks.length ?? 0} {t("fleet.trucks")}
+              </h3>
             </div>
             <span className="soft-badge">
-              {data?.trucks.filter(t => t.status === "available").length ?? 0} available
+              {data?.trucks.filter(x => x.status === "available").length ?? 0} {t("fleet.available")}
             </span>
           </div>
           <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Plate</th>
-                  <th>Vehicle</th>
-                  <th>Home ward</th>
-                  <th className="num">Capacity</th>
-                  <th className="num">Odometer</th>
-                  <th className="num">Fuel use</th>
-                  <th>Status</th>
+                  <th>{t("fleet.plate")}</th>
+                  <th>{t("fleet.vehicle")}</th>
+                  <th>{t("fleet.homeWard")}</th>
+                  <th className="num">{t("bins.capacity")}</th>
+                  <th className="num">{t("fleet.odometer")}</th>
+                  <th className="num">{t("fleet.fuelUse")}</th>
+                  <th>{t("common.status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,7 +103,7 @@ export default function Fleet() {
           {data?.trucks.length === 0 && (
             <div className="empty-state">
               <Truck size={30} />
-              <p>No trucks registered.</p>
+              <p>{t("fleet.noTrucks")}</p>
             </div>
           )}
         </div>
@@ -108,11 +112,13 @@ export default function Fleet() {
           <div className="panel-card padded">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">CREW</p>
-                <h3>{data?.drivers.length ?? 0} drivers</h3>
+                <p className="section-kicker">{t("fleet.crew")}</p>
+                <h3>
+                  {data?.drivers.length ?? 0} {t("fleet.drivers")}
+                </h3>
               </div>
               <span className="soft-badge">
-                {data?.drivers.filter(d => d.isAvailable).length ?? 0} free
+                {data?.drivers.filter(d => d.isAvailable).length ?? 0} {t("fleet.free")}
               </span>
             </div>
             <div className="activity-list">
@@ -124,11 +130,11 @@ export default function Fleet() {
                   <div>
                     <strong>{d.fullName}</strong>
                     <span>
-                      {d.licenseNo} · {titleCase(d.shift)} shift
+                      {d.licenseNo} · {titleCase(d.shift)} {t("fleet.shift")}
                       {d.phone && ` · ${d.phone}`}
                     </span>
                   </div>
-                  <time>{d.isAvailable ? "Free" : "On route"}</time>
+                  <time>{d.isAvailable ? t("fleet.free") : t("fleet.onRoute")}</time>
                 </div>
               ))}
             </div>

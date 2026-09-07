@@ -1,10 +1,12 @@
 /** Full bin inventory with the live map and the overflow forecast queue. */
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { Boxes, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { BinMap } from "@/components/map/BinMap";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { hoursUntil, relativeTime } from "@/lib/format";
 import { binTone, type BinView } from "@shared/types";
 
@@ -26,6 +28,8 @@ interface WardRow {
 }
 
 export default function Bins() {
+  const { t } = useI18n();
+  const [, navigate] = useLocation();
   const [bins, setBins] = useState<BinView[]>([]);
   const [forecasts, setForecasts] = useState<Forecast[]>([]);
   const [wards, setWards] = useState<WardRow[]>([]);
@@ -66,10 +70,10 @@ export default function Bins() {
   );
 
   return (
-    <AppShell title="Live bins" eyebrow="BIN NETWORK">
+    <AppShell title={t("bins.title")} eyebrow={t("bins.eyebrow")}>
       <div className="filter-row">
         <select value={wardFilter} onChange={e => setWardFilter(e.target.value)}>
-          <option value="">All wards</option>
+          <option value="">{t("bins.allWards")}</option>
           {wards.map(w => (
             <option key={w.wardId} value={w.wardId}>
               {w.name}
@@ -79,7 +83,15 @@ export default function Bins() {
         <div className="chip-row">
           {(["all", "critical", "high", "watch", "healthy"] as const).map(b => (
             <button key={b} className={`chip ${band === b ? "active" : ""}`} onClick={() => setBand(b)}>
-              {b === "all" ? "All" : b[0].toUpperCase() + b.slice(1)}
+              {b === "all"
+                ? t("common.all")
+                : b === "critical"
+                  ? t("common.critical")
+                  : b === "high"
+                    ? t("common.high")
+                    : b === "watch"
+                      ? t("common.watch")
+                      : t("common.healthy")}
               {b !== "all" && (
                 <span style={{ marginLeft: 5, opacity: 0.75 }}>
                   {bins.filter(x => binTone(x.currentFillPercent) === b).length}
@@ -94,7 +106,7 @@ export default function Bins() {
           onClick={() => void refreshForecasts()}
           disabled={refreshing}
         >
-          {refreshing ? <span className="spinner" /> : <RefreshCw size={14} />} Refit forecasts
+          {refreshing ? <span className="spinner" /> : <RefreshCw size={14} />} {t("bins.refit")}
         </button>
       </div>
 
@@ -102,8 +114,10 @@ export default function Bins() {
         <div className="map-card panel-card padded">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">GEOGRAPHY</p>
-              <h3>{visible.length} bins on the map</h3>
+              <p className="section-kicker">{t("bins.geography")}</p>
+              <h3>
+                {visible.length} {t("bins.onMap")}
+              </h3>
             </div>
           </div>
           <div style={{ height: 480 }}>
@@ -127,24 +141,29 @@ export default function Bins() {
           <div className="panel-card padded">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">PREDICTED OVERFLOW</p>
-                <h3>Next 24 hours</h3>
+                <p className="section-kicker">{t("bins.predictedOverflow")}</p>
+                <h3>{t("bins.next24")}</h3>
               </div>
               <span className="soft-badge">{forecasts.length}</span>
             </div>
             <div style={{ maxHeight: 470, overflowY: "auto" }}>
               {forecasts.length === 0 && (
-                <p className="empty-state">Nothing is projected to overflow within a day.</p>
+                <p className="empty-state">{t("bins.nothingSoon")}</p>
               )}
               {forecasts.map(f => (
-                <div className="forecast-row" key={f.binId}>
+                <div
+                  className="forecast-row"
+                  key={f.binId}
+                  onClick={() => navigate(`/bins/${f.binId}`)}
+                  style={{ cursor: "pointer" }}
+                >
                   <div
                     className={`forecast-clock ${
                       f.hoursToOverflow <= 3 ? "imminent" : f.hoursToOverflow <= 8 ? "soon" : "later"
                     }`}
                   >
                     {hoursUntil(f.hoursToOverflow)}
-                    <small>left</small>
+                    <small>{t("dash.left")}</small>
                   </div>
                   <div className="forecast-info">
                     <strong>{f.binCode}</strong>
@@ -168,37 +187,38 @@ export default function Bins() {
       <div className="panel-card padded" style={{ marginTop: 18 }}>
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">INVENTORY</p>
-            <h3>All bins</h3>
+            <p className="section-kicker">{t("bins.inventory")}</p>
+            <h3>{t("bins.allBins")}</h3>
           </div>
         </div>
         {visible.length === 0 ? (
           <div className="empty-state">
             <Boxes size={30} />
-            <p>No bins match this filter.</p>
+            <p>{t("bins.noMatch")}</p>
           </div>
         ) : (
           <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Landmark</th>
-                  <th>Ward</th>
-                  <th>Category</th>
-                  <th className="num">Capacity</th>
-                  <th className="num">Fill</th>
-                  <th className="num">Rate</th>
-                  <th className="num">Overflows in</th>
-                  <th>Last emptied</th>
+                  <th>{t("bins.code")}</th>
+                  <th>{t("bins.landmark")}</th>
+                  <th>{t("common.ward")}</th>
+                  <th>{t("bins.category")}</th>
+                  <th className="num">{t("bins.capacity")}</th>
+                  <th className="num">{t("bins.fill")}</th>
+                  <th className="num">{t("bins.rate")}</th>
+                  <th className="num">{t("bins.overflowsIn")}</th>
+                  <th>{t("bins.lastEmptied")}</th>
                 </tr>
               </thead>
               <tbody>
                 {visible.map(b => (
                   <tr
                     key={b.binId}
-                    onClick={() => setSelected(b.binId)}
+                    onClick={() => navigate(`/bins/${b.binId}`)}
                     style={{ cursor: "pointer" }}
+                    title={t("bins.detailKicker")}
                   >
                     <td>
                       <b>{b.binCode}</b>

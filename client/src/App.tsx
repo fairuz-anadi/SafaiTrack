@@ -4,18 +4,21 @@ import { I18nProvider } from "@/lib/i18n";
 import { ROLE_HOME, type Role } from "@shared/types";
 
 import Landing from "@/pages/Landing";
+import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Report from "@/pages/Report";
 import MyReports from "@/pages/MyReports";
 import Dashboard from "@/pages/Dashboard";
 import Bins from "@/pages/Bins";
+import BinDetail from "@/pages/BinDetail";
 import RoutesPage from "@/pages/Routes";
 import RouteDetail from "@/pages/RouteDetail";
 import Impact from "@/pages/Impact";
 import Complaints from "@/pages/Complaints";
 import Fleet from "@/pages/Fleet";
 import Analytics from "@/pages/Analytics";
+import Settings from "@/pages/Settings";
 import DriverRoute from "@/pages/DriverRoute";
 
 /**
@@ -52,6 +55,7 @@ function Router() {
       {/* Public */}
       <Route path="/" component={Landing} />
       <Route path="/report" component={Report} />
+      <Route path="/about" component={About} />
       <Route path="/login">
         <GuestOnly>
           <Login />
@@ -96,6 +100,16 @@ function Router() {
       <Route path="/bins">
         <Protected roles={["staff", "officer"]}>
           <Bins />
+        </Protected>
+      </Route>
+      <Route path="/bins/:id">
+        <Protected roles={["staff", "officer"]}>
+          <BinDetail />
+        </Protected>
+      </Route>
+      <Route path="/settings">
+        <Protected roles={["staff", "officer"]}>
+          <Settings />
         </Protected>
       </Route>
       <Route path="/impact">

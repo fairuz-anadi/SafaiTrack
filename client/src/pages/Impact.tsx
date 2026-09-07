@@ -25,6 +25,7 @@ import { useCountUp, usePointerGlow, useRevealOnScroll } from "@/hooks/useMotion
 import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { bdt, dateTime } from "@/lib/format";
 
 interface Comparison {
@@ -84,6 +85,7 @@ export default function Impact() {
   const [constants, setConstants] = useState<Constants | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
   const glowRef = usePointerGlow<HTMLDivElement>();
   const revealRef = useRevealOnScroll<HTMLDivElement>();
 
@@ -111,17 +113,13 @@ export default function Impact() {
     }));
 
   return (
-    <AppShell title="Impact proof" eyebrow="MEASURED, NOT CLAIMED">
-      <h2 className="page-title">Does optimized routing actually save anything?</h2>
-      <p className="page-sub">
-        Every time a route is generated, SafaiTrack also computes what the legacy fixed schedule
-        would have done over the same ward, at the same moment, with the same truck. The difference
-        below is that comparison — not an estimate, and not a figure borrowed from a paper.
-      </p>
+    <AppShell title={t("impact.title")} eyebrow={t("impact.eyebrow")}>
+      <h2 className="page-title">{t("impact.question")}</h2>
+      <p className="page-sub">{t("impact.lead")}</p>
 
       {loading && (
         <div className="loading-block">
-          <span className="spinner" /> Loading measured results…
+          <span className="spinner" /> {t("common.loading")}
         </div>
       )}
 
@@ -129,12 +127,7 @@ export default function Impact() {
         <div className="panel-card padded">
           <div className="empty-state">
             <RouteIcon size={32} />
-            <p>
-              No routes have been scored yet.
-              <br />
-              Generate a route from the dashboard and its baseline comparison appears here
-              automatically.
-            </p>
+            <p>{t("impact.noRoutes")}</p>
           </div>
         </div>
       )}
@@ -146,25 +139,24 @@ export default function Impact() {
             <div>
               <SavingHeadline percent={totals.avgSavedPercent} />
               <p>
-                less distance driven than the fixed schedule, averaged across{" "}
-                {totals.routesScored} scored route{totals.routesScored === 1 ? "" : "s"}.
+                {t("impact.lessDistance")} {totals.routesScored}.
               </p>
             </div>
             <div className="saving-metrics">
               <div>
-                <span>Fuel saved</span>
+                <span>{t("impact.fuelSaved")}</span>
                 <b>{totals.fuelSavedLitres.toFixed(1)} L</b>
               </div>
               <div>
-                <span>Cost avoided</span>
+                <span>{t("dash.costAvoided")}</span>
                 <b>{bdt(totals.costSavedBdt)}</b>
               </div>
               <div>
-                <span>CO₂ avoided</span>
+                <span>{t("dash.co2Avoided")}</span>
                 <b>{totals.co2SavedKg.toFixed(1)} kg</b>
               </div>
               <div>
-                <span>Wasted stops skipped</span>
+                <span>{t("impact.wastedStops")}</span>
                 <b>{totals.wastedStopsAvoided}</b>
               </div>
             </div>
@@ -172,42 +164,42 @@ export default function Impact() {
 
           <div className="impact-hero reveal reveal-stagger" ref={revealRef}>
             <div className="impact-panel baseline lift glow">
-              <h4>Today's practice — fixed schedule</h4>
+              <h4>{t("impact.todayPractice")}</h4>
               <div className="headline">{totals.totalBaselineKm.toFixed(1)} km</div>
-              <p className="sub">Visit every bin in the ward, in a static order, regardless of fill.</p>
+              <p className="sub">{t("impact.todayPracticeSub")}</p>
               <div className="impact-rows">
                 <div>
-                  <span>Stops made</span>
+                  <span>{t("impact.stopsMade")}</span>
                   <b>{rows.reduce((s, r) => s + r.baselineStopCount, 0)}</b>
                 </div>
                 <div>
-                  <span>Diesel burned</span>
+                  <span>{t("impact.dieselBurned")}</span>
                   <b>{rows.reduce((s, r) => s + r.baselineFuelLitres, 0).toFixed(1)} L</b>
                 </div>
                 <div>
-                  <span>Stops at bins under {constants?.collectionThresholdPercent}% full</span>
+                  <span>
+                    {t("impact.stopsUnder")} {constants?.collectionThresholdPercent}%
+                  </span>
                   <b>{totals.wastedStopsAvoided}</b>
                 </div>
               </div>
             </div>
 
             <div className="impact-panel optimized lift glow">
-              <h4>SafaiTrack — demand-driven</h4>
+              <h4>{t("impact.oursTitle")}</h4>
               <div className="headline">{totals.totalOptimizedKm.toFixed(1)} km</div>
-              <p className="sub">
-                Dijkstra shortest paths, priority-weighted nearest neighbour, 2-opt refinement.
-              </p>
+              <p className="sub">{t("impact.oursSub")}</p>
               <div className="impact-rows">
                 <div>
-                  <span>Stops made</span>
+                  <span>{t("impact.stopsMade")}</span>
                   <b>{rows.reduce((s, r) => s + r.optimizedStopCount, 0)}</b>
                 </div>
                 <div>
-                  <span>Diesel burned</span>
+                  <span>{t("impact.dieselBurned")}</span>
                   <b>{rows.reduce((s, r) => s + r.optimizedFuelLitres, 0).toFixed(1)} L</b>
                 </div>
                 <div>
-                  <span>Critical bins reached</span>
+                  <span>{t("impact.criticalReached")}</span>
                   <b>{rows.reduce((s, r) => s + r.overflowsPrevented, 0)}</b>
                 </div>
               </div>
@@ -217,8 +209,8 @@ export default function Impact() {
           <div className="panel-card padded lift" style={{ marginBottom: 18 }}>
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">ROUTE BY ROUTE</p>
-                <h3>Distance, both ways</h3>
+                <p className="section-kicker">{t("impact.routeByRoute")}</p>
+                <h3>{t("impact.distanceBoth")}</h3>
               </div>
             </div>
             <div style={{ height: 260, marginTop: 8 }}>
@@ -257,17 +249,17 @@ export default function Impact() {
           <div className="panel-card padded lift" style={{ marginBottom: 18 }}>
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">EVERY SCORED ROUTE</p>
-                <h3>The full record</h3>
+                <p className="section-kicker">{t("impact.everyRoute")}</p>
+                <h3>{t("impact.fullRecord")}</h3>
               </div>
             </div>
             <div className="table-scroll">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Route</th>
-                    <th>Ward</th>
-                    <th>Generated</th>
+                    <th>{t("nav.routes")}</th>
+                    <th>{t("common.ward")}</th>
+                    <th>{t("routes.generated")}</th>
                     <th className="num">Baseline</th>
                     <th className="num">Optimized</th>
                     <th className="num">Saved</th>
@@ -310,10 +302,10 @@ export default function Impact() {
                 <Wallet size={18} />
               </div>
               <div className="stat-content">
-                <span>Projected annual saving</span>
+                <span>{t("impact.annualSaving")}</span>
                 <strong>{bdt(totals.annual.annualCostSavedBdt)}</strong>
                 <small className="muted">
-                  {totals.annual.runsPerYear.toLocaleString()} ward-runs / year
+                  {totals.annual.runsPerYear.toLocaleString()} {t("impact.wardRuns")}
                 </small>
               </div>
             </div>
@@ -322,9 +314,9 @@ export default function Impact() {
                 <Leaf size={18} />
               </div>
               <div className="stat-content">
-                <span>Projected annual CO₂</span>
+                <span>{t("impact.annualCo2")}</span>
                 <strong>{totals.annual.annualCo2SavedTonnes} t</strong>
-                <small className="muted">avoided across all wards</small>
+                <small className="muted">{t("impact.avoidedAll")}</small>
               </div>
             </div>
             <div className="stat-card lift glow">
@@ -332,9 +324,9 @@ export default function Impact() {
                 <Fuel size={18} />
               </div>
               <div className="stat-content">
-                <span>Diesel price used</span>
+                <span>{t("impact.dieselPrice")}</span>
                 <strong>৳{constants?.dieselPriceBdtPerLitre}/L</strong>
-                <small className="muted">Bangladesh retail rate</small>
+                <small className="muted">{t("impact.retailRate")}</small>
               </div>
             </div>
             <div className="stat-card lift glow">
@@ -342,9 +334,9 @@ export default function Impact() {
                 <TrendingDown size={18} />
               </div>
               <div className="stat-content">
-                <span>Literature benchmark</span>
+                <span>{t("impact.benchmark")}</span>
                 <strong>21.5%</strong>
-                <small className="muted">pooled mean, IoT routing meta-analysis</small>
+                <small className="muted">{t("impact.pooledMean")}</small>
               </div>
             </div>
           </div>

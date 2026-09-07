@@ -229,7 +229,15 @@ demo never depends on the venue's wifi.
 - [x] Simulation clock: tick / skip 6h / run a full day / reset
 - [x] SMS + USSD intake webhook, English and Bangla keyword parsing
 - [x] AI assistant with Claude tool-use and offline fallback
-- [x] Bilingual UI (EN / বাংলা) across all citizen-facing surfaces
+- [x] Bilingual UI (EN / বাংলা) across the **entire** product — 413 keys covering
+      navigation, dashboards, tables, empty states and error copy, with a
+      Bengali webfont and script-specific line heights
+- [x] Two-step sign-in: role picker (keyboard 1–4) → credentials, with the
+      side panel and demo account following the chosen role
+- [x] Ambient bin-network canvas — nodes fill and recolour like real bins,
+      cursor pushes them aside, click runs a collection sweep that empties them
+- [x] New pages: /about (the problem + comparison table + SDG),
+      /bins/:id (reading history chart + map), /settings (language + build info)
 - [x] Production build: `vite build` + `esbuild` → single Node process
 
 ### Known gaps and honest limitations

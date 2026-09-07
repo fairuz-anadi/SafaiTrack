@@ -1,32 +1,123 @@
-/** Sign-in. Carries one-click demo accounts so a judge never types a password. */
-import { useState } from "react";
+/**
+ * Sign-in, in two steps.
+ *
+ * Picking a role first is not decoration: SafaiTrack shows four genuinely
+ * different products depending on who you are, and naming that up front makes
+ * the role-based access model visible instead of hidden behind one form. The
+ * chosen role also re-writes the left panel and offers its own demo account,
+ * so a judge reaches any of the four views in two clicks and no typing.
+ */
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Leaf, Radio, ShieldCheck, TrendingDown } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Eye,
+  EyeOff,
+  Leaf,
+  Radio,
+  ShieldCheck,
+  Truck,
+  TrendingDown,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { useAuth } from "@/lib/auth";
+import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
+import type { Role } from "@shared/types";
 
-const DEMO_ACCOUNTS = [
-  { role: "Municipal staff", email: "staff@safaitrack.gov.bd", note: "Full operations" },
-  { role: "Ward officer", email: "officer27@safaitrack.gov.bd", note: "Dhanmondi complaints" },
-  { role: "Truck driver", email: "rafiq@safaitrack.gov.bd", note: "Route execution" },
-  { role: "Citizen", email: "citizen@example.com", note: "Report and track" },
+interface RoleCard {
+  role: Role;
+  icon: typeof Building2;
+  whatKey: StringKey;
+  demoEmail: string;
+  tone: string;
+}
+
+const ROLE_CARDS: RoleCard[] = [
+  {
+    role: "staff",
+    icon: Building2,
+    whatKey: "auth.roleStaffWhat",
+    demoEmail: "staff@safaitrack.gov.bd",
+    tone: "lime",
+  },
+  {
+    role: "officer",
+    icon: Users,
+    whatKey: "auth.roleOfficerWhat",
+    demoEmail: "officer27@safaitrack.gov.bd",
+    tone: "blue",
+  },
+  {
+    role: "driver",
+    icon: Truck,
+    whatKey: "auth.roleDriverWhat",
+    demoEmail: "rafiq@safaitrack.gov.bd",
+    tone: "amber",
+  },
+  {
+    role: "citizen",
+    icon: UserRound,
+    whatKey: "auth.roleCitizenWhat",
+    demoEmail: "citizen@example.com",
+    tone: "violet",
+  },
 ];
+
+const DEMO_PASSWORD = "safai1234";
 
 export default function Login() {
   const { login } = useAuth();
+  const { t } = useI18n();
+  const [selected, setSelected] = useState<RoleCard | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const submit = async (e: React.FormEvent, asEmail?: string) => {
+  // Keyboard is faster than a mouse for a judge running the demo twice.
+  useEffect(() => {
+    if (selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      const index = Number(e.key) - 1;
+      if (index >= 0 && index < ROLE_CARDS.length) choose(ROLE_CARDS[index]);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
+  const choose = (card: RoleCard) => {
+    setSelected(card);
+    setError("");
+    setEmail("");
+    setPassword("");
+  };
+
+  const back = () => {
+    setSelected(null);
+    setError("");
+  };
+
+  const fillDemo = () => {
+    if (!selected) return;
+    setEmail(selected.demoEmail);
+    setPassword(DEMO_PASSWORD);
+    setError("");
+  };
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      await login(asEmail ?? email, asEmail ? "safai1234" : password);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not sign in");
+      await login(email, password);
+    } catch {
+      setError(t("auth.wrong"));
       setBusy(false);
     }
   };
@@ -35,6 +126,7 @@ export default function Login() {
     <div className="auth-page">
       <aside className="auth-aside ambient-host">
         <AmbientNetwork tone="dark" intensity={0.85} density={0.75} />
+
         <Link href="/" className="public-brand" style={{ position: "relative", zIndex: 2 }}>
           <span className="public-brand-mark">
             <Leaf size={17} fill="currentColor" />
@@ -47,90 +139,148 @@ export default function Login() {
           </span>
         </Link>
 
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <h2>
-            Waste collection that
-            <br />
-            <em>responds to the street.</em>
-          </h2>
-          <p>
-            Bin signals, citizen reports and truck routes in one system — built to run on a city
-            corporation's existing budget, with no per-bin hardware.
-          </p>
+        {/* The panel answers "what will I see?" for whichever role is selected. */}
+        <div style={{ position: "relative", zIndex: 2 }} key={selected?.role ?? "none"} className="aside-swap">
+          {selected ? (
+            <>
+              <div className={`role-badge ${selected.tone}`}>
+                <selected.icon size={20} />
+              </div>
+              <h2>
+                {t(`role.${selected.role}` as StringKey)}
+                <br />
+                <em>{t(selected.whatKey)}</em>
+              </h2>
+            </>
+          ) : (
+            <h2>
+              {t("auth.asideTitle1")}
+              <br />
+              <em>{t("auth.asideTitle2")}</em>
+            </h2>
+          )}
         </div>
 
         <div className="auth-points">
           <div>
             <TrendingDown size={17} />
-            <span>Measured route savings against the fixed schedule, not estimates</span>
+            <span>{t("cities.check3")}</span>
           </div>
           <div>
             <Radio size={17} />
-            <span>Citizens report by web, SMS or USSD — no smartphone required</span>
+            <span>{t("cities.check4")}</span>
           </div>
           <div>
             <ShieldCheck size={17} />
-            <span>Every complaint status change is permanently attributable</span>
+            <span>{t("cities.check2")}</span>
           </div>
         </div>
       </aside>
 
       <main className="auth-main">
         <div className="auth-card">
-          <p className="public-kicker">SIGN IN</p>
-          <h1>Welcome back.</h1>
-          <p>Access is scoped to your role — staff, ward officer, driver or citizen.</p>
-
-          <form onSubmit={e => void submit(e)}>
-            {error && <div className="auth-error">{error}</div>}
-
-            <label className="auth-field">
-              <span>Email</span>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoComplete="username"
-              />
-            </label>
-
-            <label className="auth-field">
-              <span>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-              />
-            </label>
-
-            <button className="auth-submit" type="submit" disabled={busy}>
-              {busy ? <span className="spinner" /> : <ArrowRight size={16} />} Sign in
-            </button>
-          </form>
-
-          <p className="auth-alt">
-            New resident? <Link href="/register">Create an account</Link>
-          </p>
-
-          <div className="demo-accounts">
-            <strong>Demo accounts — one click</strong>
-            {DEMO_ACCOUNTS.map(a => (
-              <button key={a.email} onClick={e => void submit(e, a.email)} disabled={busy}>
-                <span>
-                  <b>{a.role}</b> — {a.note}
-                </span>
-                <em>{a.email}</em>
-              </button>
-            ))}
-            <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "9px 0 0", paddingLeft: 9 }}>
-              Password for all demo accounts: <code>safai1234</code>
-            </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p className="public-kicker">{t("auth.signInKicker")}</p>
+            <LanguageToggle compact />
           </div>
+
+          {/* ── Step 1 · who are you ─────────────────────────────────────── */}
+          {!selected && (
+            <div className="auth-step">
+              <h1>{t("auth.chooseRole")}</h1>
+              <p>{t("auth.chooseRoleSub")}</p>
+
+              <div className="role-grid">
+                {ROLE_CARDS.map((card, i) => (
+                  <button
+                    key={card.role}
+                    className={`role-card ${card.tone}`}
+                    onClick={() => choose(card)}
+                    style={{ "--i": i } as React.CSSProperties}
+                  >
+                    <span className="role-key">{i + 1}</span>
+                    <span className="role-icon">
+                      <card.icon size={19} />
+                    </span>
+                    <strong>{t(`role.${card.role}` as StringKey)}</strong>
+                    <small>{t(card.whatKey)}</small>
+                    <ArrowRight className="role-arrow" size={16} />
+                  </button>
+                ))}
+              </div>
+
+              <p className="auth-alt">
+                {t("auth.newResident")} <Link href="/register">{t("auth.createAccount")}</Link>
+              </p>
+            </div>
+          )}
+
+          {/* ── Step 2 · credentials ─────────────────────────────────────── */}
+          {selected && (
+            <div className="auth-step">
+              <button className="step-back" onClick={back}>
+                <ArrowLeft size={14} /> {t("auth.changeRole")}
+              </button>
+
+              <h1>{t("auth.welcome")}</h1>
+              <p>
+                {t(`role.${selected.role}` as StringKey)} — {t(selected.whatKey)}
+              </p>
+
+              <form onSubmit={e => void submit(e)}>
+                {error && <div className="auth-error">{error}</div>}
+
+                <label className="auth-field">
+                  <span>{t("auth.email")}</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder={selected.demoEmail}
+                    required
+                    autoFocus
+                    autoComplete="username"
+                  />
+                </label>
+
+                <label className="auth-field">
+                  <span>{t("auth.password")}</span>
+                  <span className="password-wrap">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </span>
+                </label>
+
+                <button className="auth-submit" type="submit" disabled={busy}>
+                  {busy ? <span className="spinner" /> : <ArrowRight size={16} />}{" "}
+                  {t("auth.signInBtn")}
+                </button>
+              </form>
+
+              <div className="demo-accounts">
+                <strong>{t("auth.useDemo")}</strong>
+                <button onClick={fillDemo}>
+                  <span>
+                    <b>{t(`role.${selected.role}` as StringKey)}</b> — {t("auth.demoNote")}
+                  </span>
+                  <em>{selected.demoEmail}</em>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

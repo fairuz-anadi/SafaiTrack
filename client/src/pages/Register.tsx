@@ -15,7 +15,7 @@ interface Ward {
 
 export default function Register() {
   const { register } = useAuth();
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const [wards, setWards] = useState<Ward[]>([]);
   const [form, setForm] = useState({
     fullName: "",
@@ -76,24 +76,21 @@ export default function Register() {
 
         <div style={{ position: "relative", zIndex: 2 }}>
           <h2>
-            One report can
+            {t("auth.regAside1")}
             <br />
-            <em>move a whole route.</em>
+            <em>{t("auth.regAside2")}</em>
           </h2>
-          <p>
-            Register your ward so your reports reach the right officer, and so you can follow them
-            from filed to resolved.
-          </p>
+          <p>{t("auth.regAsideBody")}</p>
         </div>
 
         <div className="auth-points">
           <div>
             <MapPin size={17} />
-            <span>Your ward officer sees your report the moment it is filed</span>
+            <span>{t("auth.regPoint1")}</span>
           </div>
           <div>
             <ShieldCheck size={17} />
-            <span>Only you and your ward team can see your reports</span>
+            <span>{t("auth.regPoint2")}</span>
           </div>
         </div>
       </aside>
@@ -101,27 +98,27 @@ export default function Register() {
       <main className="auth-main">
         <div className="auth-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p className="public-kicker">CREATE ACCOUNT</p>
+            <p className="public-kicker">{t("auth.registerKicker")}</p>
             <LanguageToggle />
           </div>
-          <h1>Join your ward.</h1>
-          <p>Residents only — municipal accounts are issued by the city corporation.</p>
+          <h1>{t("auth.registerTitle")}</h1>
+          <p>{t("auth.registerSub")}</p>
 
           <form onSubmit={e => void submit(e)}>
             {error && <div className="auth-error">{error}</div>}
 
             <label className="auth-field">
-              <span>Full name</span>
+              <span>{t("auth.fullName")}</span>
               <input value={form.fullName} onChange={set("fullName")} required minLength={2} />
             </label>
 
             <label className="auth-field">
-              <span>Email</span>
+              <span>{t("auth.email")}</span>
               <input type="email" value={form.email} onChange={set("email")} required />
             </label>
 
             <label className="auth-field">
-              <span>Mobile number — enables SMS reporting</span>
+              <span>{t("auth.mobile")}</span>
               <input
                 value={form.phone}
                 onChange={set("phone")}
@@ -131,9 +128,9 @@ export default function Register() {
             </label>
 
             <label className="auth-field">
-              <span>Your ward</span>
+              <span>{t("auth.yourWard")}</span>
               <select value={form.wardId} onChange={set("wardId")}>
-                <option value="">Select your ward</option>
+                <option value="">{t("auth.selectWard")}</option>
                 {wards.map(w => (
                   <option key={w.wardId} value={w.wardId}>
                     {w.name} ({w.wardCode})
@@ -143,12 +140,16 @@ export default function Register() {
             </label>
 
             <label className="auth-field">
-              <span>Address</span>
-              <input value={form.address} onChange={set("address")} placeholder="House, road, area" />
+              <span>{t("auth.address")}</span>
+              <input
+                value={form.address}
+                onChange={set("address")}
+                placeholder={t("auth.addressPlaceholder")}
+              />
             </label>
 
             <label className="auth-field">
-              <span>Password — at least 8 characters</span>
+              <span>{t("auth.passwordRule")}</span>
               <input
                 type="password"
                 value={form.password}
@@ -160,12 +161,12 @@ export default function Register() {
             </label>
 
             <button className="auth-submit" type="submit" disabled={busy}>
-              {busy ? <span className="spinner" /> : <ArrowRight size={16} />} Create account
+              {busy ? <span className="spinner" /> : <ArrowRight size={16} />} {t("auth.createBtn")}
             </button>
           </form>
 
           <p className="auth-alt">
-            Already registered? <Link href="/login">Sign in</Link>
+            {t("auth.alreadyRegistered")} <Link href="/login">{t("auth.signInBtn")}</Link>
           </p>
         </div>
       </main>

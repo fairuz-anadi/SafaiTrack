@@ -5,6 +5,7 @@ import { ArrowUpRight, Route as RouteIcon, Sliders, Zap } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { bdt, dateTime, duration, titleCase } from "@/lib/format";
 
 interface WardRow {
@@ -41,6 +42,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function RoutesPage() {
+  const { t } = useI18n();
   const [wards, setWards] = useState<WardRow[]>([]);
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [wardId, setWardId] = useState<number | null>(null);
@@ -94,12 +96,12 @@ export default function RoutesPage() {
   };
 
   return (
-    <AppShell title="Collection routes" eyebrow="ROUTE OPTIMIZATION">
+    <AppShell title={t("routes.title")} eyebrow={t("routes.eyebrow")}>
       <div className="panel-card padded" style={{ marginBottom: 20 }}>
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">GENERATE</p>
-            <h3>Plan a collection run</h3>
+            <p className="section-kicker">{t("routes.generate")}</p>
+            <h3>{t("routes.planRun")}</h3>
           </div>
           <span className="soft-badge">
             <Sliders size={13} style={{ marginRight: 5, verticalAlign: -2 }} />
@@ -109,17 +111,17 @@ export default function RoutesPage() {
 
         <div className="filter-row" style={{ marginTop: 6 }}>
           <label className="auth-field" style={{ marginBottom: 0, minWidth: 210 }}>
-            <span>Ward</span>
+            <span>{t("common.ward")}</span>
             <select value={wardId ?? ""} onChange={e => setWardId(Number(e.target.value))}>
               {wards.map(w => (
                 <option key={w.wardId} value={w.wardId}>
-                  {w.name} — {w.criticalCount} critical of {w.binCount}
+                  {w.name} — {w.criticalCount} / {w.binCount}
                 </option>
               ))}
             </select>
           </label>
           <label className="auth-field" style={{ marginBottom: 0, width: 155 }}>
-            <span>Collect at or above</span>
+            <span>{t("routes.collectAbove")}</span>
             <input
               type="number"
               min={0}
@@ -129,7 +131,7 @@ export default function RoutesPage() {
             />
           </label>
           <label className="auth-field" style={{ marginBottom: 0, width: 130 }}>
-            <span>Max stops</span>
+            <span>{t("routes.maxStops")}</span>
             <input
               type="number"
               min={1}
@@ -139,7 +141,7 @@ export default function RoutesPage() {
             />
           </label>
           <label className="auth-field" style={{ marginBottom: 0, width: 165 }}>
-            <span>Forecast lookahead (h)</span>
+            <span>{t("routes.lookahead")}</span>
             <input
               type="number"
               min={0}
@@ -155,14 +157,12 @@ export default function RoutesPage() {
             style={{ marginTop: 20 }}
           >
             {busy ? <span className="spinner" /> : <Zap size={16} fill="currentColor" />}
-            {busy ? "Optimizing…" : "Generate route"}
+            {busy ? t("dash.optimizing") : t("routes.generateBtn")}
           </button>
         </div>
 
         <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "2px 0 0", lineHeight: 1.6 }}>
-          Bins are eligible if they are already at the threshold <em>or</em> forecast to overflow
-          within the lookahead window — that second clause is what makes the route proactive rather
-          than purely reactive.
+          {t("routes.eligibilityNote")}
         </p>
 
         {message && (
@@ -178,8 +178,8 @@ export default function RoutesPage() {
       <div className="panel-card padded">
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">HISTORY</p>
-            <h3>Generated routes</h3>
+            <p className="section-kicker">{t("routes.history")}</p>
+            <h3>{t("routes.generated")}</h3>
           </div>
           <span className="soft-badge">{routes.length}</span>
         </div>
@@ -187,22 +187,22 @@ export default function RoutesPage() {
         {routes.length === 0 ? (
           <div className="empty-state">
             <RouteIcon size={30} />
-            <p>No routes generated yet. Plan one above.</p>
+            <p>{t("routes.none")}</p>
           </div>
         ) : (
           <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Route</th>
-                  <th>Ward</th>
-                  <th>Status</th>
-                  <th className="num">Stops</th>
-                  <th className="num">Distance</th>
-                  <th className="num">vs baseline</th>
-                  <th className="num">Est. time</th>
-                  <th>Assigned</th>
-                  <th>Generated</th>
+                  <th>{t("nav.routes")}</th>
+                  <th>{t("common.ward")}</th>
+                  <th>{t("common.status")}</th>
+                  <th className="num">{t("common.stops")}</th>
+                  <th className="num">{t("common.distance")}</th>
+                  <th className="num">{t("routes.vsBaseline")}</th>
+                  <th className="num">{t("routes.estTime")}</th>
+                  <th>{t("routes.assigned")}</th>
+                  <th>{t("routes.generated")}</th>
                   <th />
                 </tr>
               </thead>
@@ -240,7 +240,7 @@ export default function RoutesPage() {
                             <span style={{ color: "var(--muted)" }}>{r.plateNumber}</span>
                           </>
                         ) : (
-                          <span style={{ color: "var(--muted)" }}>Unassigned</span>
+                          <span style={{ color: "var(--muted)" }}>{t("routes.unassigned")}</span>
                         )}
                       </td>
                       <td style={{ color: "var(--muted)", fontSize: 12.5 }}>
@@ -248,7 +248,7 @@ export default function RoutesPage() {
                       </td>
                       <td>
                         <Link href={`/routes/${r.routeId}`} className="text-button">
-                          Open <ArrowUpRight size={14} />
+                          {t("common.open")} <ArrowUpRight size={14} />
                         </Link>
                       </td>
                     </tr>

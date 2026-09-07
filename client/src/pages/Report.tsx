@@ -45,7 +45,7 @@ export default function Report() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!binId) {
-      setError(lang === "bn" ? "একটি বিন নির্বাচন করুন।" : "Please choose the bin you are reporting.");
+      setError(t("report.chooseBin"));
       return;
     }
     setBusy(true);
@@ -132,9 +132,7 @@ export default function Report() {
             </span>
             <span>
               <Check size={16} />{" "}
-              {lang === "bn"
-                ? "জমা থেকে সমাধান পর্যন্ত ট্র্যাক করুন"
-                : "Track progress from submitted to resolved"}
+              {t("report.trackProgress")}
             </span>
           </div>
 
@@ -161,9 +159,7 @@ export default function Report() {
               </code>
               <br />
               <span style={{ fontSize: 12.5, opacity: 0.8 }}>
-                {lang === "bn"
-                  ? "বাংলাতেও পাঠাতে পারেন। একই অভিযোগ নম্বর পাবেন।"
-                  : "Bangla works too. You get the same tracking reference."}
+                {t("report.smsBangla")}
               </span>
             </p>
           </div>
@@ -172,7 +168,7 @@ export default function Report() {
         <form className="report-form-card" onSubmit={e => void submit(e)}>
           <div className="form-top">
             <div>
-              <span className="form-step">{lang === "bn" ? "ধাপ ১ / ১" : "STEP 1 OF 1"}</span>
+              <span className="form-step">{t("report.step")}</span>
               <h2>{t("report.issueType")}</h2>
             </div>
             <span className="form-progress">
@@ -243,7 +239,7 @@ export default function Report() {
               <ShieldCheck size={14} /> {t("report.privacy")}
             </span>
             <button className="public-primary" type="submit" disabled={busy || !user}>
-              {busy ? <span className="spinner" /> : null} {t("common.submit")}{" "}
+              {busy ? <span className="spinner" /> : null} {t("report.submit")}{" "}
               <ArrowRight size={15} />
             </button>
           </div>
@@ -251,8 +247,8 @@ export default function Report() {
       </main>
 
       <footer className="report-footer">
-        <span>SafaiTrack {lang === "bn" ? "নাগরিক পোর্টাল" : "Citizen Portal"}</span>
-        <span>{lang === "bn" ? "একটি রিপোর্ট পুরো রুট বদলে দিতে পারে।" : "One report can move a whole route."}</span>
+        <span>SafaiTrack · {t("report.kicker")}</span>
+        <span>{t("report.footerNote")}</span>
       </footer>
     </div>
   );

@@ -84,7 +84,7 @@ export default function MyReports() {
             onClick={() => void logout()}
             style={{ background: "transparent", cursor: "pointer" }}
           >
-            <LogOut size={15} /> Sign out
+            <LogOut size={15} /> {t("common.signOut")}
           </button>
         </div>
       </header>
@@ -152,7 +152,7 @@ export default function MyReports() {
               {openId === r.complaintId && (
                 <div style={{ padding: "4px 20px 22px", borderTop: "1px solid var(--line)" }}>
                   <p className="section-kicker" style={{ margin: "16px 0 14px" }}>
-                    {lang === "bn" ? "অগ্রগতি" : "PROGRESS"}
+                    {t("myReports.progress")}
                   </p>
                   <div className="audit-trail">
                     {history.map((h, i) => (

@@ -10,6 +10,7 @@ import { AgentPanel } from "@/components/agent/AgentPanel";
 import { BinMap, type MapPath } from "@/components/map/BinMap";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 import { bdt, clockTime, duration, titleCase } from "@/lib/format";
 
 interface RouteInfo {
@@ -63,6 +64,7 @@ interface Fleet {
 export default function RouteDetail() {
   const [, params] = useRoute("/routes/:id");
   const { user } = useAuth();
+  const { t } = useI18n();
   const routeId = Number(params?.id);
 
   const [route, setRoute] = useState<RouteInfo | null>(null);
@@ -109,9 +111,9 @@ export default function RouteDetail() {
 
   if (!route) {
     return (
-      <AppShell title="Route">
+      <AppShell title={t("nav.routes")}>
         <div className="loading-block">
-          <span className="spinner" /> Loading route…
+          <span className="spinner" /> {t("common.loading")}
         </div>
       </AppShell>
     );
@@ -121,14 +123,14 @@ export default function RouteDetail() {
   const disposal = { lat: route.disposalLat, lng: route.disposalLng };
 
   const optimizedPath: MapPath = {
-    label: "Optimized",
+    label: t("routes.optimized"),
     color: "#68ad34",
     points: [depot, ...stops.map(s => ({ lat: s.latitude, lng: s.longitude })), disposal],
   };
   // The baseline visits the same bins in flat bin-code order — drawn dashed so
   // the difference in path shape is visible, not just the number.
   const baselinePath: MapPath = {
-    label: "Fixed schedule",
+    label: t("routes.fixedSchedule"),
     color: "#ff715f",
     dashed: true,
     points: [
@@ -154,25 +156,24 @@ export default function RouteDetail() {
               <small>%</small>
             </div>
             <p>
-              shorter than the fixed schedule over the same ward — {comparison.optimizedDistanceKm}{" "}
-              km instead of {comparison.baselineDistanceKm} km.
+              {t("routes.shorterThan")} — {comparison.optimizedDistanceKm} km / {comparison.baselineDistanceKm} km.
             </p>
           </div>
           <div className="saving-metrics">
             <div>
-              <span>Fuel saved</span>
+              <span>{t("impact.fuelSaved")}</span>
               <b>{comparison.fuelSavedLitres} L</b>
             </div>
             <div>
-              <span>Cost avoided</span>
+              <span>{t("dash.costAvoided")}</span>
               <b>{bdt(comparison.costSavedBdt)}</b>
             </div>
             <div>
-              <span>CO₂ avoided</span>
+              <span>{t("dash.co2Avoided")}</span>
               <b>{comparison.co2SavedKg} kg</b>
             </div>
             <div>
-              <span>Wasted stops skipped</span>
+              <span>{t("impact.wastedStops")}</span>
               <b>{comparison.wastedStopsAvoided}</b>
             </div>
           </div>
@@ -183,11 +184,11 @@ export default function RouteDetail() {
         <div className="map-card panel-card padded">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">THE TWO ROUTES</p>
-              <h3>Optimized against fixed schedule</h3>
+              <p className="section-kicker">{t("routes.twoRoutes")}</p>
+              <h3>{t("routes.optimizedVs")}</h3>
             </div>
             <button className="ghost-button" onClick={() => setShowBaseline(v => !v)}>
-              {showBaseline ? "Hide" : "Show"} baseline
+              {showBaseline ? t("routes.hideBaseline") : t("routes.showBaseline")}
             </button>
           </div>
 
@@ -203,7 +204,7 @@ export default function RouteDetail() {
                     display: "inline-block",
                   }}
                 />
-                Optimized · {route.totalDistanceKm} km
+                {t("routes.optimized")} · {route.totalDistanceKm} km
               </span>
               {showBaseline && comparison && (
                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -217,12 +218,12 @@ export default function RouteDetail() {
                       opacity: 0.7,
                     }}
                   />
-                  Fixed schedule · {comparison.baselineDistanceKm} km
+                  {t("routes.fixedSchedule")} · {comparison.baselineDistanceKm} km
                 </span>
               )}
             </div>
             <span className="map-updated">
-              {duration(route.estimatedMinutes)} estimated · {stops.length} stops
+              {duration(route.estimatedMinutes)} · {stops.length} {t("common.stops")}
             </span>
           </div>
 
@@ -248,7 +249,7 @@ export default function RouteDetail() {
           <div className="panel-card padded">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">DISPATCH</p>
+                <p className="section-kicker">{t("routes.dispatch")}</p>
                 <h3>{titleCase(route.status)}</h3>
               </div>
             </div>
@@ -256,7 +257,7 @@ export default function RouteDetail() {
             {route.status === "draft" && user?.role === "staff" && (
               <>
                 <label className="auth-field">
-                  <span>Truck</span>
+                  <span>{t("routes.truck")}</span>
                   <select value={truckId ?? ""} onChange={e => setTruckId(Number(e.target.value))}>
                     {fleet?.trucks
                       .filter(t => t.status === "available")
@@ -268,7 +269,7 @@ export default function RouteDetail() {
                   </select>
                 </label>
                 <label className="auth-field">
-                  <span>Driver</span>
+                  <span>{t("routes.driver")}</span>
                   <select value={driverId ?? ""} onChange={e => setDriverId(Number(e.target.value))}>
                     {fleet?.drivers
                       .filter(d => d.isAvailable)
@@ -286,7 +287,7 @@ export default function RouteDetail() {
                     void act(() => api.post(`/routes/${routeId}/assign`, { truckId, driverId }))
                   }
                 >
-                  {busy ? <span className="spinner" /> : <Truck size={16} />} Assign and dispatch
+                  {busy ? <span className="spinner" /> : <Truck size={16} />} {t("routes.assignDispatch")}
                 </button>
               </>
             )}
@@ -308,9 +309,9 @@ export default function RouteDetail() {
                   <b>{route.driverName ?? "—"}</b>
                 </div>
                 <div>
-                  <span>Progress</span>
+                  <span>{t("routes.progress")}</span>
                   <b>
-                    {collected} / {stops.length} collected
+                    {collected} / {stops.length} {t("routes.collected")}
                   </b>
                 </div>
               </div>
@@ -323,8 +324,8 @@ export default function RouteDetail() {
                 disabled={busy}
                 onClick={() => void act(() => api.post(`/routes/${routeId}/start`))}
               >
-                {busy ? <span className="spinner" /> : <Play size={15} fill="currentColor" />} Start
-                route
+                {busy ? <span className="spinner" /> : <Play size={15} fill="currentColor" />}{" "}
+                {t("routes.startRoute")}
               </button>
             )}
           </div>
@@ -332,8 +333,10 @@ export default function RouteDetail() {
           <div className="panel-card padded">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">STOP SEQUENCE</p>
-                <h3>{stops.length} stops in order</h3>
+                <p className="section-kicker">{t("routes.stopSequence")}</p>
+                <h3>
+                  {stops.length} {t("routes.stopsInOrder")}
+                </h3>
               </div>
             </div>
             <div style={{ maxHeight: 420, overflowY: "auto", display: "grid", gap: 7 }}>

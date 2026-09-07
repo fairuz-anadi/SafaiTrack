@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, Sparkles, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { useI18n, type StringKey } from "@/lib/i18n";
 
 interface Turn {
   role: "user" | "assistant";
@@ -17,14 +18,10 @@ interface Turn {
   tools?: { name: string }[];
 }
 
-const SUGGESTIONS = [
-  "What needs my attention right now?",
-  "Which bins will overflow in the next 6 hours?",
-  "How much have we actually saved so far?",
-  "Plan a collection route for the worst ward",
-];
+const SUGGESTION_KEYS: StringKey[] = ["agent.q1", "agent.q2", "agent.q3", "agent.q4"];
 
 export function AgentPanel() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -79,7 +76,7 @@ export function AgentPanel() {
   if (!open) {
     return (
       <button className="agent-launch" onClick={() => setOpen(true)}>
-        <Sparkles size={17} fill="currentColor" /> Ask SafaiTrack
+        <Sparkles size={17} fill="currentColor" /> {t("agent.launch")}
       </button>
     );
   }
@@ -87,20 +84,20 @@ export function AgentPanel() {
   const live = engine?.claudeConfigured ?? false;
 
   return (
-    <aside className="agent-drawer" role="dialog" aria-label="AI operations assistant">
+    <aside className="agent-drawer" role="dialog" aria-label={t("agent.title")}>
       <div className="agent-head">
         <div className="agent-mark">
           <Bot size={19} />
         </div>
         <div>
-          <strong>Operations assistant</strong>
+          <strong>{t("agent.title")}</strong>
           <small>
             <span className={`agent-engine ${live ? "live" : "offline"}`}>
-              {live ? engine?.model : "offline advisor"}
+              {live ? engine?.model : t("agent.offline")}
             </span>
           </small>
         </div>
-        <button className="agent-close" onClick={() => setOpen(false)} aria-label="Close assistant">
+        <button className="agent-close" onClick={() => setOpen(false)} aria-label={t("common.close")}>
           <X size={18} />
         </button>
       </div>
@@ -108,14 +105,11 @@ export function AgentPanel() {
       <div className="agent-body" ref={bodyRef}>
         {turns.length === 0 && (
           <>
-            <p className="agent-empty">
-              Ask about bin status, overflow forecasts, complaints, the fleet, or measured savings.
-              Every answer is read live from the operations database.
-            </p>
+            <p className="agent-empty">{t("agent.intro")}</p>
             <div className="agent-suggestions">
-              {SUGGESTIONS.map(s => (
-                <button key={s} onClick={() => void send(s)}>
-                  {s}
+              {SUGGESTION_KEYS.map(key => (
+                <button key={key} onClick={() => void send(t(key))}>
+                  {t(key)}
                 </button>
               ))}
             </div>
@@ -137,7 +131,7 @@ export function AgentPanel() {
 
         {busy && (
           <div className="agent-msg assistant" style={{ display: "flex", gap: 9, alignItems: "center" }}>
-            <span className="spinner" /> Reading the operations data…
+            <span className="spinner" /> {t("agent.reading")}
           </div>
         )}
       </div>
@@ -152,7 +146,7 @@ export function AgentPanel() {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Ask about bins, routes or savings…"
+          placeholder={t("agent.placeholder")}
           disabled={busy}
         />
         <button type="submit" disabled={busy || !input.trim()} aria-label="Send">

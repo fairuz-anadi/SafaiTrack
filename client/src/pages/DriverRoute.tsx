@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 import { clockTime, duration } from "@/lib/format";
 
 interface RouteRow {
@@ -45,6 +46,7 @@ interface Stop {
 
 export default function DriverRoute() {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [active, setActive] = useState<RouteRow | null>(null);
   const [stops, setStops] = useState<Stop[]>([]);
@@ -118,7 +120,9 @@ export default function DriverRoute() {
             <div>
               <b style={{ fontSize: 15, fontFamily: "'Space Grotesk', sans-serif" }}>SafaiTrack</b>
               <br />
-              <small style={{ color: "rgba(243,247,239,.55)", fontSize: 11.5 }}>Driver</small>
+              <small style={{ color: "rgba(243,247,239,.55)", fontSize: 11.5 }}>
+                {t("driver.role")}
+              </small>
             </div>
           </div>
           <button
@@ -130,19 +134,20 @@ export default function DriverRoute() {
               borderRadius: 9,
               cursor: "pointer",
             }}
-            aria-label="Sign out"
+            aria-label={t("common.signOut")}
           >
             <LogOut size={16} />
           </button>
         </div>
 
         <p className="eyebrow">{user?.fullName.toUpperCase()}</p>
-        <h1>{active ? active.routeCode : "No route assigned"}</h1>
+        <h1>{active ? active.routeCode : t("driver.noRoute")}</h1>
 
         {active && (
           <>
             <p style={{ color: "rgba(243,247,239,.66)", fontSize: 13.5, margin: "0 0 14px" }}>
-              {active.wardName} · {active.optimizedStopCount} stops · {active.totalDistanceKm} km ·{" "}
+              {active.wardName} · {active.optimizedStopCount} {t("common.stops")} ·{" "}
+              {active.totalDistanceKm} km ·{" "}
               {duration(active.estimatedMinutes)}
               {active.plateNumber && ` · ${active.plateNumber}`}
             </p>
@@ -168,15 +173,11 @@ export default function DriverRoute() {
         <div className="empty-state" style={{ paddingTop: 60 }}>
           <Navigation size={34} />
           <p>
-            No route is assigned to you right now.
-            <br />
-            Municipal staff will dispatch one shortly.
+            {t("driver.noRouteBody")}
           </p>
           {routes.length > 0 && (
             <p style={{ marginTop: 18, fontSize: 12.5 }}>
-              {routes.filter(r => r.status === "completed").length} route
-              {routes.filter(r => r.status === "completed").length === 1 ? "" : "s"} completed
-              previously.
+              {routes.filter(r => r.status === "completed").length} {t("driver.completedBefore")}
             </p>
           )}
         </div>
@@ -194,7 +195,7 @@ export default function DriverRoute() {
                 <div className="stop-info">
                   <strong>{stop.landmarkBn ?? stop.landmark}</strong>
                   <span>
-                    {stop.binCode} · {stop.currentFillPercent}% full
+                    {stop.binCode} · {stop.currentFillPercent}% {t("driver.full")}
                     {stop.plannedArrival && ` · ETA ${clockTime(stop.plannedArrival)}`}
                   </span>
                 </div>
@@ -212,7 +213,13 @@ export default function DriverRoute() {
                   disabled={done || active.status !== "in_progress" || busy !== null}
                   onClick={() => void collect(stop)}
                 >
-                  {busy === stop.binId ? <span className="spinner" /> : done ? "Done" : "Collected"}
+                  {busy === stop.binId ? (
+                    <span className="spinner" />
+                  ) : done ? (
+                    t("driver.done")
+                  ) : (
+                    t("driver.collected")
+                  )}
                 </button>
               </div>
             );
@@ -224,7 +231,7 @@ export default function DriverRoute() {
         <div className="driver-bar">
           <button className="primary-button" onClick={() => void start()} disabled={busy !== null}>
             {busy === "route" ? <span className="spinner" /> : <Play size={16} fill="currentColor" />}
-            Start route
+            {t("routes.startRoute")}
           </button>
         </div>
       )}
@@ -233,7 +240,7 @@ export default function DriverRoute() {
         <div className="driver-bar">
           <span style={{ fontSize: 13.5, color: "var(--lime-deep)", fontWeight: 600 }}>
             <CheckCircle2 size={15} style={{ verticalAlign: -3, marginRight: 6 }} />
-            Route complete — all {stops.length} stops logged
+            {t("driver.routeComplete")} ({stops.length})
           </span>
           <ChevronRight size={17} style={{ color: "var(--muted)" }} />
         </div>

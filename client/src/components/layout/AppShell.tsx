@@ -12,31 +12,32 @@ import {
   Menu,
   Route as RouteIcon,
   Search,
+  Settings2,
   TrendingUp,
   Truck,
   X,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { LanguageToggle } from "@/lib/i18n";
+import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
-import { ROLE_LABELS } from "@shared/types";
 
 interface NavItem {
-  label: string;
+  labelKey: StringKey;
   href: string;
   icon: typeof Grid2X2;
   roles: string[];
 }
 
 const NAV: NavItem[] = [
-  { label: "Overview", href: "/dashboard", icon: Grid2X2, roles: ["staff"] },
-  { label: "Live bins", href: "/bins", icon: Boxes, roles: ["staff", "officer"] },
-  { label: "Routes", href: "/routes", icon: RouteIcon, roles: ["staff"] },
-  { label: "Impact proof", href: "/impact", icon: TrendingUp, roles: ["staff", "officer"] },
-  { label: "Complaints", href: "/complaints", icon: FileText, roles: ["staff", "officer"] },
-  { label: "Fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
-  { label: "Analytics", href: "/analytics", icon: Gauge, roles: ["staff", "officer"] },
+  { labelKey: "nav.overview", href: "/dashboard", icon: Grid2X2, roles: ["staff"] },
+  { labelKey: "nav.liveBins", href: "/bins", icon: Boxes, roles: ["staff", "officer"] },
+  { labelKey: "nav.routes", href: "/routes", icon: RouteIcon, roles: ["staff"] },
+  { labelKey: "nav.impactProof", href: "/impact", icon: TrendingUp, roles: ["staff", "officer"] },
+  { labelKey: "nav.complaints", href: "/complaints", icon: FileText, roles: ["staff", "officer"] },
+  { labelKey: "nav.fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
+  { labelKey: "nav.analytics", href: "/analytics", icon: Gauge, roles: ["staff", "officer"] },
+  { labelKey: "nav.settings", href: "/settings", icon: Settings2, roles: ["staff", "officer"] },
 ];
 
 interface NotificationRow {
@@ -58,6 +59,7 @@ export function AppShell({
   eyebrow?: string;
 }) {
   const { user, logout } = useAuth();
+  const { t, lang } = useI18n();
   const [location] = useLocation();
   const [mobileNav, setMobileNav] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -97,6 +99,8 @@ export function AppShell({
     .join("")
     .toUpperCase();
 
+  const roleLabel = t(`role.${user.role}` as StringKey);
+
   const openNotifications = async () => {
     const next = !showNotifications;
     setShowNotifications(next);
@@ -124,21 +128,21 @@ export function AppShell({
             <small>Dhaka City Operations</small>
           </div>
         </div>
-        <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label="Close menu">
+        <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label={t("common.close")}>
           <X size={18} />
         </button>
 
         <div className="workspace-switcher">
           <div className="ward-avatar">D</div>
           <div>
-            <small>Signed in as</small>
-            <strong>{ROLE_LABELS[user.role].en}</strong>
+            <small>{t("nav.signedInAs")}</small>
+            <strong>{roleLabel}</strong>
           </div>
         </div>
 
         <nav className="nav-list">
-          <p className="nav-label">Operations</p>
-          {items.map(({ label, href, icon: Icon }) => (
+          <p className="nav-label">{t("nav.operations")}</p>
+          {items.map(({ labelKey, href, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -146,22 +150,22 @@ export function AppShell({
               onClick={() => setMobileNav(false)}
             >
               <Icon size={18} />
-              <span>{label}</span>
+              <span>{t(labelKey)}</span>
             </Link>
           ))}
         </nav>
 
         <div className="sidebar-bottom">
           <div style={{ padding: "0 6px 12px" }}>
-            <LanguageToggle />
+            <LanguageToggle compact />
           </div>
           <div className="profile-row">
             <div className="profile-avatar">{initials}</div>
             <div>
               <strong>{user.fullName}</strong>
-              <small>{ROLE_LABELS[user.role].en}</small>
+              <small>{roleLabel}</small>
             </div>
-            <button onClick={() => void logout()} aria-label="Sign out">
+            <button onClick={() => void logout()} aria-label={t("common.signOut")}>
               <LogOut size={16} />
             </button>
           </div>
@@ -178,7 +182,7 @@ export function AppShell({
               <p className="eyebrow">
                 {eyebrow ??
                   new Date()
-                    .toLocaleDateString("en-GB", {
+                    .toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", {
                       weekday: "long",
                       day: "2-digit",
                       month: "long",
@@ -193,9 +197,9 @@ export function AppShell({
           <div className="topbar-actions">
             <div className="search-box">
               <Search size={17} />
-              <input placeholder="Search bins, routes, complaints" />
+              <input placeholder={t("common.search")} />
             </div>
-            <button className="icon-button" onClick={openNotifications} aria-label="Notifications">
+            <button className="icon-button" onClick={openNotifications} aria-label={t("common.notifications")}>
               <Bell size={18} />
               {unread > 0 && <i />}
             </button>
@@ -205,12 +209,12 @@ export function AppShell({
           {showNotifications && (
             <div className="notification-pop">
               <div className="pop-title">
-                <strong>Notifications</strong>
+                <strong>{t("common.notifications")}</strong>
                 <span>{notifications.length}</span>
               </div>
               {notifications.length === 0 && (
                 <p style={{ padding: "14px 4px", color: "var(--muted)", fontSize: 13 }}>
-                  Nothing yet.
+                  {t("common.nothingYet")}
                 </p>
               )}
               {notifications.slice(0, 8).map(n => (
