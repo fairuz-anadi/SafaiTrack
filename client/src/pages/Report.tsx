@@ -4,7 +4,8 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, ArrowRight, Check, Leaf, MapPin, MessageSquare, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, MapPin, MessageSquare, ShieldCheck } from "lucide-react";
+import { BrandLockup } from "@/components/brand/Brand";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
@@ -98,15 +99,7 @@ export default function Report() {
     <div className="report-page">
       <header className="report-nav">
         <Link href="/" className="public-brand">
-          <span className="public-brand-mark">
-            <Leaf size={17} fill="currentColor" />
-          </span>
-          <span>
-            <b>
-              Safai<span>Track</span>
-            </b>
-            <small>Dhaka City Operations</small>
-          </span>
+          <BrandLockup size={34} />
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <LanguageToggle />

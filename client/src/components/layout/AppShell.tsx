@@ -7,7 +7,6 @@ import {
   FileText,
   Gauge,
   Grid2X2,
-  Leaf,
   LogOut,
   Menu,
   Route as RouteIcon,
@@ -17,6 +16,7 @@ import {
   Truck,
   X,
 } from "lucide-react";
+import { BrandLockup } from "@/components/brand/Brand";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
@@ -118,15 +118,7 @@ export function AppShell({
     <div className="app-shell">
       <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
         <div className="brand-lockup">
-          <div className="brand-mark">
-            <Leaf size={17} fill="currentColor" />
-          </div>
-          <div>
-            <b>
-              Safai<span>Track</span>
-            </b>
-            <small>Dhaka City Operations</small>
-          </div>
+          <BrandLockup size={34} tone="dark" />
         </div>
         <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label={t("common.close")}>
           <X size={18} />

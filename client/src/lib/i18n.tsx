@@ -85,6 +85,12 @@ const strings = {
   "role.driver": { en: "Truck driver", bn: "ট্রাক চালক" },
   "role.officer": { en: "Ward officer", bn: "ওয়ার্ড কর্মকর্তা" },
 
+  "brand.kicker": { en: "THE NAME", bn: "নামের অর্থ" },
+  "brand.meaning": {
+    en: "Safai (সাফাই) is the Bangla word for cleaning — the work itself, done by hand, every day. Track is what has been missing: a record of where the waste is, who collected it, and when.",
+    bn: "সাফাই মানে পরিচ্ছন্নতার কাজ — যা প্রতিদিন হাতে করা হয়। ট্র্যাক সেই জিনিসটি যা এতদিন ছিল না: কোথায় ময়লা, কে নিয়েছে, কখন নিয়েছে — তার হিসাব।",
+  },
+  "brand.tagline": { en: "Cleaning, on the record", bn: "পরিচ্ছন্নতা, হিসাবসহ" },
   /* ── landing ─────────────────────────────────────────────────────────── */
   "hero.eyebrow": {
     en: "Built for the wards that keep Dhaka moving",

@@ -11,12 +11,12 @@ import {
   ArrowRight,
   Building2,
   CircleCheck,
-  Leaf,
   Recycle,
   Trash2,
   TrendingDown,
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
+import { BrandLockup, BrandMark, Wordmark } from "@/components/brand/Brand";
 import { useRevealOnScroll } from "@/hooks/useMotion";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
 
@@ -107,15 +107,7 @@ export default function About() {
     <div className="public-site is-ready" ref={revealRef}>
       <header className="public-nav">
         <Link href="/" className="public-brand">
-          <span className="public-brand-mark">
-            <Leaf size={17} fill="currentColor" />
-          </span>
-          <span>
-            <b>
-              Safai<span>Track</span>
-            </b>
-            <small>Dhaka City Operations</small>
-          </span>
+          <BrandLockup size={34} />
         </Link>
         <div className="public-nav-actions">
           <LanguageToggle compact />
@@ -217,10 +209,8 @@ export default function About() {
 
       <footer className="public-footer">
         <div>
-          <span className="public-brand-mark">
-            <Leaf size={15} fill="currentColor" />
-          </span>
-          <b>SafaiTrack</b>
+          <BrandMark size={26} />
+          <Wordmark size={14} />
         </div>
         <span>{t("footer.tagline")}</span>
         <Link href="/team" className="footer-link">

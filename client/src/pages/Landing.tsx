@@ -11,7 +11,6 @@ import {
   Building2,
   CircleCheck,
   FileText,
-  Leaf,
   MapPin,
   Menu,
   Radio,
@@ -26,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
+import { BrandLockup, BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -88,15 +88,7 @@ export default function Landing() {
     >
       <header className="public-nav">
         <Link href="/" className="public-brand">
-          <span className="public-brand-mark">
-            <Leaf size={17} fill="currentColor" />
-          </span>
-          <span>
-            <b>
-              Safai<span>Track</span>
-            </b>
-            <small>Dhaka City Operations</small>
-          </span>
+          <BrandLockup size={34} />
         </Link>
 
         <nav className={`public-links ${mobileOpen ? "open" : ""}`}>
@@ -376,6 +368,14 @@ export default function Landing() {
           </div>
         </section>
 
+        <section className="brand-band reveal" id="brand">
+          <BrandStatement
+            kicker={t("brand.kicker")}
+            meaning={t("brand.meaning")}
+            tagline={t("brand.tagline")}
+          />
+        </section>
+
         <section className="roles-section reveal" id="roles">
           <div className="story-intro reveal">
             <p className="public-kicker">{t("auth.chooseRole")}</p>
@@ -452,10 +452,8 @@ export default function Landing() {
 
       <footer className="public-footer">
         <div>
-          <span className="public-brand-mark">
-            <Leaf size={15} fill="currentColor" />
-          </span>
-          <b>SafaiTrack</b>
+          <BrandMark size={26} />
+          <Wordmark size={14} />
         </div>
         <span>{t("footer.tagline")}</span>
         <Link href="/team" className="footer-link">

@@ -960,3 +960,178 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 }
 .footer-link { color: var(--lime-deep); font-weight: 600; text-decoration: none; }
 .footer-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BRAND — mark, wordmark, lockup and the landing statement band
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Wordmark ───────────────────────────────────────────────────────────────
+   Two words, two weights, one hairline space. The weight contrast is what
+   stops it collapsing back into "SafaiTrack" at a glance. */
+.wordmark {
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1;
+  letter-spacing: -.022em;
+  white-space: nowrap;
+  display: inline-block;
+}
+.wordmark .wm-safai { font-weight: 700; color: var(--ink); }
+.wordmark .wm-track {
+  font-weight: 400;
+  color: var(--lime-deep);
+  /* Small optical nudge on top of the real space character. */
+  margin-left: .06em;
+}
+.wordmark.on-dark .wm-safai { color: #f3f7ef; }
+.wordmark.on-dark .wm-track { color: var(--lime); }
+
+/* ── Header lockup ──────────────────────────────────────────────────────── */
+.brand-lockup-v2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+}
+.brand-lockup-v2 svg { flex-shrink: 0; }
+.brand-lockup-v2 .brand-text { display: flex; flex-direction: column; gap: 3px; }
+.brand-lockup-v2 .brand-text small {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.sidebar .brand-lockup-v2 .brand-text small,
+.auth-aside .brand-lockup-v2 .brand-text small,
+.driver-top .brand-lockup-v2 .brand-text small { color: rgba(243, 247, 239, .45); }
+
+/* The mark tilts a touch toward the cursor on hover — a small sign of life. */
+.brand-lockup-v2 svg { transition: transform .3s cubic-bezier(.2, .7, .3, 1); }
+.brand-lockup-v2:hover svg { transform: rotate(-6deg) scale(1.05); }
+
+/* ── Landing brand statement band ───────────────────────────────────────── */
+.brand-band {
+  position: relative;
+  overflow: hidden;
+  max-width: 1184px;
+  margin: 0 auto 78px;
+  padding: 0 6vw;
+}
+.brand-statement {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 58px;
+  padding: 58px 62px;
+  border-radius: 26px;
+  background: var(--ink);
+  color: #f3f7ef;
+  overflow: hidden;
+}
+/* A soft lime bloom behind the mark. */
+.brand-statement::before {
+  content: "";
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  left: -140px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(183, 239, 93, .17), transparent 68%);
+  pointer-events: none;
+}
+
+.brand-statement-mark { position: relative; display: grid; place-items: center; }
+.brand-statement-mark svg {
+  position: relative;
+  z-index: 2;
+  border-radius: 30px;
+  box-shadow: 0 22px 54px rgba(183, 239, 93, .22);
+}
+.brand-orbit {
+  position: absolute;
+  width: 168px;
+  height: 168px;
+  border: 1px solid rgba(183, 239, 93, .26);
+  border-radius: 50%;
+  animation: orbit-spin 26s linear infinite;
+}
+.brand-orbit.two {
+  width: 216px;
+  height: 216px;
+  border-color: rgba(183, 239, 93, .13);
+  border-style: dashed;
+  animation-duration: 40s;
+  animation-direction: reverse;
+}
+@keyframes orbit-spin { to { transform: rotate(360deg); } }
+
+.brand-statement-copy { position: relative; z-index: 2; }
+.brand-statement-copy .public-kicker { color: rgba(183, 239, 93, .78); }
+
+.brand-statement-word {
+  /* Block flow, not flex: a flex container collapses the real space between
+     the two words, which is the whole point of having it. */
+  display: block;
+  margin: 14px 0 18px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(44px, 6vw, 74px);
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+.bs-safai { font-weight: 700; color: #f7f8f3; }
+.bs-track { font-weight: 300; color: var(--lime); }
+
+.brand-meaning {
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: rgba(243, 247, 239, .72);
+  max-width: 54ch;
+  margin: 0 0 14px;
+}
+/* The Bangla root, called out. */
+.brand-meaning em {
+  font-style: normal;
+  color: var(--lime);
+  font-weight: 600;
+}
+.brand-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .11);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(243, 247, 239, .7);
+}
+
+@media (max-width: 860px) {
+  .brand-statement {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding: 44px 30px;
+    text-align: left;
+  }
+  .brand-statement-mark { justify-self: start; }
+  .brand-orbit, .brand-orbit.two { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-orbit, .brand-orbit.two { animation: none; }
+  .brand-lockup-v2:hover svg { transform: none; }
+}
+
+/* Bangla wordmark keeps the Latin face — it is a name, not body copy. */
+html[data-lang="bn"] .wordmark,
+html[data-lang="bn"] .brand-statement-word {
+  font-family: 'Space Grotesk', sans-serif;
+}

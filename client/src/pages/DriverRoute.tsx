@@ -8,12 +8,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   CheckCircle2,
   ChevronRight,
-  Leaf,
   LogOut,
   MapPin,
   Navigation,
   Play,
 } from "lucide-react";
+import { BrandLockup } from "@/components/brand/Brand";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
@@ -113,18 +113,7 @@ export default function DriverRoute() {
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className="brand-mark">
-              <Leaf size={16} fill="currentColor" />
-            </div>
-            <div>
-              <b style={{ fontSize: 15, fontFamily: "'Space Grotesk', sans-serif" }}>SafaiTrack</b>
-              <br />
-              <small style={{ color: "rgba(243,247,239,.55)", fontSize: 11.5 }}>
-                {t("driver.role")}
-              </small>
-            </div>
-          </div>
+          <BrandLockup size={32} tone="dark" tagline={t("driver.role")} />
           <button
             onClick={() => void logout()}
             style={{

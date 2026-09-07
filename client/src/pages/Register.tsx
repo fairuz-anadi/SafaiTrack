@@ -1,9 +1,10 @@
 /** Citizen self-registration. Municipal roles are provisioned, not signed up for. */
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Leaf, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowRight, MapPin, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
+import { BrandLockup } from "@/components/brand/Brand";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
 
@@ -63,15 +64,7 @@ export default function Register() {
       <aside className="auth-aside ambient-host">
         <AmbientNetwork tone="dark" intensity={0.85} density={0.75} />
         <Link href="/" className="public-brand" style={{ position: "relative", zIndex: 2 }}>
-          <span className="public-brand-mark">
-            <Leaf size={17} fill="currentColor" />
-          </span>
-          <span>
-            <b style={{ color: "#f3f7ef" }}>
-              Safai<span style={{ color: "var(--lime)" }}>Track</span>
-            </b>
-            <small style={{ color: "rgba(243,247,239,.5)" }}>Dhaka City Operations</small>
-          </span>
+          <BrandLockup size={34} tone="dark" />
         </Link>
 
         <div style={{ position: "relative", zIndex: 2 }}>
