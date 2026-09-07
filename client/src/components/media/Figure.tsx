@@ -6,13 +6,14 @@
  * lists copied material as a disqualification criterion, and a remote image
  * would also break the offline demo.
  *
- * So each slot renders an original illustration by default and swaps to a real
- * photograph the moment one is dropped into `client/public/images/`. Nothing
- * breaks if the file is missing, and nothing is borrowed if it never arrives.
+ * So each slot draws an original illustration, and a real photograph is laid
+ * over the top the moment one is dropped into `client/public/images/`. Nothing
+ * breaks if the file is missing — the illustration was never removed — and
+ * nothing is borrowed if it never arrives.
  */
 import { useState, type ReactNode } from "react";
 
-export type SceneName = "overflow" | "route" | "report" | "collected";
+export type SceneName = "overflow" | "route" | "report" | "collected" | "bin" | "sorting";
 
 interface Props {
   /** File under `client/public/images/`, e.g. "bin-overflow.jpg". */
@@ -20,28 +21,45 @@ interface Props {
   alt: string;
   /** Illustration shown until a real photograph is supplied. */
   scene: SceneName;
+  /** Accent for the `bin` scene — the waste stream's own colour. */
+  tint?: string;
   caption?: ReactNode;
   className?: string;
 }
 
-export function Figure({ src, alt, scene, caption, className }: Props) {
-  // `failed` covers the case where a filename is set but the file is absent.
+export function Figure({ src, alt, scene, tint, caption, className }: Props) {
+  /**
+   * The illustration is the base layer and the photograph is painted over it
+   * once it has actually decoded — rather than the photograph being the base
+   * and the illustration a fallback swapped in on `error`.
+   *
+   * That ordering matters. Swapping on `error` leaves a broken-image frame on
+   * screen for as long as the failure takes to arrive, which on a slow link is
+   * plainly visible. Layering means the worst case is an illustration that
+   * never gets covered, which is the intended empty state anyway.
+   */
+  const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const showPhoto = Boolean(src) && !failed;
 
   return (
     <figure className={`app-figure ${className ?? ""}`}>
       <div className="figure-frame">
-        {showPhoto ? (
+        <Scene name={scene} tint={tint} />
+        {src && !failed && (
           <img
+            className={`figure-photo ${loaded ? "is-loaded" : ""}`}
             src={`/images/${src}`}
             alt={alt}
             loading="lazy"
             decoding="async"
+            onLoad={e => {
+              // A server that answers a missing file with an HTML page rather
+              // than a 404 can still fire `load`; a real image has dimensions.
+              if (e.currentTarget.naturalWidth > 0) setLoaded(true);
+              else setFailed(true);
+            }}
             onError={() => setFailed(true)}
           />
-        ) : (
-          <Scene name={scene} />
         )}
       </div>
       {caption && <figcaption>{caption}</figcaption>}
@@ -53,7 +71,7 @@ export function Figure({ src, alt, scene, caption, className }: Props) {
 /* Drawn in the project palette so a slot with no photograph still reads as a
    deliberate piece of the design rather than a missing asset. */
 
-function Scene({ name }: { name: SceneName }) {
+function Scene({ name, tint }: { name: SceneName; tint?: string }) {
   switch (name) {
     case "overflow":
       return <OverflowScene />;
@@ -63,7 +81,135 @@ function Scene({ name }: { name: SceneName }) {
       return <ReportScene />;
     case "collected":
       return <CollectedScene />;
+    case "bin":
+      return <BinScene tint={tint ?? "#68ad34"} />;
+    case "sorting":
+      return <SortingScene />;
   }
+}
+
+/**
+ * A single wheeled bin in one waste stream's colour.
+ *
+ * The tint is the `colorHex` the database stores against that stream, so the
+ * illustration cannot drift out of step with the colour the rest of the app
+ * uses for the same category.
+ */
+function BinScene({ tint }: { tint: string }) {
+  return (
+    <svg viewBox="0 0 320 220" className="scene" role="img" aria-label="A collection bin">
+      <rect width="320" height="220" fill="#f4f7ef" />
+      {/* kerb */}
+      <rect x="0" y="176" width="320" height="44" fill="#e9eee2" />
+      <path d="M0 176h320" stroke="#dbe2d1" strokeWidth="2" />
+      {/* soft ground shadow */}
+      <ellipse cx="160" cy="180" rx="66" ry="9" fill="#17211e" opacity=".07" />
+
+      {/* body */}
+      <path d="M112 74h96l-9 96a10 10 0 0 1-10 9h-58a10 10 0 0 1-10-9z" fill={tint} />
+      {/* the lit face, so the bin has a light source rather than reading flat */}
+      <path d="M112 74h30l-7 105h-14a10 10 0 0 1-10-9z" fill="#fff" opacity=".16" />
+      {/* lid */}
+      <rect x="104" y="58" width="112" height="18" rx="9" fill={tint} />
+      <rect x="104" y="58" width="112" height="7" rx="3.5" fill="#fff" opacity=".22" />
+      {/* handle */}
+      <path
+        d="M138 58v-8a8 8 0 0 1 8-8h28a8 8 0 0 1 8 8v8"
+        stroke={tint}
+        strokeWidth="7"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* wheels */}
+      <circle cx="126" cy="182" r="12" fill="#2b3a33" />
+      <circle cx="126" cy="182" r="4.5" fill="#8f9d93" />
+      <circle cx="194" cy="182" r="12" fill="#2b3a33" />
+      <circle cx="194" cy="182" r="4.5" fill="#8f9d93" />
+
+      {/* stream badge on the body — the universal "use a bin" mark */}
+      <circle cx="160" cy="122" r="24" fill="#fff" opacity=".92" />
+      <path d="M154 112h12l-2 20a2 2 0 0 1-2 1.8h-4a2 2 0 0 1-2-1.8z" fill={tint} />
+      <rect x="150" y="106" width="20" height="4.6" rx="2.3" fill={tint} />
+      <path d="M157 106v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke={tint} strokeWidth="2.4" fill="none" />
+    </svg>
+  );
+}
+
+/**
+ * The sorting yard: recovered material separated into streams.
+ *
+ * Drawn as objects rather than as a person at work. Every other scene in this
+ * file is a street, a bin or a phone, and a flat-vector human among them would
+ * read as clip art — which is the exact impression this whole component exists
+ * to avoid. The three sacks carry the three non-hazardous stream colours, so
+ * the illustration says which streams end up here without a caption.
+ */
+function SortingScene() {
+  return (
+    <svg viewBox="0 0 320 220" className="scene" role="img" aria-label="Recovered material sorted into streams">
+      <rect width="320" height="220" fill="#f3efe9" />
+
+      {/* Brick wall, blocked in rather than drawn course by course. */}
+      <rect x="0" y="0" width="320" height="128" fill="#e7ded8" />
+      <g stroke="#dccfc7" strokeWidth="1.4">
+        <path d="M0 32h320M0 64h320M0 96h320" />
+        <path d="M40 0v32M120 0v32M200 0v32M280 0v32" />
+        <path d="M0 32v32M80 32v32M160 32v32M240 32v32M320 32v32" />
+        <path d="M40 64v32M120 64v32M200 64v32M280 64v32" />
+        <path d="M0 96v32M80 96v32M160 96v32M240 96v32M320 96v32" />
+      </g>
+      {/* Yard floor. */}
+      <rect x="0" y="128" width="320" height="92" fill="#e4e9dd" />
+      <path d="M0 128h320" stroke="#d3dbca" strokeWidth="2" />
+
+      {/* Zone tag, stencilled on the wall the way a yard is signed. */}
+      <rect x="112" y="20" width="96" height="26" rx="6" fill="#17211e" />
+      <text x="160" y="37" textAnchor="middle" fill="#b7ef5d" fontSize="11" fontFamily="monospace">
+        ZONE-5 YARD
+      </text>
+
+      {/* Three open sacks, one per stream that arrives here. */}
+      <g>
+        {/* plastic — blue */}
+        <ellipse cx="62" cy="196" rx="34" ry="7" fill="#17211e" opacity=".07" />
+        <path d="M40 128h44l-6 66a5 5 0 0 1-5 4.4H51a5 5 0 0 1-5-4.4z" fill="#68a5e8" />
+        <path d="M40 128h44l-1.4 15H41.4z" fill="#8fc9f0" />
+        <ellipse cx="62" cy="128" rx="22" ry="6" fill="#4d8ad0" />
+        {/* bottles above the rim */}
+        <rect x="50" y="106" width="9" height="20" rx="4" fill="#c8e2f8" transform="rotate(-14 54 116)" />
+        <rect x="64" y="103" width="9" height="22" rx="4" fill="#dceefc" transform="rotate(11 68 114)" />
+      </g>
+
+      <g>
+        {/* paper and general — green */}
+        <ellipse cx="160" cy="200" rx="38" ry="8" fill="#17211e" opacity=".07" />
+        <path d="M134 120h52l-7 74a5 5 0 0 1-5 4.6h-28a5 5 0 0 1-5-4.6z" fill="#68ad34" />
+        <path d="M134 120h52l-1.6 16h-48.8z" fill="#8fca5c" />
+        <ellipse cx="160" cy="120" rx="26" ry="7" fill="#4f8a26" />
+        {/* flattened board stacked on top */}
+        <rect x="141" y="96" width="38" height="9" rx="2" fill="#d9c19a" transform="rotate(-5 160 100)" />
+        <rect x="146" y="88" width="30" height="8" rx="2" fill="#e8d5b4" transform="rotate(4 161 92)" />
+      </g>
+
+      <g>
+        {/* metal — amber */}
+        <ellipse cx="258" cy="196" rx="32" ry="7" fill="#17211e" opacity=".07" />
+        <path d="M238 130h40l-5.4 64a5 5 0 0 1-5 4.6h-19.2a5 5 0 0 1-5-4.6z" fill="#f0b84a" />
+        <path d="M238 130h40l-1.3 14h-37.4z" fill="#f7d18a" />
+        <ellipse cx="258" cy="130" rx="20" ry="5.5" fill="#d19a24" />
+        {/* cans above the rim */}
+        <rect x="248" y="110" width="8" height="17" rx="3" fill="#fbe6bd" transform="rotate(-9 252 118)" />
+        <rect x="260" y="112" width="8" height="16" rx="3" fill="#f7d18a" transform="rotate(7 264 120)" />
+      </g>
+
+      {/* Weighing scale: the yard pays by the kilo, which is why the stream
+          has to be clean before it arrives. */}
+      <rect x="12" y="150" width="26" height="6" rx="3" fill="#8b968c" />
+      <path d="M25 150v-14" stroke="#8b968c" strokeWidth="3" />
+      <circle cx="25" cy="132" r="7" fill="#fff" stroke="#8b968c" strokeWidth="2.5" />
+      <path d="M25 132v-4" stroke="#8b968c" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 /** Street level: a bin past capacity, waste spilling onto the footpath. */

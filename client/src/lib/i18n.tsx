@@ -771,6 +771,35 @@ const strings = {
   "agent.q3": { en: "How much have we actually saved so far?", bn: "এ পর্যন্ত আমরা কতটা সাশ্রয় করেছি?" },
   "agent.q4": { en: "Plan a collection route for the worst ward", bn: "সবচেয়ে খারাপ ওয়ার্ডের জন্য রুট তৈরি করুন" },
 
+  /* ── waste streams / segregation ─────────────────────────────────────── */
+  "streams.kicker": { en: "WHICH BIN", bn: "কোন বিনে" },
+  "streams.title1": { en: "Four streams,", bn: "চার ধরনের বর্জ্য," },
+  "streams.title2": { en: "four bins.", bn: "চারটি বিন।" },
+  "streams.body": {
+    en: "A route that arrives on time at a bin full of mixed waste has still lost the recyclable and composted the plastic. Every bin in the system is registered to one stream, and the colour on these cards is the same colour the operations map paints that bin.",
+    bn: "মিশ্র বর্জ্যে ভরা বিনে সময়মতো ট্রাক পৌঁছালেও পুনর্ব্যবহারযোগ্য জিনিস নষ্ট হয়ে যায়। সিস্টেমের প্রতিটি বিন একটি নির্দিষ্ট ধারার সঙ্গে নিবন্ধিত, আর এই কার্ডের রঙই মানচিত্রে সেই বিনের রঙ।",
+  },
+  "streams.avgFill": { en: "average fill", bn: "গড় ভরাট" },
+  "streams.hazardous": { en: "Hazardous", bn: "বিপজ্জনক" },
+  "streams.photoAlt": { en: "A {stream} collection bin", bn: "{stream} সংগ্রহের বিন" },
+  "streams.yardKicker": { en: "WHERE IT GOES", bn: "এরপর কোথায়" },
+  "streams.yardTitle": {
+    en: "The recyclable stream is sorted by hand.",
+    bn: "পুনর্ব্যবহারযোগ্য বর্জ্য হাতে বাছাই করা হয়।",
+  },
+  "streams.yardBody": {
+    en: "General waste goes to Amin Bazar. Recyclable does not — it goes to a sorting yard, where people separate paper, plastic and metal by hand. Getting the stream right at the bin is what decides whether that work is possible at all, which is why the category is recorded against every bin rather than inferred later.",
+    bn: "সাধারণ বর্জ্য যায় আমিন বাজারে। পুনর্ব্যবহারযোগ্য বর্জ্য যায় বাছাই কেন্দ্রে, যেখানে মানুষ হাতে কাগজ, প্লাস্টিক ও ধাতু আলাদা করেন। বিনেই সঠিক ধারা বেছে নেওয়ার উপরেই নির্ভর করে সেই কাজ আদৌ সম্ভব কি না — তাই প্রতিটি বিনের সঙ্গে ধারাটি নথিভুক্ত থাকে।",
+  },
+  "streams.yardAlt": {
+    en: "Recovered plastic being sorted by hand at a yard",
+    bn: "বাছাই কেন্দ্রে হাতে প্লাস্টিক আলাদা করা হচ্ছে",
+  },
+  "streams.note": {
+    en: "Stream names, colours and handling notes are read from the waste-category table, not written into this page — change one in the database and it changes here.",
+    bn: "ধারার নাম, রঙ ও নির্দেশনা ডেটাবেসের ওয়েস্ট-ক্যাটাগরি টেবিল থেকে আসে, এই পাতায় লেখা নেই — ডেটাবেসে বদলালে এখানেও বদলাবে।",
+  },
+
   /* ── live wire (landing ticker) ──────────────────────────────────────── */
   "wire.label": { en: "Live wire", bn: "লাইভ ওয়্যার" },
   "wire.critical": { en: "Bins over the critical line", bn: "সংকটসীমা পেরোনো বিন" },

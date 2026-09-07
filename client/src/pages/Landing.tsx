@@ -34,6 +34,7 @@ import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
 import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { Figure, type SceneName } from "@/components/media/Figure";
+import { BinStreams } from "@/components/landing/BinStreams";
 import { NewsWire } from "@/components/landing/NewsWire";
 import { RouteEngineSection } from "@/components/landing/RouteEngineSection";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
@@ -53,15 +54,16 @@ interface Overview {
 /**
  * The four moments of a collection cycle.
  *
- * `src` is intentionally empty: each slot renders an original illustration
- * until a real photograph is dropped into `client/public/images/`. Fill in a
- * filename here once you have one — see that folder's README.
+ * Each `src` names the file the slot will use. Until that file exists in
+ * `client/public/images/`, `Figure` catches the load error and draws its
+ * original illustration instead — so naming them up front costs nothing and
+ * the page is never broken by a missing photograph. See that folder's README.
  */
 const GALLERY: { scene: SceneName; src?: string; k: string; b: string }[] = [
-  { scene: "overflow", src: undefined, k: "gallery.g1", b: "gallery.g1b" },
-  { scene: "report", src: undefined, k: "gallery.g2", b: "gallery.g2b" },
-  { scene: "route", src: undefined, k: "gallery.g3", b: "gallery.g3b" },
-  { scene: "collected", src: undefined, k: "gallery.g4", b: "gallery.g4b" },
+  { scene: "overflow", src: "bin-overflow.jpg", k: "gallery.g1", b: "gallery.g1b" },
+  { scene: "report", src: "citizen-report.jpg", k: "gallery.g2", b: "gallery.g2b" },
+  { scene: "route", src: "truck-route.jpg", k: "gallery.g3", b: "gallery.g3b" },
+  { scene: "collected", src: "bin-collected.jpg", k: "gallery.g4", b: "gallery.g4b" },
 ];
 
 export default function Landing() {
@@ -431,6 +433,9 @@ export default function Landing() {
 
           <p className="gallery-note">{t("gallery.note")}</p>
         </section>
+
+        {/* ── Which bin ───────────────────────────────────────────────── */}
+        <BinStreams />
 
         {/* ── A day in the ward ───────────────────────────────────────── */}
         <section className="day-section reveal" id="a-day">

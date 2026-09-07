@@ -161,9 +161,42 @@ binRoutes.get("/wards/:id/zones", async c => {
   return c.json({ zones: rows });
 });
 
+/**
+ * The waste streams, each with how many active bins currently carry it and how
+ * full they are on average.
+ *
+ * The landing page's segregation section renders straight off this, so the
+ * stream colours, the Bangla names, the handling notes and the counts all come
+ * from the database rather than being retyped into the markup — which is the
+ * same claim the rest of the site makes about its numbers.
+ */
 binRoutes.get("/waste-categories", async c => {
-  const rows = await db.select().from(wasteCategories).orderBy(wasteCategories.categoryName);
-  return c.json({ categories: rows });
+  const rows = await db
+    .select({
+      wasteCategoryId: wasteCategories.wasteCategoryId,
+      categoryName: wasteCategories.categoryName,
+      categoryNameBn: wasteCategories.categoryNameBn,
+      handlingNotes: wasteCategories.handlingNotes,
+      isHazardous: wasteCategories.isHazardous,
+      colorHex: wasteCategories.colorHex,
+      binCount: sql<number>`count(${bins.binId})`,
+      avgFill: sql<number>`coalesce(avg(${bins.currentFillPercent}), 0)`,
+    })
+    .from(wasteCategories)
+    .leftJoin(
+      bins,
+      and(eq(bins.wasteCategoryId, wasteCategories.wasteCategoryId), eq(bins.operationalStatus, "active"))
+    )
+    .groupBy(wasteCategories.wasteCategoryId)
+    .orderBy(wasteCategories.wasteCategoryId);
+
+  return c.json({
+    categories: rows.map(r => ({
+      ...r,
+      binCount: Number(r.binCount),
+      avgFill: Math.round(Number(r.avgFill) * 10) / 10,
+    })),
+  });
 });
 
 /** Bins predicted to overflow within `hours`, most urgent first. */

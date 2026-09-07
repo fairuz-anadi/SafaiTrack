@@ -81,9 +81,19 @@ if (existsSync(publicDir)) {
   app.use("/assets/*", serveStatic({ root: "./dist/public" }));
   app.use("/*", serveStatic({ root: "./dist/public" }));
   // Client-side routing: anything not matched above returns the SPA shell.
+  //
+  // Except a request that is plainly for a file. A missing photograph used to
+  // come back as the SPA shell with a 200, so the browser downloaded a page of
+  // HTML, tried to decode it as a JPEG, and only then fired `error` — which is
+  // why an empty image slot flashed a broken-image icon before its fallback
+  // illustration appeared. A path with a file extension is never a client
+  // route, so it gets an honest 404 and the failure is immediate.
+  const ASSET_PATH = /\.[a-z0-9]{2,5}$/i;
   const indexHtml = resolve(publicDir, "index.html");
   app.get("*", c => {
-    if (c.req.path.startsWith("/api")) return c.json({ error: "Not found" }, 404);
+    const path = c.req.path;
+    if (path.startsWith("/api")) return c.json({ error: "Not found" }, 404);
+    if (ASSET_PATH.test(path)) return c.text("Not found", 404);
     return c.html(readFileSync(indexHtml, "utf-8"));
   });
 }

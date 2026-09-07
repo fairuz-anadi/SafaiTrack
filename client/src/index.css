@@ -3007,3 +3007,189 @@ html[data-lang="bn"] .final-cta h2 em {
 .engine-section {
   background: linear-gradient(180deg, #17211e 0%, #101f1a 34%, #0c211c 100%);
 }
+
+/* ── Waste streams / segregation section ─────────────────────────────────────
+   Four cards, each tinted by `--stream` — the `colorHex` its row carries in
+   the database. Nothing here hardcodes a colour, so a stream recoloured in the
+   waste-category table recolours its card, its swatch, its wash and its
+   hover shadow together. */
+.streams-section { max-width: 1184px; margin: 0 auto; padding: 0 6vw 92px; }
+.streams-head { max-width: 62ch; margin-bottom: 34px; }
+.streams-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(30px, 3.6vw, 43px);
+  letter-spacing: -.03em;
+  line-height: 1.02;
+  margin: 12px 0 16px;
+}
+.streams-head h2 em { font-style: normal; color: var(--lime-deep); }
+.streams-head > p:last-child {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.streams-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.stream-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  /* Plain first, then the tinted version. An engine without `color-mix` drops
+     the second declaration as invalid and keeps a clean white card rather than
+     a transparent one. */
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcf8 100%);
+  /* `color-mix` keeps the wash tied to the one colour the row supplies, so a
+     stream cannot end up with a tint that disagrees with its own swatch. */
+  background:
+    linear-gradient(170deg, color-mix(in srgb, var(--stream) 16%, transparent) 0%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, #ffffff 0%, #fbfcf8 100%);
+  box-shadow: var(--shadow);
+  transition: transform .26s cubic-bezier(.2, .7, .3, 1), box-shadow .26s ease, border-color .26s ease;
+}
+.stream-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--stream);
+  border-color: color-mix(in srgb, var(--stream) 55%, transparent);
+  box-shadow: 0 18px 40px rgba(39, 55, 43, .12);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--stream) 22%, transparent);
+}
+
+/* The photograph (or its stand-in illustration) is the top of the card, so it
+   loses the figure's own rounding and border and takes the card's instead. */
+.stream-card .stream-figure .figure-frame {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  background: color-mix(in srgb, var(--stream) 8%, var(--paper));
+}
+
+/* A column, so the live figures can be pushed to the bottom edge — the four
+   handling notes are different lengths and the meta rows were landing at four
+   different heights, which made the row look untidy. */
+.stream-body { position: relative; display: flex; flex-direction: column; padding: 18px 18px 20px; flex: 1; }
+.stream-swatch {
+  display: block;
+  width: 34px;
+  height: 5px;
+  border-radius: 3px;
+  margin-bottom: 13px;
+  background: var(--stream);
+}
+.stream-body strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+.stream-body > small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+.stream-body p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.stream-meta {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.stream-meta b {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 4px;
+}
+
+/* Medical waste is the one stream a resident must never put anything into, so
+   it says so on the card rather than relying on the colour alone. */
+.stream-flag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--stream);
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(23, 33, 30, .18);
+}
+
+.streams-note {
+  max-width: 72ch;
+  margin: 24px 0 0;
+  color: #9aa49e;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+@media (max-width: 1000px) { .streams-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .streams-grid { grid-template-columns: 1fr; } }
+
+/* The stream cards answer "which bin"; this answers "and then what". A wide
+   figure beside the copy, because the yard is the part of the system nobody
+   sees from the footpath. */
+.streams-outro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 40px;
+  margin-top: 34px;
+  padding: 26px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(120deg, rgba(104, 165, 232, .1) 0%, rgba(255, 255, 255, 0) 58%), var(--surface);
+}
+.streams-outro h3 {
+  margin: 12px 0 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+}
+.streams-outro > div > p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.streams-yard .figure-frame { border-radius: var(--radius-sm); }
+
+@media (max-width: 860px) {
+  .streams-outro { grid-template-columns: 1fr; gap: 22px; padding: 20px; }
+}
+
+/* The photograph sits over its illustration and is only revealed once it has
+   decoded, so an empty slot can never show a broken-image frame. */
+.figure-frame { position: relative; }
+.figure-frame .figure-photo {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .3s ease, transform .5s cubic-bezier(.2, .7, .3, 1);
+}
+.figure-frame .figure-photo.is-loaded { opacity: 1; }

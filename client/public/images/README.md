@@ -6,15 +6,33 @@ by a missing file.
 
 ## Filenames the site looks for
 
+### "On the ground" — the four moments of a collection cycle
+
 | File | Slot |
 |---|---|
 | `bin-overflow.jpg` | An overflowing bin on a Dhaka street |
-| `truck-route.jpg` | A collection truck working a route |
 | `citizen-report.jpg` | Someone reporting a bin on a phone |
+| `truck-route.jpg` | A collection truck working a route |
 | `bin-collected.jpg` | The same spot after collection |
 
-Then set the filename in `client/src/pages/Landing.tsx` — look for the
-`GALLERY` constant and fill in the `src` field.
+### "Four streams, four bins" — the segregation section
+
+One photograph per waste stream. The stream a file belongs to is decided by
+the `categoryName` in the `waste_categories` table, not by the file itself, so
+these four names are fixed:
+
+| File | Stream |
+|---|---|
+| `bin-general.jpg` | General waste — the green stream |
+| `bin-organic.jpg` | Organic waste — kitchen and market waste |
+| `bin-recyclable.jpg` | Recyclable — paper, plastic, metal |
+| `bin-medical.jpg` | Medical waste — hazardous, licensed handlers only |
+| `sorting-yard.jpg` | The sorting yard where the recyclable stream ends |
+
+Every filename above is already wired up. Drop a file in with the right name
+and it appears on the next reload; no code change is needed. Until then the
+slot draws its own illustration, which for the stream cards is a bin in that
+stream's database colour.
 
 ## Use your own photographs
 
