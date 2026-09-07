@@ -2993,3 +2993,17 @@ html[data-lang="bn"] .final-cta h2 em {
   .wire-item { padding: 0 14px; }
   .wire-item:after { margin-left: 14px; }
 }
+
+/* ── The dark-on-dark seam ───────────────────────────────────────────────────
+   `.city-section` and the route engine sit directly against each other, and
+   they were painted in two different darks: #17211e, the brand ink used by
+   every other dark block on the site, and #0c211c, a colder and deeper green
+   belonging to nothing else. Where they met, the page showed a hard horizontal
+   band that read as a mistake rather than a section change.
+
+   The engine now starts on the ink and settles into its own depth over the
+   first third of the section, so the join is invisible and the panel still
+   gets the darker ground its terminal styling was designed for. */
+.engine-section {
+  background: linear-gradient(180deg, #17211e 0%, #101f1a 34%, #0c211c 100%);
+}
