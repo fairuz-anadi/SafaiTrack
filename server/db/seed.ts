@@ -245,6 +245,13 @@ async function main() {
     await db.delete(table);
   }
 
+  // Reset AUTOINCREMENT counters so a reseed always produces the same ids.
+  // Deleting rows alone leaves sqlite_sequence intact, which is why repeated
+  // seeding used to push bin ids into the hundreds. Doing it this way also
+  // avoids deleting the database file, which Windows refuses while the server
+  // holds it open.
+  await db.run(sql`delete from sqlite_sequence`);
+
   console.log("→ Wards and zones…");
   const wardIdByCode = new Map<string, number>();
   for (const w of WARD_SEED) {

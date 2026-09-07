@@ -29,6 +29,8 @@ npm run setup
 ```
 
 Do this again the morning of the event so the judges see predictable numbers.
+It is safe to run with the server still going, and it resets the id counters,
+so bins are always `1-32` and every screenshot you took still matches.
 
 ### Step 3 — Start it
 
