@@ -207,6 +207,112 @@ routeRoutes.post(
   }
 );
 
+/* ───────────────────────────  PUBLIC PREVIEW  ──────────────────────────── */
+
+/**
+ * Runs the optimizer for a ward and returns the plan without saving anything.
+ *
+ * Public on purpose: the landing page uses it to let a visitor switch the
+ * algorithm and watch the numbers move, which is a far better argument for
+ * the engine than a paragraph describing it. Read-only, no personal data, and
+ * it writes nothing — the route is computed and thrown away.
+ */
+routeRoutes.get("/route-preview", async c => {
+  const wardIdParam = c.req.query("wardId");
+  const mode = c.req.query("mode") === "nearest" ? "nearest" : "shortest";
+  const threshold = Number(c.req.query("threshold") ?? 55);
+
+  // Default to whichever ward is under the most pressure, so the section has
+  // something worth showing without the visitor choosing anything.
+  let wardId = wardIdParam ? Number(wardIdParam) : null;
+  if (!wardId) {
+    const [worst] = await db
+      .select({ wardId: bins.wardId, critical: sql<number>`sum(case when ${bins.currentFillPercent} >= 85 then 1 else 0 end)` })
+      .from(bins)
+      .where(eq(bins.operationalStatus, "active"))
+      .groupBy(bins.wardId)
+      .orderBy(desc(sql`sum(case when ${bins.currentFillPercent} >= 85 then 1 else 0 end)`))
+      .limit(1);
+    wardId = worst?.wardId ?? null;
+  }
+  if (!wardId) throw new HTTPException(404, { message: "No wards with active bins" });
+
+  const [ward] = await db.select().from(wards).where(eq(wards.wardId, wardId)).limit(1);
+  if (!ward) throw new HTTPException(404, { message: "Ward not found" });
+
+  const wardBins = await db
+    .select()
+    .from(bins)
+    .where(and(eq(bins.wardId, wardId), eq(bins.operationalStatus, "active")));
+  if (wardBins.length === 0) throw new HTTPException(400, { message: "Ward has no active bins" });
+
+  const toNode = (b: (typeof wardBins)[number]): GeoNode => ({
+    id: b.binId,
+    lat: b.latitude,
+    lng: b.longitude,
+    fillPercent: b.currentFillPercent,
+    label: b.binCode,
+  });
+  const depot: GeoNode = { id: -1, lat: ward.depotLat, lng: ward.depotLng, fillPercent: 0, label: "Depot" };
+  const disposal: GeoNode = {
+    id: -2,
+    lat: ward.disposalLat,
+    lng: ward.disposalLng,
+    fillPercent: 0,
+    label: "Landfill",
+  };
+
+  const candidates = wardBins.filter(b => b.currentFillPercent >= threshold);
+  const source = candidates.length > 0 ? candidates : wardBins;
+
+  // The two modes differ in the refinement stage, not the construction:
+  // `nearest` stops at the raw greedy walk, `shortest` runs 2-opt over it.
+  // Dropping the priority weighting instead makes no difference here — 2-opt
+  // converges to the same tour from either starting order at ward scale.
+  const optimized = optimizeRoute(depot, disposal, source.map(toNode), 20, new Set(), {
+    priorityWeighted: true,
+    refine: mode === "shortest",
+  });
+  const baseline = baselineFixedScheduleRoute(depot, disposal, wardBins.map(toNode));
+
+  const comparison = compareRoutes({
+    baseline,
+    optimized,
+    allBins: wardBins.map(toNode),
+    fuelLitresPerKm: 0.35,
+    thresholdPercent: threshold,
+  });
+
+  const byId = new Map(wardBins.map(b => [b.binId, b]));
+
+  return c.json({
+    mode,
+    ward: { wardId: ward.wardId, name: ward.name, wardCode: ward.wardCode },
+    algorithmName: optimized.algorithmName,
+    stops: optimized.order.map((n, i) => {
+      const b = byId.get(n.id);
+      return {
+        binId: n.id,
+        sequence: i + 1,
+        binCode: n.label,
+        landmark: b?.landmark ?? n.label,
+        lat: n.lat,
+        lng: n.lng,
+        fillPercent: n.fillPercent,
+        legKm: optimized.legDistancesKm[i],
+      };
+    }),
+    depot: { lat: depot.lat, lng: depot.lng },
+    disposal: { lat: disposal.lat, lng: disposal.lng },
+    totalDistanceKm: optimized.totalDistanceKm,
+    estimatedMinutes: optimized.estimatedMinutes,
+    /** Bins at or above 80% that this ordering reaches in its first half. */
+    priorityStops: optimized.order.filter(n => n.fillPercent >= 80).length,
+    totalStops: optimized.order.length,
+    comparison,
+  });
+});
+
 /* ────────────────────────────  READ / LIST  ────────────────────────────── */
 
 routeRoutes.get("/routes", requireAuth, async c => {

@@ -33,6 +33,7 @@ import {
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { BrandLockup, BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
 import { Figure, type SceneName } from "@/components/media/Figure";
+import { RouteEngineSection } from "@/components/landing/RouteEngineSection";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -392,6 +393,8 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        <RouteEngineSection />
 
         {/* ── On the ground ───────────────────────────────────────────── */}
         <section className="gallery-section reveal" id="on-the-ground">

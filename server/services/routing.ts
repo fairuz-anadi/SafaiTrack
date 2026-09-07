@@ -143,12 +143,28 @@ function effectiveCost(distanceKm: number, fillPercent: number): number {
   return distanceKm / urgency;
 }
 
+/**
+ * Which parts of the optimizer to run.
+ *
+ * Exposed because the two stages answer different questions, and being able
+ * to switch them off is how the difference gets *shown* rather than asserted:
+ * with `priorityWeighted` off the tour is a plain distance-greedy walk, which
+ * is shorter but leaves the fullest bins for last.
+ */
+export interface OptimizeOptions {
+  /** Divide edge cost by fill urgency, pulling near-full bins forward. */
+  priorityWeighted?: boolean;
+  /** Run the 2-opt improvement pass over the constructed tour. */
+  refine?: boolean;
+}
+
 /** Greedy nearest-neighbour tour construction from the depot. */
 function nearestNeighbourOrder(
   matrix: number[][],
   nodes: GeoNode[],
   depotIndex: number,
-  stopIndices: number[]
+  stopIndices: number[],
+  priorityWeighted = true
 ): number[] {
   const remaining = new Set(stopIndices);
   const order: number[] = [];
@@ -158,7 +174,9 @@ function nearestNeighbourOrder(
     let bestIdx = -1;
     let bestCost = Infinity;
     for (const candidate of remaining) {
-      const cost = effectiveCost(matrix[current][candidate], nodes[candidate].fillPercent);
+      const cost = priorityWeighted
+        ? effectiveCost(matrix[current][candidate], nodes[candidate].fillPercent)
+        : matrix[current][candidate];
       if (cost < bestCost) {
         bestCost = cost;
         bestIdx = candidate;
@@ -238,15 +256,26 @@ export function optimizeRoute(
   disposal: GeoNode,
   candidates: GeoNode[],
   maxStops = 20,
-  blockedPairs: Set<string> = new Set()
+  blockedPairs: Set<string> = new Set(),
+  opts: OptimizeOptions = {}
 ): OptimizedRoute {
+  const priorityWeighted = opts.priorityWeighted ?? true;
+  const refine = opts.refine ?? true;
+  const algorithmName = [
+    "dijkstra",
+    priorityWeighted ? "priority-nn" : "nn",
+    refine ? "2opt" : null,
+  ]
+    .filter(Boolean)
+    .join("+");
+
   if (candidates.length === 0) {
     return {
       order: [],
       legDistancesKm: [],
       totalDistanceKm: 0,
       estimatedMinutes: 0,
-      algorithmName: "dijkstra+nn+2opt",
+      algorithmName,
     };
   }
 
@@ -262,8 +291,10 @@ export function optimizeRoute(
   const stopIndices = selected.map((_, i) => i + 1);
 
   const matrix = buildDistanceMatrix(nodes, blockedPairs);
-  const greedy = nearestNeighbourOrder(matrix, nodes, depotIndex, stopIndices);
-  const refined = twoOptImprove(matrix, greedy, depotIndex, disposalIndex);
+  const greedy = nearestNeighbourOrder(matrix, nodes, depotIndex, stopIndices, priorityWeighted);
+  const refined = refine
+    ? twoOptImprove(matrix, greedy, depotIndex, disposalIndex)
+    : greedy;
 
   // Walk the final tour to collect per-leg distances.
   const legDistancesKm: number[] = [];
@@ -285,7 +316,7 @@ export function optimizeRoute(
     legDistancesKm,
     totalDistanceKm: round2(totalDistanceKm),
     estimatedMinutes: Math.round(drivingMinutes + servicingMinutes),
-    algorithmName: "dijkstra+nn+2opt",
+    algorithmName,
   };
 }
 
