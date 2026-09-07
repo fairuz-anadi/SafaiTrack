@@ -971,7 +971,10 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 .wordmark {
   font-family: 'Space Grotesk', sans-serif;
   line-height: 1;
-  letter-spacing: -.022em;
+  /* Open, not condensed. The name was set at -.022em and its glyphs came out
+     33px narrower than the tagline beneath it, which made the whole lockup
+     read pinched — a masthead should be the widest thing in its own block. */
+  letter-spacing: .004em;
   white-space: nowrap;
   display: inline-block;
 }
@@ -979,8 +982,9 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 .wordmark .wm-track {
   font-weight: 400;
   color: var(--lime-deep);
-  /* Small optical nudge on top of the real space character. */
-  margin-left: .06em;
+  /* A visible gap on top of the real space character: the two words should
+     never re-fuse into "SafaiTrack" at a glance. */
+  margin-left: .16em;
 }
 .wordmark.on-dark .wm-safai { color: #f3f7ef; }
 .wordmark.on-dark .wm-track { color: var(--lime); }
@@ -989,15 +993,20 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 .brand-lockup-v2 {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: 13px;
   text-decoration: none;
 }
 .brand-lockup-v2 svg { flex-shrink: 0; }
 .brand-lockup-v2 .brand-text { display: flex; flex-direction: column; gap: 3px; }
+.brand-lockup-v2 .brand-text { gap: 4px; min-width: 0; }
+/* The wider name leaves the sidebar only a few px of slack, and one call site
+   feeds a user's name in as the tagline. Let the tagline clip rather than
+   push the lockup past its container. */
+.brand-lockup-v2 .brand-text small { overflow: hidden; text-overflow: ellipsis; }
 .brand-lockup-v2 .brand-text small {
   font-family: 'DM Mono', monospace;
   font-size: 8.5px;
-  letter-spacing: .13em;
+  letter-spacing: .152em;
   text-transform: uppercase;
   color: var(--muted);
   white-space: nowrap;

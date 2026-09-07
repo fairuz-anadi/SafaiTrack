@@ -121,7 +121,7 @@ export function BrandLockup({
     <span className={`brand-lockup-v2 ${className ?? ""}`}>
       <BrandMark size={size} tone={tone} />
       <span className="brand-text">
-        <Wordmark size={size * 0.56} tone={tone === "dark" ? "paper" : "ink"} />
+        <Wordmark size={size * 0.74} tone={tone === "dark" ? "paper" : "ink"} />
         {tagline && <small>{tagline}</small>}
       </span>
     </span>
