@@ -96,34 +96,47 @@ npm run db:seed
 Then **delete or comment out those lines in `.env`** so your laptop demo goes
 back to the local file. You do not want the venue demo depending on Turso.
 
-#### Step 4 — Create the Render web service
+#### Step 4 — Create the Render service from the blueprint
 
-At [render.com](https://render.com) → **New → Web Service** → connect your repo.
+The repo contains `render.yaml`, so Render can configure the whole service
+itself. At [render.com](https://render.com):
+
+**New → Blueprint → connect the SafaiTrack repo → Apply.**
+
+Render reads `render.yaml` and creates a free Node web service in the
+Singapore region, with the health check and build command already set. It
+prompts for the two Turso values; `JWT_SECRET` it generates itself, so no
+secret ever passes through your clipboard or the repo.
+
+| Prompted for | Paste |
+|---|---|
+| `DATABASE_URL` | your `libsql://…` URL from step 2 |
+| `DATABASE_AUTH_TOKEN` | your Turso token |
+| `ANTHROPIC_API_KEY` | *optional — leave blank and the offline advisor runs* |
+
+#### If you configure it by hand instead
+
+**New → Web Service**, runtime Node, instance type Free:
 
 | Field | Value |
 |---|---|
-| Runtime | Node |
-| Build command | `npm install && npm run build` |
+| Build command | `npm install --include=dev && npm run build` |
 | Start command | `npm start` |
-| Instance type | Free |
+| Health check path | `/api/health` |
 
-#### Step 5 — Add environment variables in Render
+> **`--include=dev` is required, not optional.** Render sets
+> `NODE_ENV=production` on Node services, which makes `npm install` skip
+> devDependencies — and vite, esbuild, typescript and the Tailwind plugin all
+> live there. Without the flag the build fails with `vite: not found`. Do not
+> add `NODE_ENV` as an env var yourself; Render already sets it.
 
-| Key | Value |
-|---|---|
-| `DATABASE_URL` | your `libsql://…` URL |
-| `DATABASE_AUTH_TOKEN` | your Turso token |
-| `JWT_SECRET` | a long random string — **generate a new one** |
-| `NODE_ENV` | `production` |
-| `ANTHROPIC_API_KEY` | *(optional — omit and the offline advisor runs)* |
-
-Generate a secret:
+Then add `DATABASE_URL`, `DATABASE_AUTH_TOKEN` and a `JWT_SECRET` of your own:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
-#### Step 6 — Deploy and check
+#### Step 5 — Deploy and check
 
 Render gives you `https://safaitrack.onrender.com`. Confirm:
 
