@@ -3,8 +3,10 @@
  *
  * Three layers of behaviour, each earning its keep:
  *
- *   · At rest it is exactly the static `BrandMark` — a logo that squirms
- *     unprompted is a distraction, so nothing moves until you approach it.
+ *   · On arrival it pops: a spring in from small and rotated, one ring off
+ *     the edge, and then a slow idle breath. A mark that never moves is a
+ *     mark nobody discovers is interactive — but the idle motion is a five
+ *     second cycle of two and a half pixels, which is a pulse, not a squirm.
  *   · On hover the badge tilts toward the pointer in 3D, the lid lifts off
  *     the bin, and the two signal arcs sweep out. That is the product's
  *     thesis acted out: an ordinary bin that opens up and reports.
@@ -37,8 +39,12 @@ export function InteractiveLogo({ size = 34, tone = "light", popover = true, cla
   const { t } = useI18n();
   const hostRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  /** Bumped on every click so each burst remounts and replays its animation. */
-  const [burst, setBurst] = useState(0);
+  /**
+   * Bumped on every click so each burst remounts and replays its animation.
+   * It starts at 1 rather than 0: the mark should announce itself once when
+   * the page paints, which is the only moment every visitor is looking at it.
+   */
+  const [burst, setBurst] = useState(1);
 
   const setTilt = useCallback((x: number, y: number) => {
     const el = hostRef.current;
@@ -97,35 +103,39 @@ export function InteractiveLogo({ size = 34, tone = "light", popover = true, cla
         aria-label={t("brand.markLabel")}
         aria-expanded={popover ? open : undefined}
       >
-        <span className="logo-live-tilt">
-          {/* Rings live behind the badge so they read as signal, not outline. */}
-          <span className="logo-halo" aria-hidden="true" />
-          <BrandMark size={size} tone={tone} className="logo-live-mark" />
-          {/* The lid is redrawn on top so it can lift independently of the
-              body. It matches the mark's own lid geometry exactly. */}
-          <svg
-            className="logo-live-lid"
-            width={size}
-            height={size}
-            viewBox="0 0 40 40"
-            fill="none"
-            aria-hidden="true"
-          >
-            <rect
-              x="8.4"
-              y="15.2"
-              width="15.4"
-              height="3.3"
-              rx="1.65"
-              fill={tone === "dark" ? "#17211e" : "#f7f8f3"}
-            />
-            <path
-              d="M13.9 15.2v-1.5a1.5 1.5 0 0 1 1.5-1.5h1.4a1.5 1.5 0 0 1 1.5 1.5v1.5"
-              stroke={tone === "dark" ? "#17211e" : "#f7f8f3"}
-              strokeWidth="1.9"
-              strokeLinecap="round"
-            />
-          </svg>
+        <span className="logo-live-idle">
+          <span className="logo-live-tilt">
+            {/* Rings live behind the badge so they read as signal, not outline. */}
+            <span className="logo-halo" aria-hidden="true" />
+            {/* A slow repeating ping — the bin is still reporting. */}
+            <span className="logo-ping" aria-hidden="true" />
+            <BrandMark size={size} tone={tone} className="logo-live-mark" />
+            {/* The lid is redrawn on top so it can lift independently of the
+                body. It matches the mark's own lid geometry exactly. */}
+            <svg
+              className="logo-live-lid"
+              width={size}
+              height={size}
+              viewBox="0 0 40 40"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="8.4"
+                y="15.2"
+                width="15.4"
+                height="3.3"
+                rx="1.65"
+                fill={tone === "dark" ? "#17211e" : "#f7f8f3"}
+              />
+              <path
+                d="M13.9 15.2v-1.5a1.5 1.5 0 0 1 1.5-1.5h1.4a1.5 1.5 0 0 1 1.5 1.5v1.5"
+                stroke={tone === "dark" ? "#17211e" : "#f7f8f3"}
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
         </span>
 
         {burst > 0 && (

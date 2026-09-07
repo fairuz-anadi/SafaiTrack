@@ -134,7 +134,7 @@ export default function DriverRoute() {
 
         {active && (
           <>
-            <p style={{ color: "rgba(243,247,239,.66)", fontSize: 13.5, margin: "0 0 14px" }}>
+            <p style={{ color: "rgba(243,247,239,.66)", fontSize: 15.5, margin: "0 0 14px" }}>
               {active.wardName} · {active.optimizedStopCount} {t("common.stops")} ·{" "}
               {active.totalDistanceKm} km ·{" "}
               {duration(active.estimatedMinutes)}
@@ -165,7 +165,7 @@ export default function DriverRoute() {
             {t("driver.noRouteBody")}
           </p>
           {routes.length > 0 && (
-            <p style={{ marginTop: 18, fontSize: 12.5 }}>
+            <p style={{ marginTop: 18, fontSize: 14 }}>
               {routes.filter(r => r.status === "completed").length} {t("driver.completedBefore")}
             </p>
           )}
@@ -227,7 +227,7 @@ export default function DriverRoute() {
 
       {active && active.status === "in_progress" && collected === stops.length && stops.length > 0 && (
         <div className="driver-bar">
-          <span style={{ fontSize: 13.5, color: "var(--lime-deep)", fontWeight: 600 }}>
+          <span style={{ fontSize: 15.5, color: "var(--lime-deep)", fontWeight: 600 }}>
             <CheckCircle2 size={15} style={{ verticalAlign: -3, marginRight: 6 }} />
             {t("driver.routeComplete")} ({stops.length})
           </span>

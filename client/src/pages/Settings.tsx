@@ -65,7 +65,7 @@ export default function Settings() {
               ))}
             </div>
 
-            <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "14px 0 0", lineHeight: 1.65 }}>
+            <p style={{ fontSize: 14, color: "var(--muted)", margin: "14px 0 0", lineHeight: 1.65 }}>
               {t("settings.langNote")}
             </p>
           </div>
@@ -131,7 +131,7 @@ export default function Settings() {
               </div>
               <div>
                 <span>{t("auth.email")}</span>
-                <b style={{ fontSize: 12.5 }}>{user.email}</b>
+                <b style={{ fontSize: 14 }}>{user.email}</b>
               </div>
               <div>
                 <span>{t("settings.role")}</span>

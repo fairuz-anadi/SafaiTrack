@@ -161,7 +161,7 @@ export default function RoutesPage() {
           </button>
         </div>
 
-        <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "2px 0 0", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 14, color: "var(--muted)", margin: "2px 0 0", lineHeight: 1.6 }}>
           {t("routes.eligibilityNote")}
         </p>
 
@@ -232,7 +232,7 @@ export default function RoutesPage() {
                         <b style={{ color: "var(--lime-deep)" }}>−{saved.toFixed(1)}%</b>
                       </td>
                       <td className="num">{duration(r.estimatedMinutes)}</td>
-                      <td style={{ fontSize: 12.5 }}>
+                      <td style={{ fontSize: 14 }}>
                         {r.driverName ? (
                           <>
                             {r.driverName}
@@ -243,7 +243,7 @@ export default function RoutesPage() {
                           <span style={{ color: "var(--muted)" }}>{t("routes.unassigned")}</span>
                         )}
                       </td>
-                      <td style={{ color: "var(--muted)", fontSize: 12.5 }}>
+                      <td style={{ color: "var(--muted)", fontSize: 14 }}>
                         {dateTime(r.generatedAt)}
                       </td>
                       <td>

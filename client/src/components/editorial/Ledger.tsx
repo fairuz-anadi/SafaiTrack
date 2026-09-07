@@ -77,7 +77,7 @@ export function LogCard({
       </div>
 
       {rows.length === 0 ? (
-        <p style={{ padding: "18px 0 20px", fontSize: 12.5, color: "#8a8474", margin: 0 }}>
+        <p style={{ padding: "18px 0 20px", fontSize: 14, color: "#8a8474", margin: 0 }}>
           {empty}
         </p>
       ) : (

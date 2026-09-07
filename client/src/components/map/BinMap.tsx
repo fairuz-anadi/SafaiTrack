@@ -157,7 +157,7 @@ export function BinMap({
             eventHandlers={{ click: () => onSelectBin?.(bin) }}
           >
             <Popup>
-              <strong style={{ fontSize: 13 }}>{bin.binCode}</strong>
+              <strong style={{ fontSize: 15 }}>{bin.binCode}</strong>
               <br />
               {bin.landmark}
               <br />

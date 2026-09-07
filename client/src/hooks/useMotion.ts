@@ -50,8 +50,13 @@ export function useCountUp(target: number, durationMs = 900, decimals = 0): stri
  * Adds `is-visible` to an element the first time it scrolls into view, so CSS
  * can stagger a reveal. Returns a ref to attach to the container; every
  * descendant carrying `.reveal` is observed.
+ *
+ * `resetKey` re-runs the scan. The app shell keys its page container on the
+ * current route, so the container node is replaced on every navigation — the
+ * observer has to be rebuilt against the new one or the incoming page's
+ * `.reveal` blocks would sit at opacity 0 forever.
  */
-export function useRevealOnScroll<T extends HTMLElement>() {
+export function useRevealOnScroll<T extends HTMLElement>(resetKey?: unknown) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
@@ -80,7 +85,7 @@ export function useRevealOnScroll<T extends HTMLElement>() {
 
     targets.forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [resetKey]);
 
   return ref;
 }

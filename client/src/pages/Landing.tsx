@@ -34,6 +34,7 @@ import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
 import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { Figure, type SceneName } from "@/components/media/Figure";
+import { NewsWire } from "@/components/landing/NewsWire";
 import { RouteEngineSection } from "@/components/landing/RouteEngineSection";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
 import { api } from "@/lib/api";
@@ -111,7 +112,7 @@ export default function Landing() {
       }}
     >
       <header className="public-nav">
-        <LiveBrandLockup size={34} className="public-brand" />
+        <LiveBrandLockup size={40} className="public-brand" />
 
         <nav className={`public-links ${mobileOpen ? "open" : ""}`}>
           <Link href="/about" onClick={() => setMobileOpen(false)}>
@@ -272,6 +273,8 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        <NewsWire />
 
         <section className="outcomes-strip reveal" id="impact">
           {outcomes.map((item, index) => (
@@ -482,7 +485,11 @@ export default function Landing() {
               { icon: Zap, k: "cap.c5", b: "cap.c5b", tone: "lime" },
               { icon: Bot, k: "cap.c6", b: "cap.c6b", tone: "blue" },
             ].map((c, i) => (
-              <div className="cap-card glow lift" key={c.k} style={{ "--i": i } as React.CSSProperties}>
+              <div
+                className={`cap-card cap-${c.tone} glow lift`}
+                key={c.k}
+                style={{ "--i": i } as React.CSSProperties}
+              >
                 <span className={`cap-icon ${c.tone}`}>
                   <c.icon size={18} />
                 </span>

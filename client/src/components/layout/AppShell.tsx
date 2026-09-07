@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
+import { useRevealOnScroll } from "@/hooks/useMotion";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
@@ -119,6 +120,10 @@ export function AppShell({
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(0);
   const [counts, setCounts] = useState<SidebarCounts | null>(null);
+  /* Scroll reveal used to be a landing-page trick. Observing from the shell
+     means any signed-in page can mark a block `.reveal` and get the same
+     behaviour without wiring its own observer. */
+  const revealRef = useRevealOnScroll<HTMLDivElement>(location);
 
   useEffect(() => {
     let cancelled = false;
@@ -195,7 +200,7 @@ export function AppShell({
         <div className="brand-lockup">
           {/* No brand card in here: `.sidebar` is `overflow: hidden`, which would
               clip it. The mark still tilts and bursts. */}
-          <LiveBrandLockup size={34} tone="dark" href="/dashboard" popover={false} />
+          <LiveBrandLockup size={38} tone="dark" href="/dashboard" popover={false} />
         </div>
         <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label={t("common.close")}>
           <X size={18} />
@@ -318,7 +323,7 @@ export function AppShell({
                 <span>{notifications.length}</span>
               </div>
               {notifications.length === 0 && (
-                <p style={{ padding: "14px 4px", color: "var(--muted)", fontSize: 13 }}>
+                <p style={{ padding: "14px 4px", color: "var(--muted)", fontSize: 15 }}>
                   {t("common.nothingYet")}
                 </p>
               )}
@@ -345,7 +350,9 @@ export function AppShell({
           )}
         </header>
 
-        <div className="page-wrap">{children}</div>
+        <div className="page-wrap" key={location} ref={revealRef}>
+          {children}
+        </div>
       </main>
 
       {/* Tapping outside closes the drawer on mobile. */}

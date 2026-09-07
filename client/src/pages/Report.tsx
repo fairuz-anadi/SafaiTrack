@@ -138,7 +138,7 @@ export default function Report() {
               <code
                 style={{
                   fontFamily: "'DM Mono', monospace",
-                  fontSize: 13,
+                  fontSize: 15,
                   background: "rgba(255,255,255,.6)",
                   padding: "3px 8px",
                   borderRadius: 6,
@@ -149,7 +149,7 @@ export default function Report() {
                 BIN {selectedBin?.binCode ?? "W27-B001"} FULL
               </code>
               <br />
-              <span style={{ fontSize: 12.5, opacity: 0.8 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>
                 {t("report.smsBangla")}
               </span>
             </p>
@@ -192,7 +192,7 @@ export default function Report() {
                 border: 0,
                 background: "transparent",
                 outline: "none",
-                fontSize: 14,
+                fontSize: 15.5,
                 padding: "2px 0",
               }}
             >

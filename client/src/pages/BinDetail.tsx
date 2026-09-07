@@ -150,7 +150,7 @@ export default function BinDetail() {
           </div>
           <div className="stat-content">
             <span>{t("bins.lastEmptied")}</span>
-            <strong style={{ fontSize: 21 }}>{relativeTime(bin.lastCollectedAt)}</strong>
+            <strong style={{ fontSize: 22 }}>{relativeTime(bin.lastCollectedAt)}</strong>
             <small className="muted">
               {readings.length} {t("bins.onFile")}
             </small>
@@ -178,20 +178,20 @@ export default function BinDetail() {
                 <CartesianGrid strokeDasharray="3 4" stroke="#e8ece5" vertical={false} />
                 <XAxis
                   dataKey="time"
-                  tick={{ fontSize: 10.5, fill: "#7c8682" }}
+                  tick={{ fontSize: 12.5, fill: "#7c8682" }}
                   axisLine={{ stroke: "#e8ece5" }}
                   tickLine={false}
                   minTickGap={28}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#7c8682" }}
+                  tick={{ fontSize: 13, fill: "#7c8682" }}
                   axisLine={false}
                   tickLine={false}
                   unit="%"
                   domain={[0, 100]}
                 />
                 <Tooltip
-                  contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 12.5 }}
+                  contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 14 }}
                   labelFormatter={(_, payload) =>
                     payload?.[0] ? dateTime(String(payload[0].payload.full)) : ""
                   }
@@ -210,7 +210,7 @@ export default function BinDetail() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "10px 0 0", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0", lineHeight: 1.6 }}>
             {t("bins.chartNote")}
           </p>
         </div>
@@ -273,7 +273,7 @@ export default function BinDetail() {
                 <tbody>
                   {[...readings].reverse().slice(0, 30).map(r => (
                     <tr key={`${r.binId}-${r.readingNo}`}>
-                      <td style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                      <td style={{ fontSize: 14, color: "var(--muted)" }}>
                         {dateTime(r.recordedAt)}
                       </td>
                       <td className="num">

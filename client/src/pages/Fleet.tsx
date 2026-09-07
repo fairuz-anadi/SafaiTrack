@@ -79,7 +79,7 @@ export default function Fleet() {
                 {data?.trucks.map(t => (
                   <tr key={t.truckId}>
                     <td>
-                      <b style={{ fontFamily: "'DM Mono', monospace", fontSize: 12.5 }}>
+                      <b style={{ fontFamily: "'DM Mono', monospace", fontSize: 14 }}>
                         {t.plateNumber}
                       </b>
                     </td>

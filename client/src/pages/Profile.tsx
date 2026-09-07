@@ -198,7 +198,7 @@ export default function ProfilePage() {
             <div className="impact-rows">
               <div>
                 <span>{t("auth.email")}</span>
-                <b style={{ fontSize: 12.5 }}>{profile.email}</b>
+                <b style={{ fontSize: 14 }}>{profile.email}</b>
               </div>
               <div>
                 <span>{t("settings.role")}</span>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                   <span>{t("profile.trust")}</span>
                 </div>
               </div>
-              <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "12px 0 0", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: "var(--muted)", margin: "12px 0 0", lineHeight: 1.6 }}>
                 {t("profile.trustNote")}
               </p>
             </div>

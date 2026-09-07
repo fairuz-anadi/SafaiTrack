@@ -219,12 +219,12 @@ export default function Impact() {
                   <CartesianGrid strokeDasharray="3 4" stroke="#e8ece5" vertical={false} />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11, fill: "#7c8682" }}
+                    tick={{ fontSize: 13, fill: "#7c8682" }}
                     axisLine={{ stroke: "#e8ece5" }}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "#7c8682" }}
+                    tick={{ fontSize: 13, fill: "#7c8682" }}
                     axisLine={false}
                     tickLine={false}
                     unit=" km"
@@ -233,12 +233,12 @@ export default function Impact() {
                     contentStyle={{
                       borderRadius: 11,
                       border: "1px solid #e8ece5",
-                      fontSize: 12.5,
+                      fontSize: 14,
                       boxShadow: "0 10px 34px rgba(39,55,43,.09)",
                     }}
                     formatter={(v: number) => [`${v} km`, ""]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 13.5, paddingTop: 6 }} />
                   <Bar dataKey="Baseline" fill="#ff715f" radius={[5, 5, 0, 0]} maxBarSize={30} />
                   <Bar dataKey="Optimized" fill="#68ad34" radius={[5, 5, 0, 0]} maxBarSize={30} />
                 </BarChart>
@@ -275,7 +275,7 @@ export default function Impact() {
                         <b>{r.routeCode}</b>
                       </td>
                       <td>{r.wardName}</td>
-                      <td style={{ color: "var(--muted)", fontSize: 12.5 }}>
+                      <td style={{ color: "var(--muted)", fontSize: 14 }}>
                         {dateTime(r.computedAt)}
                       </td>
                       <td className="num">{r.baselineDistanceKm} km</td>

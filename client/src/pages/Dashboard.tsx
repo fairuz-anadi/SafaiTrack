@@ -573,7 +573,7 @@ export default function Dashboard() {
               </span>
             </div>
             {forecasts.length === 0 ? (
-              <p style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0 4px", lineHeight: 1.6 }}>
+              <p style={{ color: "var(--muted)", fontSize: 15, padding: "8px 0 4px", lineHeight: 1.6 }}>
                 {t("dash.noForecast")}
               </p>
             ) : (

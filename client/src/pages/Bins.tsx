@@ -231,7 +231,7 @@ export default function Bins() {
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 6,
-                          fontSize: 12.5,
+                          fontSize: 14,
                         }}
                       >
                         <i
@@ -254,7 +254,7 @@ export default function Bins() {
                     </td>
                     <td className="num">+{b.fillRatePctPerHour}%/h</td>
                     <td className="num">{hoursUntil(b.hoursToOverflow)}</td>
-                    <td style={{ color: "var(--muted)", fontSize: 12.5 }}>
+                    <td style={{ color: "var(--muted)", fontSize: 14 }}>
                       {relativeTime(b.lastCollectedAt)}
                     </td>
                   </tr>

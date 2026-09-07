@@ -771,6 +771,19 @@ const strings = {
   "agent.q3": { en: "How much have we actually saved so far?", bn: "এ পর্যন্ত আমরা কতটা সাশ্রয় করেছি?" },
   "agent.q4": { en: "Plan a collection route for the worst ward", bn: "সবচেয়ে খারাপ ওয়ার্ডের জন্য রুট তৈরি করুন" },
 
+  /* ── live wire (landing ticker) ──────────────────────────────────────── */
+  "wire.label": { en: "Live wire", bn: "লাইভ ওয়্যার" },
+  "wire.critical": { en: "Bins over the critical line", bn: "সংকটসীমা পেরোনো বিন" },
+  "wire.avgFill": { en: "Average fill across the network", bn: "নেটওয়ার্কে গড় ভরাট" },
+  "wire.worstWard": { en: "Under most pressure: {ward}", bn: "সবচেয়ে চাপে: {ward}" },
+  "wire.routes": { en: "Collection routes running now", bn: "এখন চলমান সংগ্রহ রুট" },
+  "wire.saved": { en: "Distance saved against the fixed schedule", bn: "নির্ধারিত সূচির তুলনায় দূরত্ব সাশ্রয়" },
+  "wire.cost": { en: "Fuel cost avoided so far", bn: "এ পর্যন্ত জ্বালানি খরচ সাশ্রয়" },
+  "wire.complaints": { en: "Citizen reports still open", bn: "এখনো খোলা নাগরিক অভিযোগ" },
+  "wire.resolution": { en: "Mean time to resolve a report", bn: "অভিযোগ সমাধানে গড় সময়" },
+  "wire.simLive": { en: "Simulation running", bn: "সিমুলেশন চলছে" },
+  "wire.simPaused": { en: "Simulation paused at", bn: "সিমুলেশন থেমে আছে" },
+
   /* ── team ────────────────────────────────────────────────────────────── */
   "team.kicker": { en: "THE TEAM", bn: "টিম" },
   "team.supervisors": { en: "SUPERVISED BY", bn: "তত্ত্বাবধানে" },

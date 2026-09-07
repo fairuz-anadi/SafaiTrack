@@ -193,7 +193,7 @@ export default function RouteDetail() {
           </div>
 
           <div className="map-toolbar">
-            <div style={{ display: "flex", gap: 18, fontSize: 12, color: "var(--muted)" }}>
+            <div style={{ display: "flex", gap: 18, fontSize: 13.5, color: "var(--muted)" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <i
                   style={{

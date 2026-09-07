@@ -100,7 +100,7 @@ export default function Analytics() {
             <h3>{t("an.filled72")}</h3>
           </div>
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
           {t("an.trendNote")}
         </p>
         <div style={{ height: 280 }}>
@@ -119,13 +119,13 @@ export default function Analytics() {
               <CartesianGrid strokeDasharray="3 4" stroke="#e8ece5" vertical={false} />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 10.5, fill: "#7c8682" }}
+                tick={{ fontSize: 12.5, fill: "#7c8682" }}
                 axisLine={{ stroke: "#e8ece5" }}
                 tickLine={false}
                 minTickGap={26}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#7c8682" }}
+                tick={{ fontSize: 13, fill: "#7c8682" }}
                 axisLine={false}
                 tickLine={false}
                 unit="%"
@@ -135,7 +135,7 @@ export default function Analytics() {
                 contentStyle={{
                   borderRadius: 11,
                   border: "1px solid #e8ece5",
-                  fontSize: 12.5,
+                  fontSize: 14,
                   boxShadow: "0 10px 34px rgba(39,55,43,.09)",
                 }}
               />
@@ -179,13 +179,13 @@ export default function Analytics() {
                 <CartesianGrid strokeDasharray="3 4" stroke="#e8ece5" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10.5, fill: "#7c8682" }}
+                  tick={{ fontSize: 12.5, fill: "#7c8682" }}
                   axisLine={{ stroke: "#e8ece5" }}
                   tickLine={false}
                 />
-                <YAxis tick={{ fontSize: 11, fill: "#7c8682" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 13, fill: "#7c8682" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 12.5 }}
+                  contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 14 }}
                 />
                 <Bar dataKey="Filed" fill="#68a5e8" radius={[5, 5, 0, 0]} maxBarSize={28} />
                 <Bar dataKey="Resolved" fill="#68ad34" radius={[5, 5, 0, 0]} maxBarSize={28} />
@@ -240,7 +240,7 @@ export default function Analytics() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 12.5 }}
+                    contentStyle={{ borderRadius: 11, border: "1px solid #e8ece5", fontSize: 14 }}
                   />
                 </PieChart>
               </ResponsiveContainer>

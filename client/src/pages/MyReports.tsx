@@ -85,14 +85,14 @@ export default function MyReports() {
         <h1
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 34,
+            fontSize: 36,
             letterSpacing: "-.025em",
             margin: "8px 0 8px",
           }}
         >
           {t("myReports.title")}
         </h1>
-        <p style={{ color: "var(--muted)", fontSize: 15, margin: "0 0 30px", lineHeight: 1.6 }}>
+        <p style={{ color: "var(--muted)", fontSize: 16.5, margin: "0 0 30px", lineHeight: 1.6 }}>
           {t("myReports.sub")}
         </p>
 
@@ -128,10 +128,10 @@ export default function MyReports() {
                   {r.status === "resolved" ? <Check size={16} /> : <FileText size={16} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong style={{ display: "block", fontSize: 14.5, marginBottom: 3 }}>
+                  <strong style={{ display: "block", fontSize: 16, marginBottom: 3 }}>
                     {COMPLAINT_TYPE_LABELS[r.complaintType][lang]}
                   </strong>
-                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                  <span style={{ fontSize: 13.5, color: "var(--muted)" }}>
                     {r.complaintCode} · {r.locationText ?? r.binCode} · {relativeTime(r.createdAt)}
                   </span>
                 </div>

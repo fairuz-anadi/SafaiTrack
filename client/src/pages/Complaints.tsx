@@ -214,7 +214,7 @@ export default function Complaints() {
                 {selected.description && (
                   <p
                     style={{
-                      fontSize: 13.5,
+                      fontSize: 15.5,
                       lineHeight: 1.65,
                       color: "var(--muted)",
                       background: "var(--paper)",
@@ -256,7 +256,7 @@ export default function Complaints() {
                 )}
 
                 {allowed.length === 0 && (
-                  <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                  <p style={{ fontSize: 15, color: "var(--muted)", margin: 0 }}>
                     {t("comp.closed")}
                   </p>
                 )}
