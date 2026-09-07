@@ -1,0 +1,528 @@
+/** Municipal staff overview — the primary operations screen. */
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
+import {
+  AlertCircle,
+  ArrowUpRight,
+  Boxes,
+  Filter,
+  MoreHorizontal,
+  Navigation,
+  ShieldCheck,
+  TrendingDown,
+  Zap,
+} from "lucide-react";
+import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
+import { useCountUp, usePointerGlow, useRevealOnScroll } from "@/hooks/useMotion";
+import { AppShell } from "@/components/layout/AppShell";
+import { AgentPanel } from "@/components/agent/AgentPanel";
+import { SimulationBar } from "@/components/SimulationBar";
+import { BinMap, type MapBin } from "@/components/map/BinMap";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { bdt, hoursUntil, km, pct, relativeTime } from "@/lib/format";
+import { binTone, type BinView } from "@shared/types";
+
+interface Overview {
+  bins: { total: number; avgFill: number; critical: number; overflowing: number; overflowHours: number };
+  complaints: { total: number; open: number; resolved: number; urgent: number; avgResolutionHours: number };
+  routes: { total: number; active: number; completed: number; distanceKm: number };
+  impact: {
+    routesScored: number;
+    avgSavedPercent: number;
+    fuelSavedLitres: number;
+    costSavedBdt: number;
+    co2SavedKg: number;
+    wastedStopsAvoided: number;
+  };
+  simulation: { simClock: string; ticksElapsed: number; minutesPerTick: number };
+}
+
+interface Forecast {
+  binId: number;
+  binCode: string;
+  landmark: string;
+  wardName: string;
+  currentFillPercent: number;
+  hoursToOverflow: number;
+  confidence: number;
+}
+
+interface WardRow {
+  wardId: number;
+  name: string;
+  binCount: number;
+  criticalCount: number;
+  avgFill: number;
+}
+
+interface ComplaintRow {
+  complaintId: number;
+  complaintCode: string;
+  complaintType: string;
+  status: string;
+  priority: string;
+  channel: string;
+  locationText: string | null;
+  createdAt: string;
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  trend,
+  tone = "lime",
+  decimals = 0,
+  suffix = "",
+  pad = 0,
+}: {
+  icon: typeof Boxes;
+  label: string;
+  /** Animated from its previous figure, so a tick reads as live telemetry. */
+  value: number;
+  detail: string;
+  trend: string;
+  tone?: string;
+  decimals?: number;
+  suffix?: string;
+  /** Zero-pad to this width, matching the original design's "06" style. */
+  pad?: number;
+}) {
+  const counted = useCountUp(value, 850, decimals);
+  const shown = pad > 0 ? counted.padStart(pad, "0") : counted;
+  return (
+    <div className="stat-card lift glow">
+      <div className={`stat-icon ${tone}`}>
+        <Icon size={18} strokeWidth={2.2} />
+      </div>
+      <div className="stat-content">
+        <span>{label}</span>
+        <strong>
+          {shown}
+          {suffix}
+        </strong>
+        <small className={trend.startsWith("+") ? "positive" : "muted"}>
+          {trend} {detail}
+        </small>
+      </div>
+      <MoreHorizontal className="stat-more" size={18} />
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [bins, setBins] = useState<BinView[]>([]);
+  const [forecasts, setForecasts] = useState<Forecast[]>([]);
+  const [wards, setWards] = useState<WardRow[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintRow[]>([]);
+  const [selectedBin, setSelectedBin] = useState<BinView | null>(null);
+  const [tab, setTab] = useState<"All bins" | "Critical" | "Watch">("All bins");
+  const [generating, setGenerating] = useState(false);
+  const [toast, setToast] = useState("");
+  const glowRef = usePointerGlow<HTMLDivElement>();
+  const revealRef = useRevealOnScroll<HTMLDivElement>();
+
+  const load = useCallback(async () => {
+    const [ov, bn, fc, wd, cp] = await Promise.all([
+      api.get<Overview>("/analytics/overview"),
+      api.get<{ bins: BinView[] }>("/bins"),
+      api.get<{ forecasts: Forecast[] }>("/forecasts?hours=8"),
+      api.get<{ wards: WardRow[] }>("/wards"),
+      api.get<{ complaints: ComplaintRow[] }>("/complaints"),
+    ]);
+    setOverview(ov);
+    setBins(bn.bins);
+    setForecasts(fc.forecasts);
+    setWards(wd.wards);
+    setComplaints(cp.complaints.slice(0, 5));
+    setSelectedBin(prev => bn.bins.find(b => b.binId === prev?.binId) ?? bn.bins[0] ?? null);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const notify = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(""), 4200);
+  };
+
+  const visibleBins = useMemo(() => {
+    if (tab === "Critical") return bins.filter(b => b.currentFillPercent >= 85);
+    if (tab === "Watch")
+      return bins.filter(b => b.currentFillPercent >= 65 && b.currentFillPercent < 85);
+    return bins;
+  }, [bins, tab]);
+
+  /** Generate a route for whichever ward is in the worst shape right now. */
+  const optimizeWorstWard = async () => {
+    const worst = [...wards].sort(
+      (a, b) => b.criticalCount - a.criticalCount || b.avgFill - a.avgFill
+    )[0];
+    if (!worst) return;
+
+    setGenerating(true);
+    try {
+      const res = await api.post<{
+        route: { routeId: number; routeCode: string };
+        comparison: { distanceSavedPercent: number; costSavedBdt: number };
+      }>("/routes/generate", { wardId: worst.wardId, thresholdPercent: 55, maxStops: 20, lookaheadHours: 6 });
+      notify(
+        `${res.route.routeCode} generated for ${worst.name} — ${res.comparison.distanceSavedPercent}% shorter than the fixed schedule, ${bdt(res.comparison.costSavedBdt)} saved.`
+      );
+      navigate(`/routes/${res.route.routeId}`);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Could not generate a route");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const mapBins: MapBin[] = visibleBins.map(b => ({
+    binId: b.binId,
+    binCode: b.binCode,
+    landmark: b.landmark,
+    latitude: b.latitude,
+    longitude: b.longitude,
+    currentFillPercent: b.currentFillPercent,
+  }));
+
+  const coverage = overview ? Math.max(0, Math.round(100 - overview.bins.avgFill)) : 0;
+
+  return (
+    <AppShell title={`Good day, ${user?.fullName.split(" ")[0] ?? "there"}`}>
+      <SimulationBar state={overview?.simulation ?? null} onAdvanced={() => void load()} />
+
+      <section className="hero-row ambient-host">
+        <AmbientNetwork className="feather" intensity={0.5} density={0.6} showTruck={false} />
+        <div>
+          <p className="section-kicker">
+            <span className="live-dot" /> LIVE OPERATIONS
+          </p>
+          <h2>
+            Your wards, <em>in motion.</em>
+          </h2>
+          <p className="hero-copy">
+            A live view of the waste network across Dhaka North. Prioritise what matters, then move.
+          </p>
+        </div>
+        <div className="hero-actions">
+          <button className="primary-button" onClick={() => void optimizeWorstWard()} disabled={generating}>
+            {generating ? <span className="spinner" /> : <Zap size={16} fill="currentColor" />}
+            {generating ? "Optimizing…" : "Optimize worst ward"}
+          </button>
+        </div>
+      </section>
+
+      <section className="stats-grid reveal-stagger" ref={glowRef}>
+        <StatCard
+          icon={Boxes}
+          label="Bins monitored"
+          value={overview?.bins.total ?? 0}
+          detail={`average fill across ${wards.length} wards`}
+          trend={`${overview?.bins.avgFill ?? 0}%`}
+        />
+        <StatCard
+          icon={AlertCircle}
+          label="Need attention"
+          value={overview?.bins.critical ?? 0}
+          detail="of them already overflowing"
+          trend={String(overview?.bins.overflowing ?? 0)}
+          tone="coral"
+        />
+        <StatCard
+          icon={Navigation}
+          label="Active routes"
+          value={overview?.routes.active ?? 0}
+          pad={2}
+          detail="planned in total"
+          trend={km(overview?.routes.distanceKm ?? 0)}
+          tone="blue"
+        />
+        <StatCard
+          icon={ShieldCheck}
+          label="Avg. resolution"
+          value={overview?.complaints.avgResolutionHours ?? 0}
+          suffix="h"
+          detail="complaints still open"
+          trend={String(overview?.complaints.open ?? 0)}
+          tone="violet"
+        />
+      </section>
+
+      <section className="dashboard-grid">
+        <div className="map-card panel-card padded lift">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">WARD NETWORK</p>
+              <h3>Live bin intelligence</h3>
+            </div>
+            <button className="ghost-button" onClick={() => navigate("/bins")}>
+              <Filter size={15} /> All bins
+            </button>
+          </div>
+
+          <div className="map-toolbar">
+            <div className="tabs">
+              {(["All bins", "Critical", "Watch"] as const).map(t => (
+                <button key={t} className={tab === t ? "active" : ""} onClick={() => setTab(t)}>
+                  {t}
+                  <span>
+                    {t === "All bins"
+                      ? bins.length
+                      : t === "Critical"
+                        ? bins.filter(b => b.currentFillPercent >= 85).length
+                        : bins.filter(b => b.currentFillPercent >= 65 && b.currentFillPercent < 85).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <span className="map-updated">
+              <span className="live-dot" /> Real Dhaka coordinates
+            </span>
+          </div>
+
+          <div style={{ height: 400, margin: "0 0 14px" }}>
+            <BinMap
+              bins={mapBins}
+              selectedBinId={selectedBin?.binId}
+              onSelectBin={b => setSelectedBin(bins.find(x => x.binId === b.binId) ?? null)}
+            />
+          </div>
+
+          <div className="selected-bin-strip">
+            {selectedBin ? (
+              <>
+                <div className={`bin-status-mark ${binTone(selectedBin.currentFillPercent)}`}>
+                  <Boxes size={16} />
+                </div>
+                <div className="selected-bin-info">
+                  <strong>{selectedBin.landmark}</strong>
+                  <span>
+                    {selectedBin.binCode} · {selectedBin.wardName} · emptied{" "}
+                    {relativeTime(selectedBin.lastCollectedAt)}
+                  </span>
+                </div>
+                <div className="selected-bin-fill">
+                  <small>Fill level</small>
+                  <b>{selectedBin.currentFillPercent}%</b>
+                  <div className="fill-wrap">
+                    <div
+                      className={`fill-bar ${binTone(selectedBin.currentFillPercent)}`}
+                      style={{ width: `${selectedBin.currentFillPercent}%` }}
+                    />
+                    <span>{selectedBin.currentFillPercent}%</span>
+                  </div>
+                </div>
+                {selectedBin.hoursToOverflow !== null && (
+                  <div className="selected-bin-fill">
+                    <small>Overflows in</small>
+                    <b>{hoursUntil(selectedBin.hoursToOverflow)}</b>
+                  </div>
+                )}
+              </>
+            ) : (
+              <span>Select a bin to inspect details</span>
+            )}
+          </div>
+        </div>
+
+        <div className="side-column">
+          {/* Measured saving — the headline judging asset. */}
+          <div className="panel-card route-card padded lift glow">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">MEASURED IMPACT</p>
+                <h3>Versus fixed schedule</h3>
+              </div>
+              <button className="more-button" onClick={() => navigate("/impact")}>
+                <ArrowUpRight size={18} />
+              </button>
+            </div>
+            <div className="route-score">
+              <div className="score-ring">
+                <span>{Math.round(overview?.impact.avgSavedPercent ?? 0)}</span>
+                <small>% less</small>
+              </div>
+              <div>
+                <strong>Distance saved</strong>
+                <p>
+                  averaged over {overview?.impact.routesScored ?? 0} scored
+                  <br />
+                  route{overview?.impact.routesScored === 1 ? "" : "s"}
+                </p>
+              </div>
+            </div>
+            <div className="mini-bars">
+              <div>
+                <span>Fuel not burned</span>
+                <b>{(overview?.impact.fuelSavedLitres ?? 0).toFixed(1)} L</b>
+                <i>
+                  <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
+                </i>
+              </div>
+              <div>
+                <span>Cost avoided</span>
+                <b>{bdt(overview?.impact.costSavedBdt ?? 0)}</b>
+                <i>
+                  <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
+                </i>
+              </div>
+              <div>
+                <span>CO₂ avoided</span>
+                <b>{(overview?.impact.co2SavedKg ?? 0).toFixed(1)} kg</b>
+                <i>
+                  <em style={{ width: `${Math.min(100, (overview?.impact.avgSavedPercent ?? 0) * 2.4)}%` }} />
+                </i>
+              </div>
+            </div>
+            <button className="text-button" onClick={() => navigate("/impact")}>
+              See the full proof <ArrowUpRight size={15} />
+            </button>
+          </div>
+
+          {/* Predictive layer */}
+          <div className="panel-card coverage-card padded lift glow">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">OVERFLOW FORECAST</p>
+                <h3>Next 8 hours</h3>
+              </div>
+              <span className="soft-badge">{forecasts.length} bins</span>
+            </div>
+            {forecasts.length === 0 ? (
+              <p style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0 4px", lineHeight: 1.6 }}>
+                No bin is projected to overflow in the next 8 hours. Run the simulation forward to
+                see the forecast react.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gap: 7, marginTop: 4 }}>
+                {forecasts.slice(0, 4).map(f => (
+                  <div className="forecast-row" key={f.binId} style={{ marginBottom: 0 }}>
+                    <div
+                      className={`forecast-clock ${
+                        f.hoursToOverflow <= 2 ? "imminent" : f.hoursToOverflow <= 5 ? "soon" : "later"
+                      }`}
+                    >
+                      {hoursUntil(f.hoursToOverflow)}
+                      <small>left</small>
+                    </div>
+                    <div className="forecast-info">
+                      <strong>{f.binCode}</strong>
+                      <span>
+                        {f.landmark} · {f.currentFillPercent}%
+                      </span>
+                    </div>
+                    <div className="confidence-bar">
+                      <span>{Math.round(f.confidence * 100)}%</span>
+                      <i>
+                        <em style={{ width: `${f.confidence * 100}%` }} />
+                      </i>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="coverage-footer">
+              <span>
+                <TrendingDown size={14} /> Predicted from each bin's own fill rate
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bottom-grid reveal" ref={revealRef}>
+        <div className="panel-card complaints-card padded lift">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">CITIZEN SIGNALS</p>
+              <h3>Latest complaints</h3>
+            </div>
+            <button className="text-button" onClick={() => navigate("/complaints")}>
+              View all <ArrowUpRight size={15} />
+            </button>
+          </div>
+          <div className="complaints-list">
+            {complaints.length === 0 && <p className="empty-state">No complaints filed yet.</p>}
+            {complaints.map(item => {
+              const tone =
+                item.priority === "urgent"
+                  ? "coral"
+                  : item.status === "resolved"
+                    ? "green"
+                    : item.status === "in_progress"
+                      ? "amber"
+                      : "blue";
+              return (
+                <div className="complaint-row" key={item.complaintId}>
+                  <div className={`complaint-icon ${tone}`}>
+                    <AlertCircle size={16} />
+                  </div>
+                  <div className="complaint-info">
+                    <strong>{item.locationText ?? item.complaintType.replace("_", " ")}</strong>
+                    <span>
+                      {item.complaintCode} · {relativeTime(item.createdAt)} ·{" "}
+                      <span className={`channel-tag ${item.channel === "web" ? "web" : ""}`}>
+                        {item.channel}
+                      </span>
+                    </span>
+                  </div>
+                  <span className={`status-pill ${tone}`}>{item.status.replace("_", " ")}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="panel-card activity-card padded lift">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">WARD LEAGUE TABLE</p>
+              <h3>Where the pressure is</h3>
+            </div>
+          </div>
+          <div className="activity-list">
+            {[...wards]
+              .sort((a, b) => b.avgFill - a.avgFill)
+              .map(w => (
+                <div className="activity-item" key={w.wardId}>
+                  <div
+                    className={`activity-icon ${
+                      w.criticalCount >= 3 ? "coral" : w.criticalCount > 0 ? "blue" : "lime"
+                    }`}
+                  >
+                    <Boxes size={15} />
+                  </div>
+                  <div>
+                    <strong>{w.name}</strong>
+                    <span>
+                      {w.binCount} bins · {w.criticalCount} critical
+                    </span>
+                  </div>
+                  <time>{pct(w.avgFill, 0)}</time>
+                </div>
+              ))}
+          </div>
+        </div>
+      </section>
+
+      {toast && (
+        <div className="toast">
+          <div className="toast-check">
+            <Zap size={14} fill="currentColor" />
+          </div>
+          <span>{toast}</span>
+          <button onClick={() => setToast("")}>×</button>
+        </div>
+      )}
+
+      <AgentPanel />
+    </AppShell>
+  );
+}
