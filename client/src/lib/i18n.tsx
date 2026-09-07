@@ -598,6 +598,17 @@ const strings = {
 
   /* ── team ────────────────────────────────────────────────────────────── */
   "team.kicker": { en: "THE TEAM", bn: "টিম" },
+  "team.supervisors": { en: "SUPERVISED BY", bn: "তত্ত্বাবধানে" },
+  "team.course": { en: "COURSE", bn: "কোর্স" },
+  "team.courseNo": { en: "Course number", bn: "কোর্স নম্বর" },
+  "team.courseName": { en: "Course name", bn: "কোর্সের নাম" },
+  "team.section": { en: "Lab section", bn: "ল্যাব সেকশন" },
+  "team.group": { en: "Group", bn: "গ্রুপ" },
+  "team.sdg": { en: "SDG alignment", bn: "SDG সংযোগ" },
+  "team.note": {
+    en: "Everything on this site runs against a live database — the numbers on the impact page are computed from routes the system actually planned, not typed in.",
+    bn: "এই সাইটের সবকিছু একটি সচল ডেটাবেসের উপর চলে — প্রভাব পাতার সংখ্যাগুলো সিস্টেমের তৈরি করা রুট থেকে হিসাব করা, হাতে লেখা নয়।",
+  },
   "team.title": { en: "Built by three students in Dhaka.", bn: "ঢাকার তিনজন শিক্ষার্থীর তৈরি।" },
   "team.body": {
     en: "SafaiTrack began as a Software Development coursework project and grew into a working system aimed at a problem all three of us walk past every day.",

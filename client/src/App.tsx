@@ -5,6 +5,7 @@ import { ROLE_HOME, type Role } from "@shared/types";
 
 import Landing from "@/pages/Landing";
 import About from "@/pages/About";
+import Team from "@/pages/Team";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Report from "@/pages/Report";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/report" component={Report} />
       <Route path="/about" component={About} />
+      <Route path="/team" component={Team} />
       <Route path="/login">
         <GuestOnly>
           <Login />

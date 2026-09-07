@@ -458,6 +458,9 @@ export default function Landing() {
           <b>SafaiTrack</b>
         </div>
         <span>{t("footer.tagline")}</span>
+        <Link href="/team" className="footer-link">
+          {t("nav.team")}
+        </Link>
         <span>{t("footer.sdg")}</span>
       </footer>
     </div>
