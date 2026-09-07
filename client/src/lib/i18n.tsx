@@ -597,6 +597,28 @@ const strings = {
   "nav.profile": { en: "Profile", bn: "প্রোফাইল" },
 
   /* ── landing: extra sections ─────────────────────────────────────────── */
+  /* ── live route card ─────────────────────────────────────────────────── */
+  "live.routeLabel": { en: "LIVE ROUTE", bn: "চলমান রুট" },
+  "live.legendRoute": { en: "Efficient route", bn: "কার্যকর রুট" },
+  "live.legendAlert": { en: "Overflow alert", bn: "উপচে পড়ার সতর্কতা" },
+  "live.legendStop": { en: "Collection stop", bn: "সংগ্রহ স্টপ" },
+  "live.offlineMap": { en: "OFFLINE MAP", bn: "অফলাইন মানচিত্র" },
+  "live.noRoute": { en: "No route in flight", bn: "চলমান কোনো রুট নেই" },
+  "live.noRouteBody": {
+    en: "Generate one from the optimizer and it appears here.",
+    bn: "অপটিমাইজার থেকে একটি তৈরি করলে এখানে দেখা যাবে।",
+  },
+  "live.runLedger": { en: "RUN LEDGER", bn: "রানের হিসাব" },
+  "live.stopLog": { en: "STOP LOG", bn: "স্টপের তালিকা" },
+  "live.noStops": { en: "No stops on this run yet.", bn: "এই রানে এখনো কোনো স্টপ নেই।" },
+  "live.ledgerStops": { en: "Stops", bn: "স্টপ" },
+  "live.ledgerDistance": { en: "Distance", bn: "দূরত্ব" },
+  "live.ledgerBaseline": { en: "Fixed schedule", bn: "নির্ধারিত সূচি" },
+  "live.ledgerSaved": { en: "Distance saved", bn: "দূরত্ব সাশ্রয়" },
+  "live.ledgerFuel": { en: "Fuel avoided", bn: "জ্বালানি সাশ্রয়" },
+  "live.ledgerCost": { en: "Cost avoided", bn: "খরচ সাশ্রয়" },
+  "live.ledgerTime": { en: "Estimated time", bn: "আনুমানিক সময়" },
+
   "gallery.kicker": { en: "ON THE GROUND", bn: "মাঠের বাস্তবতা" },
   "gallery.title1": { en: "This is the street", bn: "এই রাস্তাটাই" },
   "gallery.title2": { en: "the system is for.", bn: "সিস্টেমের লক্ষ্য।" },

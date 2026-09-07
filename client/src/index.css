@@ -1474,3 +1474,281 @@ html[data-lang="bn"] .figure {
 @media (prefers-reduced-motion: reduce) {
   .app-figure:hover .figure-frame img { transform: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITORIAL SURFACES
+   A quieter register than the operations UI: warm paper, hairline rules, mono
+   labels. Used where the system is being *presented* rather than operated.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --paper-warm: #faf7f0;
+  --paper-warm-2: #f2ede1;
+  --rule: #e2dccf;
+  --ink-warm: #1d2b25;
+}
+
+/* ── Live route card ────────────────────────────────────────────────────── */
+.live-route-card {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 10px 30px rgba(48, 42, 28, .05);
+}
+
+.lrc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 4px 14px;
+}
+.lrc-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #6e6a5c;
+}
+.lrc-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime-deep);
+  box-shadow: 0 0 0 3px rgba(104, 173, 52, .18);
+  animation: lrc-pulse 2.4s ease-in-out infinite;
+}
+@keyframes lrc-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(104, 173, 52, .18); }
+  50%      { box-shadow: 0 0 0 6px rgba(104, 173, 52, .06); }
+}
+.lrc-clock {
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  color: #6e6a5c;
+}
+
+.lrc-map {
+  position: relative;
+  height: 360px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--paper-warm-2);
+}
+/* The whole point of the treatment: tiles drop back so the route reads first. */
+.lrc-map .leaflet-tile-pane {
+  filter: sepia(.42) saturate(.42) contrast(.9) brightness(1.07);
+  opacity: .88;
+}
+.lrc-map .leaflet-container { background: var(--paper-warm-2); }
+
+.lrc-offline {
+  position: absolute;
+  z-index: 500;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(250, 247, 240, .93);
+  border: 1px solid var(--rule);
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  color: #6e6a5c;
+}
+
+/* ── Stop pins ──────────────────────────────────────────────────────────── */
+/* The square is the anchor; the pill overflows to its right so adding a label
+   never moves the marker off its coordinate. */
+.route-pin { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.route-pin-num {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--lime);
+  color: var(--ink-warm);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(29, 43, 37, .22);
+}
+.route-pin-num.alert { background: var(--coral); color: #fff; }
+.route-pin-label {
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: var(--ink-warm);
+  color: #f4f1e8;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -.005em;
+  box-shadow: 0 2px 8px rgba(29, 43, 37, .2);
+}
+
+.route-dot {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--lime-deep);
+  box-shadow: 0 0 0 2px rgba(250, 247, 240, .8);
+}
+.route-dot.alert { border-color: var(--coral); }
+
+/* ── Legend ─────────────────────────────────────────────────────────────── */
+.lrc-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 13px 4px 2px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  color: #797465;
+}
+.lrc-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.lrc-legend .lg-line {
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--ink-warm);
+}
+.lrc-legend .lg-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime-deep);
+}
+.lrc-legend .lg-dot.alert { background: var(--coral); }
+
+/* ── Companion 1: ledger strip ──────────────────────────────────────────── */
+/* Same register as the route card, for a run of figures. */
+.ledger-card {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+}
+.ledger-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #6e6a5c;
+}
+.ledger-rows { display: grid; }
+.ledger-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(226, 220, 207, .65);
+}
+.ledger-rows > div:last-child { border-bottom: 0; }
+.ledger-rows dt,
+.ledger-rows .lg-key {
+  font-size: 12.5px;
+  color: #797465;
+}
+/* Leader dots between label and figure, the way a printed table sets them. */
+.ledger-rows .lg-lead {
+  flex: 1;
+  height: 1px;
+  margin: 0 4px 4px;
+  border-bottom: 1px dotted #cec7b6;
+}
+.ledger-rows .lg-val {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  color: var(--ink-warm);
+}
+.ledger-rows .lg-val.up { color: var(--lime-deep); }
+.ledger-rows .lg-val.down { color: var(--coral); }
+
+/* ── Companion 2: collection log ────────────────────────────────────────── */
+.log-card {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 18px 20px 8px;
+}
+.log-rows { display: grid; }
+.log-row {
+  display: grid;
+  grid-template-columns: 58px 22px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(226, 220, 207, .65);
+}
+.log-row:last-child { border-bottom: 0; }
+.log-time {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-size: 11px;
+  color: #8a8474;
+}
+.log-seq {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--paper-warm-2);
+  border: 1px solid var(--rule);
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: #6e6a5c;
+}
+.log-row.done .log-seq { background: var(--lime); border-color: var(--lime); color: var(--ink-warm); }
+.log-row.alert .log-seq { background: var(--coral); border-color: var(--coral); color: #fff; }
+.log-name { font-size: 13px; color: var(--ink-warm); min-width: 0; }
+.log-name small { display: block; font-size: 11px; color: #8a8474; margin-top: 2px; }
+.log-fill {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6e6a5c;
+}
+.log-fill.hot { color: var(--coral); }
+
+@media (max-width: 620px) {
+  .lrc-map { height: 280px; }
+  .route-pin-label { display: none; }
+  .log-row { grid-template-columns: 50px 22px 1fr auto; gap: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lrc-live { animation: none; }
+}
+
+/* Live route section: card left, ledger + log stacked right. */
+.live-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.live-side { display: grid; gap: 16px; align-content: start; }
+@media (max-width: 1000px) { .live-grid { grid-template-columns: 1fr; } }

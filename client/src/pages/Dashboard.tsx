@@ -18,10 +18,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { SimulationBar } from "@/components/SimulationBar";
 import { BinMap, type MapBin } from "@/components/map/BinMap";
+import { LiveRouteCard, type RouteStopPin } from "@/components/map/LiveRouteCard";
+import { LedgerCard, LogCard, type LogRow } from "@/components/editorial/Ledger";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { bdt, hoursUntil, km, pct, relativeTime } from "@/lib/format";
+import { bdt, clockTime, duration, hoursUntil, km, pct, relativeTime } from "@/lib/format";
 import { binTone, type BinView } from "@shared/types";
 
 interface Overview {
@@ -57,6 +59,41 @@ interface WardRow {
   avgFill: number;
 }
 
+/** Shape of `GET /routes/:id`, trimmed to what this card needs. */
+interface LiveRoute {
+  route: {
+    routeId: number;
+    routeCode: string;
+    wardName: string;
+    status: string;
+    totalDistanceKm: number;
+    estimatedMinutes: number;
+    depotLat: number;
+    depotLng: number;
+    disposalLat: number;
+    disposalLng: number;
+  };
+  stops: {
+    binId: number;
+    binCode: string;
+    landmark: string;
+    latitude: number;
+    longitude: number;
+    sequenceOrder: number;
+    plannedFillPercent: number;
+    currentFillPercent: number;
+    stopStatus: string;
+    plannedArrival: string | null;
+    actualArrival: string | null;
+  }[];
+  comparison: {
+    baselineDistanceKm: number;
+    distanceSavedPercent: number;
+    fuelSavedLitres: number;
+    costSavedBdt: number;
+  } | null;
+}
+
 interface ComplaintRow {
   complaintId: number;
   complaintCode: string;
@@ -66,6 +103,25 @@ interface ComplaintRow {
   channel: string;
   locationText: string | null;
   createdAt: string;
+}
+
+/**
+ * Pills have room for about two words. "Dhanmondi Road 15 kitchen market"
+ * becomes "Dhanmondi 06" — the area plus the bin number, which is how a crew
+ * would say it out loud anyway.
+ */
+function pillLabel(landmark: string, binCode: string): string {
+  const words = landmark.replace(/,.*$/, "").split(/\s+/).filter(Boolean);
+  // One word is usually enough, unless it is very short ("Green" -> "Green Road").
+  const area = words[0] && words[0].length >= 6 ? words[0] : words.slice(0, 2).join(" ");
+  const num = binCode.match(/B(\d+)$/)?.[1]?.slice(-2);
+  return num ? `${area} ${num}` : area;
+}
+
+/** "R-27-96893" -> "DHK-27": the ward is what identifies the run on a wall. */
+function shortRouteCode(routeCode: string): string {
+  const ward = routeCode.match(/^R-(\d+)/)?.[1];
+  return ward ? `DHK-${ward}` : routeCode;
 }
 
 function StatCard({
@@ -122,6 +178,7 @@ export default function Dashboard() {
   const [forecasts, setForecasts] = useState<Forecast[]>([]);
   const [wards, setWards] = useState<WardRow[]>([]);
   const [complaints, setComplaints] = useState<ComplaintRow[]>([]);
+  const [liveRoute, setLiveRoute] = useState<LiveRoute | null>(null);
   const [selectedBin, setSelectedBin] = useState<BinView | null>(null);
   const [tab, setTab] = useState<"All bins" | "Critical" | "Watch">("All bins");
   const [generating, setGenerating] = useState(false);
@@ -142,6 +199,20 @@ export default function Dashboard() {
     setForecasts(fc.forecasts);
     setWards(wd.wards);
     setComplaints(cp.complaints.slice(0, 5));
+
+    // Feature whichever route is furthest along: running, then dispatched,
+    // then the most recent draft.
+    const rl = await api.get<{ routes: { routeId: number; status: string }[] }>("/routes");
+    const pick =
+      rl.routes.find(r => r.status === "in_progress") ??
+      rl.routes.find(r => r.status === "assigned") ??
+      rl.routes[0];
+    if (pick) {
+      const detail = await api.get<LiveRoute>(`/routes/${pick.routeId}`);
+      setLiveRoute(detail);
+    } else {
+      setLiveRoute(null);
+    }
     setSelectedBin(prev => bn.bins.find(b => b.binId === prev?.binId) ?? bn.bins[0] ?? null);
   }, []);
 
@@ -195,6 +266,42 @@ export default function Dashboard() {
   }));
 
   const coverage = overview ? Math.max(0, Math.round(100 - overview.bins.avgFill)) : 0;
+
+  /**
+   * Only the first four stops get a name pill — past that the labels collide
+   * and the card stops being readable. The rest stay as plain rings.
+   */
+  const livePins: RouteStopPin[] = (liveRoute?.stops ?? []).map((s, i) => ({
+    binId: s.binId,
+    sequence: s.sequenceOrder,
+    label: pillLabel(s.landmark, s.binCode),
+    lat: s.latitude,
+    lng: s.longitude,
+    alert: s.currentFillPercent >= 85,
+    minor: i >= 4,
+  }));
+
+  const livePath = liveRoute
+    ? [
+        { lat: liveRoute.route.depotLat, lng: liveRoute.route.depotLng },
+        ...liveRoute.stops.map(s => ({ lat: s.latitude, lng: s.longitude })),
+        { lat: liveRoute.route.disposalLat, lng: liveRoute.route.disposalLng },
+      ]
+    : [];
+
+  const logRows: LogRow[] = (liveRoute?.stops ?? []).slice(0, 6).map(s => ({
+    key: s.binId,
+    time: s.actualArrival
+      ? clockTime(s.actualArrival)
+      : s.plannedArrival
+        ? clockTime(s.plannedArrival)
+        : "--:--",
+    sequence: s.sequenceOrder,
+    name: s.landmark.split(",")[0].trim(),
+    sub: s.binCode,
+    fillPercent: s.currentFillPercent,
+    done: s.stopStatus === "collected",
+  }));
 
   return (
     <AppShell title={`${t("dash.greeting")}, ${user?.fullName.split(" ")[0] ?? ""}`}>
@@ -254,6 +361,66 @@ export default function Dashboard() {
           tone="violet"
         />
       </section>
+
+      {/* ── Live route, presented ─────────────────────────────────────── */}
+      {liveRoute && (
+        <section className="live-grid reveal">
+          <LiveRouteCard
+            routeCode={shortRouteCode(liveRoute.route.routeCode)}
+            stops={livePins}
+            path={livePath}
+          />
+
+          <div className="live-side">
+            <LedgerCard
+              kicker={t("live.runLedger")}
+              meta={liveRoute.route.wardName}
+              rows={[
+                { label: t("live.ledgerStops"), value: String(liveRoute.stops.length) },
+                {
+                  label: t("live.ledgerDistance"),
+                  value: `${liveRoute.route.totalDistanceKm} km`,
+                },
+                {
+                  label: t("live.ledgerBaseline"),
+                  value: liveRoute.comparison
+                    ? `${liveRoute.comparison.baselineDistanceKm} km`
+                    : "—",
+                },
+                {
+                  label: t("live.ledgerSaved"),
+                  value: liveRoute.comparison
+                    ? `${liveRoute.comparison.distanceSavedPercent.toFixed(1)}%`
+                    : "—",
+                  trend: "up",
+                },
+                {
+                  label: t("live.ledgerFuel"),
+                  value: liveRoute.comparison
+                    ? `${liveRoute.comparison.fuelSavedLitres} L`
+                    : "—",
+                },
+                {
+                  label: t("live.ledgerCost"),
+                  value: liveRoute.comparison ? bdt(liveRoute.comparison.costSavedBdt) : "—",
+                  trend: "up",
+                },
+                {
+                  label: t("live.ledgerTime"),
+                  value: duration(liveRoute.route.estimatedMinutes),
+                },
+              ]}
+            />
+
+            <LogCard
+              kicker={t("live.stopLog")}
+              meta={`${liveRoute.stops.filter(s => s.stopStatus === "collected").length}/${liveRoute.stops.length}`}
+              rows={logRows}
+              empty={t("live.noStops")}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="dashboard-grid">
         <div className="map-card panel-card padded lift">
