@@ -22,6 +22,21 @@ export const registerSchema = z.object({
   preferredLanguage: z.enum(["en", "bn"]).default("en"),
 });
 
+/** Fields a signed-in user may change about themselves. */
+export const updateProfileSchema = z.object({
+  fullName: z.string().min(2, "Please enter your full name").max(120).optional(),
+  phone: z
+    .string()
+    .regex(/^01[3-9]\d{8}$/, "Enter a valid Bangladeshi mobile number, e.g. 01712345678")
+    .optional()
+    .or(z.literal("")),
+  address: z.string().max(240).optional(),
+  wardId: z.coerce.number().int().positive().optional(),
+  preferredLanguage: z.enum(["en", "bn"]).optional(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
 export const createComplaintSchema = z
   .object({
     complaintType: z.enum(COMPLAINT_TYPES),

@@ -20,6 +20,7 @@ import Complaints from "@/pages/Complaints";
 import Fleet from "@/pages/Fleet";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
+import ProfilePage from "@/pages/Profile";
 import DriverRoute from "@/pages/DriverRoute";
 
 /**
@@ -107,6 +108,11 @@ function Router() {
       <Route path="/bins/:id">
         <Protected roles={["staff", "officer"]}>
           <BinDetail />
+        </Protected>
+      </Route>
+      <Route path="/profile">
+        <Protected roles={["staff", "officer", "driver", "citizen"]}>
+          <ProfilePage />
         </Protected>
       </Route>
       <Route path="/settings">

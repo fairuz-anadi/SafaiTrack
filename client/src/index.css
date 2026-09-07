@@ -8,7 +8,7 @@
  * impact proof, forecasting, simulation controls, the AI assistant) and the
  * real Leaflet map that replaced the mockup's decorative one.
  */
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -1134,4 +1134,281 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 html[data-lang="bn"] .wordmark,
 html[data-lang="bn"] .brand-statement-word {
   font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUMERALS
+   Figures get their own voice: JetBrains Mono, tabular and slashed-zero.
+   An operations console should read like an instrument, and it also stops
+   counting numbers from jittering their own width as the digits change.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --font-num: 'JetBrains Mono', 'DM Mono', ui-monospace, monospace;
+  --num-feat: "tnum" 1, "zero" 1, "ss01" 1;
+}
+
+/* Every figure the eye lands on. */
+.stat-content strong,
+.saving-banner .big,
+.impact-panel .headline,
+.score-ring span,
+.numbers-band strong,
+.fact-card strong,
+.data-table .num,
+.city-score b,
+.city-card-foot b,
+.outcome > strong,
+.driver-progress b,
+.forecast-clock,
+.member-id,
+.figure,
+.contribution-grid strong,
+.brand-statement .brand-tagline {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+/* Mono runs wide and reads heavy — pull tracking in and drop a weight step
+   so the figures still feel like display type, not code. */
+.stat-content strong,
+.numbers-band strong,
+.fact-card strong,
+.impact-panel .headline,
+.saving-banner .big {
+  letter-spacing: -.045em;
+  font-weight: 600;
+}
+.saving-banner .big { font-weight: 700; letter-spacing: -.05em; }
+.impact-panel .headline { font-weight: 700; letter-spacing: -.05em; }
+.score-ring span { letter-spacing: -.04em; font-weight: 600; }
+.outcome > strong { letter-spacing: -.04em; font-weight: 600; }
+
+/* Units stay in the text face — "km" and "%" are words, not figures. */
+.saving-banner .big small,
+.city-score small,
+.stat-content small {
+  font-family: 'DM Sans', sans-serif;
+  font-feature-settings: normal;
+  letter-spacing: 0;
+}
+
+/* Tables: right-aligned tabular figures line up under each other. */
+.data-table .num { font-size: 12.5px; letter-spacing: -.01em; }
+
+/* Bangla keeps Latin figures — see i18n.tsx for why. */
+html[data-lang="bn"] .stat-content strong,
+html[data-lang="bn"] .numbers-band strong,
+html[data-lang="bn"] .fact-card strong,
+html[data-lang="bn"] .saving-banner .big,
+html[data-lang="bn"] .impact-panel .headline,
+html[data-lang="bn"] .data-table .num,
+html[data-lang="bn"] .figure {
+  font-family: var(--font-num);
+}
+
+/* ── Profile page ───────────────────────────────────────────────────────── */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 18px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.profile-hero-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(183, 239, 93, .35);
+  color: var(--ink);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+}
+.profile-hero strong { display: block; font-size: 16px; }
+.profile-hero small { color: var(--muted); font-size: 12.5px; }
+
+.lock-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: rgba(104, 165, 232, .09);
+  border: 1px solid rgba(104, 165, 232, .2);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #46586c;
+}
+.lock-note svg { color: var(--blue); flex-shrink: 0; margin-top: 1px; }
+
+.contribution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.contribution-grid > div {
+  padding: 15px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  text-align: center;
+}
+.contribution-grid strong {
+  display: block;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -.04em;
+  color: var(--ink);
+}
+.contribution-grid span {
+  display: block;
+  margin-top: 5px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING · A DAY IN THE WARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.day-section {
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 0 6vw 78px;
+  display: grid;
+  grid-template-columns: .72fr 1.28fr;
+  gap: 62px;
+  align-items: start;
+}
+.day-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.day-timeline li {
+  display: grid;
+  grid-template-columns: 42px 1fr 46px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: transform .22s cubic-bezier(.2,.7,.3,1), border-color .22s ease;
+}
+.day-timeline li:hover { transform: translateX(3px); border-color: var(--lime-deep); }
+.day-icon {
+  width: 42px; height: 42px; border-radius: 13px;
+  display: grid; place-items: center; color: var(--ink);
+}
+.day-icon.blue { background: rgba(104,165,232,.2); }
+.day-icon.coral { background: rgba(255,113,95,.2); }
+.day-icon.violet { background: rgba(152,135,232,.2); }
+.day-icon.amber { background: rgba(240,184,74,.24); }
+.day-time {
+  display: block; font-size: 10.5px; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 3px;
+}
+.day-body strong { display: block; font-size: 14.5px; margin-bottom: 3px; }
+.day-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+/* A tiny bar chart of how hard that window loads the network. */
+.day-bar {
+  height: 46px; width: 100%; display: flex; align-items: flex-end;
+  border-radius: 5px; background: var(--paper); overflow: hidden;
+}
+.day-bar i { display: block; width: 100%; border-radius: 5px 5px 0 0; }
+.day-bar i.blue { background: var(--blue); }
+.day-bar i.coral { background: var(--coral); }
+.day-bar i.violet { background: var(--violet); }
+.day-bar i.amber { background: var(--amber); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING · CAPABILITY GRID
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cap-section { max-width: 1184px; margin: 0 auto; padding: 0 6vw 78px; }
+.cap-head { max-width: 46ch; margin-bottom: 30px; }
+.cap-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(30px, 3.6vw, 43px);
+  letter-spacing: -.03em; line-height: 1.02; margin: 12px 0 0;
+}
+.cap-head h2 em { font-style: normal; color: var(--lime-deep); }
+.cap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.cap-card {
+  padding: 24px 22px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.cap-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center; color: var(--ink); margin-bottom: 15px;
+  transition: transform .24s cubic-bezier(.2,.7,.3,1);
+}
+.cap-card:hover .cap-icon { transform: scale(1.07) rotate(-4deg); }
+.cap-icon.lime { background: rgba(183,239,93,.36); }
+.cap-icon.blue { background: rgba(104,165,232,.22); }
+.cap-icon.violet { background: rgba(152,135,232,.22); }
+.cap-icon.amber { background: rgba(240,184,74,.26); }
+.cap-card strong { display: block; font-size: 15.5px; font-weight: 600; margin-bottom: 7px; }
+.cap-card p { margin: 0; font-size: 13px; line-height: 1.62; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING · FAQ
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.faq-section { max-width: 900px; margin: 0 auto; padding: 0 6vw 78px; }
+.faq-head { text-align: center; margin-bottom: 30px; }
+.faq-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(28px, 3.4vw, 40px);
+  letter-spacing: -.03em; margin: 12px 0 0;
+}
+.faq-list { display: grid; gap: 9px; }
+.faq-item {
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+.faq-item.open { border-color: var(--lime-deep); box-shadow: var(--shadow); }
+.faq-item > button {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 19px 22px;
+  background: transparent; cursor: pointer; text-align: left;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15.5px; font-weight: 600; color: var(--ink);
+}
+.faq-item > button svg { color: var(--muted); flex-shrink: 0; transition: transform .26s cubic-bezier(.2,.7,.3,1); }
+.faq-item.open > button svg { transform: rotate(180deg); color: var(--lime-deep); }
+/* max-height, not the 0fr/1fr grid trick: `fr` resolves to 0px in an
+   auto-height grid on some engines, which collapsed the panel completely.
+   The cap sits well above the longest answer, Bangla included. */
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .34s cubic-bezier(.2, .7, .3, 1);
+}
+.faq-item.open .faq-answer { max-height: 500px; }
+.faq-answer > p {
+  margin: 0;
+  padding: 4px 22px 20px;
+  font-size: 13.5px; line-height: 1.72; color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .day-section { grid-template-columns: 1fr; gap: 30px; }
+  .cap-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 620px) {
+  .cap-grid { grid-template-columns: 1fr; }
+  .day-timeline li { grid-template-columns: 38px 1fr; }
+  .day-bar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .day-timeline li:hover { transform: none; }
+  .faq-answer { transition: none; }
 }

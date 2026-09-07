@@ -12,6 +12,7 @@ import {
   Route as RouteIcon,
   Search,
   Settings2,
+  UserRound,
   TrendingUp,
   Truck,
   X,
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
   { labelKey: "nav.complaints", href: "/complaints", icon: FileText, roles: ["staff", "officer"] },
   { labelKey: "nav.fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
   { labelKey: "nav.analytics", href: "/analytics", icon: Gauge, roles: ["staff", "officer"] },
+  { labelKey: "nav.profile", href: "/profile", icon: UserRound, roles: ["staff", "officer"] },
   { labelKey: "nav.settings", href: "/settings", icon: Settings2, roles: ["staff", "officer"] },
 ];
 

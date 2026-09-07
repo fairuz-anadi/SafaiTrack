@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
-import { loginSchema, registerSchema } from "../../shared/schemas.js";
+import { loginSchema, registerSchema, updateProfileSchema } from "../../shared/schemas.js";
 import type { AuthUser } from "../../shared/types.js";
 import { db, schema } from "../db/client.js";
 import { SESSION_COOKIE, hashPassword, signSession, verifyPassword } from "../lib/auth.js";
@@ -121,6 +121,106 @@ authRoutes.patch("/me/language", requireAuth, async c => {
   await db.update(users).set({ preferredLanguage: lang }).where(eq(users.userId, user.userId));
   return c.json({ ok: true, preferredLanguage: lang });
 });
+
+/**
+ * Full profile detail for the signed-in user, including the subtype fields
+ * that live outside the `users` table.
+ */
+authRoutes.get("/me/profile", requireAuth, async c => {
+  const user = c.get("user");
+  const [row] = await db.select().from(users).where(eq(users.userId, user.userId)).limit(1);
+  if (!row) throw new HTTPException(401, { message: "Session no longer valid" });
+
+  let extra: Record<string, unknown> = {};
+  if (row.userType === "citizen") {
+    const [z] = await db.select().from(citizens).where(eq(citizens.userId, user.userId)).limit(1);
+    extra = {
+      address: z?.address ?? null,
+      wardId: z?.wardId ?? null,
+      trustScore: z?.trustScore ?? null,
+      reportsFiled: z?.reportsFiled ?? 0,
+      reportsConfirmed: z?.reportsConfirmed ?? 0,
+    };
+  } else if (row.userType === "staff") {
+    const [z] = await db
+      .select()
+      .from(municipalStaff)
+      .where(eq(municipalStaff.userId, user.userId))
+      .limit(1);
+    extra = { employeeNo: z?.employeeNo, designation: z?.designation, cityCorporation: z?.cityCorporation };
+  } else if (row.userType === "driver") {
+    const [z] = await db
+      .select()
+      .from(truckDrivers)
+      .where(eq(truckDrivers.userId, user.userId))
+      .limit(1);
+    extra = { licenseNo: z?.licenseNo, licenseExpiry: z?.licenseExpiry, shift: z?.shift, isAvailable: z?.isAvailable };
+  } else if (row.userType === "officer") {
+    const [z] = await db
+      .select()
+      .from(wardOfficers)
+      .where(eq(wardOfficers.userId, user.userId))
+      .limit(1);
+    extra = { employeeNo: z?.employeeNo, wardId: z?.wardId, officeContact: z?.officeContact };
+  }
+
+  return c.json({
+    profile: {
+      userId: row.userId,
+      role: row.userType,
+      fullName: row.fullName,
+      email: row.email,
+      phone: row.phone,
+      preferredLanguage: row.preferredLanguage,
+      createdAt: row.createdAt,
+      ...extra,
+    },
+  });
+});
+
+/**
+ * Update your own profile. Deliberately narrow: email and role are not
+ * editable here — an email change is an identity change, and a role change
+ * is a privilege escalation. Both belong with the city corporation.
+ */
+authRoutes.patch(
+  "/me/profile",
+  requireAuth,
+  zValidator("json", updateProfileSchema),
+  async c => {
+    const user = c.get("user");
+    const input = c.req.valid("json");
+
+    const userPatch: Record<string, unknown> = {};
+    if (input.fullName !== undefined) userPatch.fullName = input.fullName;
+    if (input.phone !== undefined) userPatch.phone = input.phone || null;
+    if (input.preferredLanguage !== undefined) userPatch.preferredLanguage = input.preferredLanguage;
+
+    // A phone number is the key for the SMS channel, so it has to stay unique.
+    if (input.phone) {
+      const clash = await db.select().from(users).where(eq(users.phone, input.phone)).limit(1);
+      if (clash.length > 0 && clash[0].userId !== user.userId) {
+        throw new HTTPException(409, {
+          message: "That mobile number is already registered to another account",
+        });
+      }
+    }
+
+    if (Object.keys(userPatch).length > 0) {
+      await db.update(users).set(userPatch).where(eq(users.userId, user.userId));
+    }
+
+    // Address and ward live on the citizen subtype only.
+    if (user.role === "citizen" && (input.address !== undefined || input.wardId !== undefined)) {
+      const citizenPatch: Record<string, unknown> = {};
+      if (input.address !== undefined) citizenPatch.address = input.address || null;
+      if (input.wardId !== undefined) citizenPatch.wardId = input.wardId;
+      await db.update(citizens).set(citizenPatch).where(eq(citizens.userId, user.userId));
+    }
+
+    return c.json({ ok: true });
+  }
+);
 
 /** Ward officers and citizens carry a ward; staff and drivers do not. */
 async function resolveWardId(userId: number, role: string): Promise<number | null> {

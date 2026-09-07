@@ -8,15 +8,21 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import {
   ArrowRight,
+  Bot,
   Building2,
+  ChevronDown,
   CircleCheck,
   FileText,
+  Gauge,
   MapPin,
   Menu,
+  Moon,
   Radio,
   Route as RouteIcon,
   ShieldCheck,
   Sparkles,
+  Sunrise,
+  Sunset,
   TrendingDown,
   Truck,
   UserRound,
@@ -46,6 +52,7 @@ export default function Landing() {
   const revealRef = useRevealOnScroll<HTMLDivElement>();
   const glowRef = usePointerGlow<HTMLDivElement>();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [revealed, setRevealed] = useState(false);
   const [data, setData] = useState<Overview | null>(null);
 
@@ -97,6 +104,9 @@ export default function Landing() {
           </Link>
           <a href="#how-it-works" onClick={() => setMobileOpen(false)}>
             {t("nav.howItWorks")}
+          </a>
+          <a href="#faq" onClick={() => setMobileOpen(false)}>
+            {t("faq.kicker")}
           </a>
           <a href="#impact" onClick={() => setMobileOpen(false)}>
             {t("nav.impact")}
@@ -368,6 +378,70 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ── A day in the ward ───────────────────────────────────────── */}
+        <section className="day-section reveal" id="a-day">
+          <div className="story-intro">
+            <p className="public-kicker">{t("day.kicker")}</p>
+            <h2>
+              {t("day.title1")}
+              <br />
+              <em>{t("day.title2")}</em>
+            </h2>
+            <p>{t("day.body")}</p>
+          </div>
+
+          <ol className="day-timeline reveal-stagger">
+            {[
+              { time: "00–05", icon: Moon, k: "day.t1", b: "day.t1body", level: 18, tone: "blue" },
+              { time: "05–09", icon: Sunrise, k: "day.t2", b: "day.t2body", level: 92, tone: "coral" },
+              { time: "12–15", icon: Gauge, k: "day.t3", b: "day.t3body", level: 58, tone: "violet" },
+              { time: "15–19", icon: Sunset, k: "day.t4", b: "day.t4body", level: 100, tone: "amber" },
+            ].map((row, i) => (
+              <li key={row.time} style={{ "--i": i } as React.CSSProperties}>
+                <span className={`day-icon ${row.tone}`}>
+                  <row.icon size={16} />
+                </span>
+                <div className="day-body">
+                  <span className="day-time figure">{row.time}</span>
+                  <strong>{t(row.k as never)}</strong>
+                  <p>{t(row.b as never)}</p>
+                </div>
+                <div className="day-bar" aria-hidden="true">
+                  <i className={row.tone} style={{ height: `${row.level}%` }} />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* ── Capability grid ─────────────────────────────────────────── */}
+        <section className="cap-section reveal" id="capabilities">
+          <div className="cap-head">
+            <p className="public-kicker">{t("cap.kicker")}</p>
+            <h2>
+              {t("cap.title1")} <em>{t("cap.title2")}</em>
+            </h2>
+          </div>
+          <div className="cap-grid reveal-stagger">
+            {[
+              { icon: RouteIcon, k: "cap.c1", b: "cap.c1b", tone: "lime" },
+              { icon: TrendingDown, k: "cap.c2", b: "cap.c2b", tone: "violet" },
+              { icon: Radio, k: "cap.c3", b: "cap.c3b", tone: "blue" },
+              { icon: ShieldCheck, k: "cap.c4", b: "cap.c4b", tone: "amber" },
+              { icon: Zap, k: "cap.c5", b: "cap.c5b", tone: "lime" },
+              { icon: Bot, k: "cap.c6", b: "cap.c6b", tone: "blue" },
+            ].map((c, i) => (
+              <div className="cap-card glow lift" key={c.k} style={{ "--i": i } as React.CSSProperties}>
+                <span className={`cap-icon ${c.tone}`}>
+                  <c.icon size={18} />
+                </span>
+                <strong>{t(c.k as never)}</strong>
+                <p>{t(c.b as never)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="brand-band reveal" id="brand">
           <BrandStatement
             kicker={t("brand.kicker")}
@@ -429,6 +503,32 @@ export default function Landing() {
           <div>
             <strong>0</strong>
             <span>{t("roles.noSensors")}</span>
+          </div>
+        </section>
+
+        {/* ── FAQ ─────────────────────────────────────────────────────── */}
+        <section className="faq-section reveal" id="faq">
+          <div className="faq-head">
+            <p className="public-kicker">{t("faq.kicker")}</p>
+            <h2>{t("faq.title")}</h2>
+          </div>
+          <div className="faq-list">
+            {[
+              { q: "faq.q1", a: "faq.a1" },
+              { q: "faq.q2", a: "faq.a2" },
+              { q: "faq.q3", a: "faq.a3" },
+              { q: "faq.q4", a: "faq.a4" },
+            ].map((row, i) => (
+              <div className={`faq-item ${openFaq === i ? "open" : ""}`} key={row.q}>
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i}>
+                  <span>{t(row.q as never)}</span>
+                  <ChevronDown size={17} />
+                </button>
+                <div className="faq-answer">
+                  <p>{t(row.a as never)}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
