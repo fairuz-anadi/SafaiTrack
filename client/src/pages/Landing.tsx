@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { BrandLockup, BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
+import { Figure, type SceneName } from "@/components/media/Figure";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -45,6 +46,20 @@ interface Overview {
   routes: { active: number };
   impact: { avgSavedPercent: number; costSavedBdt: number; co2SavedKg: number; routesScored: number };
 }
+
+/**
+ * The four moments of a collection cycle.
+ *
+ * `src` is intentionally empty: each slot renders an original illustration
+ * until a real photograph is dropped into `client/public/images/`. Fill in a
+ * filename here once you have one — see that folder's README.
+ */
+const GALLERY: { scene: SceneName; src?: string; k: string; b: string }[] = [
+  { scene: "overflow", src: undefined, k: "gallery.g1", b: "gallery.g1b" },
+  { scene: "report", src: undefined, k: "gallery.g2", b: "gallery.g2b" },
+  { scene: "route", src: undefined, k: "gallery.g3", b: "gallery.g3b" },
+  { scene: "collected", src: undefined, k: "gallery.g4", b: "gallery.g4b" },
+];
 
 export default function Landing() {
   const { user } = useAuth();
@@ -376,6 +391,40 @@ export default function Landing() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ── On the ground ───────────────────────────────────────────── */}
+        <section className="gallery-section reveal" id="on-the-ground">
+          <div className="gallery-head">
+            <p className="public-kicker">{t("gallery.kicker")}</p>
+            <h2>
+              {t("gallery.title1")}
+              <br />
+              <em>{t("gallery.title2")}</em>
+            </h2>
+            <p>{t("gallery.body")}</p>
+          </div>
+
+          <div className="gallery-grid reveal-stagger">
+            {GALLERY.map((g, i) => (
+              <Figure
+                key={g.k}
+                scene={g.scene}
+                src={g.src}
+                alt={t(g.k as never)}
+                className="lift"
+                caption={
+                  <>
+                    <span className="fig-step figure">{String(i + 1).padStart(2, "0")}</span>
+                    <strong>{t(g.k as never)}</strong>
+                    <span>{t(g.b as never)}</span>
+                  </>
+                }
+              />
+            ))}
+          </div>
+
+          <p className="gallery-note">{t("gallery.note")}</p>
         </section>
 
         {/* ── A day in the ward ───────────────────────────────────────── */}

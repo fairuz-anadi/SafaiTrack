@@ -1412,3 +1412,65 @@ html[data-lang="bn"] .figure {
   .day-timeline li:hover { transform: none; }
   .faq-answer { transition: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING · ON THE GROUND (photo gallery)
+   Each slot ships an original illustration and swaps to a photograph the
+   moment one lands in client/public/images.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.gallery-section { max-width: 1184px; margin: 0 auto; padding: 0 6vw 78px; }
+.gallery-head { max-width: 52ch; margin-bottom: 30px; }
+.gallery-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(30px, 3.8vw, 45px);
+  line-height: 1.02; letter-spacing: -.032em; margin: 12px 0 14px;
+}
+.gallery-head h2 em { font-style: normal; color: var(--lime-deep); }
+.gallery-head p { font-size: 14.5px; line-height: 1.7; color: var(--muted); margin: 0; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+.app-figure { margin: 0; }
+.figure-frame {
+  aspect-ratio: 320 / 220;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.figure-frame img,
+.figure-frame .scene { width: 100%; height: 100%; display: block; object-fit: cover; }
+/* A photograph gets a slow zoom on hover; an illustration stays put. */
+.figure-frame img { transition: transform .5s cubic-bezier(.2, .7, .3, 1); }
+.app-figure:hover .figure-frame img { transform: scale(1.04); }
+
+.app-figure figcaption { padding: 14px 4px 0; }
+.app-figure .fig-step {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  color: var(--lime-deep);
+  margin-bottom: 5px;
+}
+.app-figure figcaption strong { display: block; font-size: 14.5px; margin-bottom: 4px; }
+.app-figure figcaption > span:last-child {
+  display: block; font-size: 12.5px; line-height: 1.58; color: var(--muted);
+}
+
+.gallery-note {
+  margin: 26px 0 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(104, 165, 232, .08);
+  border: 1px solid rgba(104, 165, 232, .2);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #46586c;
+}
+
+@media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px) { .gallery-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .app-figure:hover .figure-frame img { transform: none; }
+}

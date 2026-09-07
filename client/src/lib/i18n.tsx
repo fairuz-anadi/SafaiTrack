@@ -597,6 +597,26 @@ const strings = {
   "nav.profile": { en: "Profile", bn: "প্রোফাইল" },
 
   /* ── landing: extra sections ─────────────────────────────────────────── */
+  "gallery.kicker": { en: "ON THE GROUND", bn: "মাঠের বাস্তবতা" },
+  "gallery.title1": { en: "This is the street", bn: "এই রাস্তাটাই" },
+  "gallery.title2": { en: "the system is for.", bn: "সিস্টেমের লক্ষ্য।" },
+  "gallery.body": {
+    en: "Four moments in one collection cycle. Every screen in SafaiTrack exists to move a ward from the first picture to the last.",
+    bn: "একটি সংগ্রহ চক্রের চারটি মুহূর্ত। সাফাইট্র্যাকের প্রতিটি স্ক্রিন আছে একটি ওয়ার্ডকে প্রথম ছবি থেকে শেষ ছবিতে নেওয়ার জন্য।",
+  },
+  "gallery.g1": { en: "The bin passes capacity", bn: "বিন ধারণক্ষমতা ছাড়ায়" },
+  "gallery.g1b": { en: "Waste reaches the footpath before anyone is dispatched.", bn: "কেউ পৌঁছানোর আগেই ময়লা ফুটপাতে পৌঁছে যায়।" },
+  "gallery.g2": { en: "A resident reports it", bn: "একজন বাসিন্দা জানান" },
+  "gallery.g2b": { en: "Web, SMS or USSD — all three produce the same tracked record.", bn: "ওয়েব, SMS বা USSD — তিনটিতেই একই নথি তৈরি হয়।" },
+  "gallery.g3": { en: "A route is generated", bn: "রুট তৈরি হয়" },
+  "gallery.g3b": { en: "Full bins first, near-empty bins skipped, distance minimised.", bn: "ভরা বিন আগে, খালি বিন বাদ, দূরত্ব সর্বনিম্ন।" },
+  "gallery.g4": { en: "The street is clear", bn: "রাস্তা পরিষ্কার" },
+  "gallery.g4b": { en: "The collection is logged and the resident sees it resolved.", bn: "সংগ্রহ নথিভুক্ত হয় এবং বাসিন্দা সমাধান দেখতে পান।" },
+  "gallery.note": {
+    en: "These are original illustrations. Replace them with your own photographs by dropping files into client/public/images.",
+    bn: "এগুলো মৌলিক চিত্র। client/public/images ফোল্ডারে নিজের ছবি রাখলে সেগুলো দেখা যাবে।",
+  },
+
   "day.kicker": { en: "A DAY IN THE WARD", bn: "ওয়ার্ডের একটি দিন" },
   "day.title1": { en: "Waste does not arrive", bn: "ময়লা সারাদিন" },
   "day.title2": { en: "at a steady rate.", bn: "সমান হারে জমে না।" },
