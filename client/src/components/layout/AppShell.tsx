@@ -17,7 +17,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { BrandLockup } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
@@ -193,7 +193,9 @@ export function AppShell({
     <div className="app-shell">
       <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
         <div className="brand-lockup">
-          <BrandLockup size={34} tone="dark" />
+          {/* No brand card in here: `.sidebar` is `overflow: hidden`, which would
+              clip it. The mark still tilts and bursts. */}
+          <LiveBrandLockup size={34} tone="dark" href="/dashboard" popover={false} />
         </div>
         <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label={t("common.close")}>
           <X size={18} />

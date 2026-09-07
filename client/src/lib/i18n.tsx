@@ -95,6 +95,19 @@ const strings = {
     en: "Safai (সাফাই) is the Bangla word for cleaning — the work itself, done by hand, every day. Track is what has been missing: a record of where the waste is, who collected it, and when.",
     bn: "সাফাই মানে পরিচ্ছন্নতার কাজ — যা প্রতিদিন হাতে করা হয়। ট্র্যাক সেই জিনিসটি যা এতদিন ছিল না: কোথায় ময়লা, কে নিয়েছে, কখন নিয়েছে — তার হিসাব।",
   },
+  "brand.markLabel": { en: "Safai Track — about the mark", bn: "সাফাই ট্র্যাক — লোগো সম্পর্কে" },
+  "brand.partArcs": {
+    en: "The two arcs are the signal — the bin reporting its own fill level.",
+    bn: "দুটি বাঁকা রেখা হলো সংকেত — বিন নিজেই তার ভরাট মাত্রা জানাচ্ছে।",
+  },
+  "brand.partBin": {
+    en: "The body is an ordinary municipal bin, not a futuristic one. The system works with what Dhaka already has.",
+    bn: "দেহটি সাধারণ পৌর বিন, ভবিষ্যতের কোনো যন্ত্র নয়। ঢাকায় যা আছে তা নিয়েই ব্যবস্থাটি কাজ করে।",
+  },
+  "brand.partLines": {
+    en: "The two inner lines are the record: measured, logged, answerable.",
+    bn: "ভেতরের দুটি রেখা হলো হিসাব: মাপা, নথিভুক্ত, জবাবদিহিযোগ্য।",
+  },
   "brand.tagline": { en: "Cleaning, on the record", bn: "পরিচ্ছন্নতা, হিসাবসহ" },
   /* ── landing ─────────────────────────────────────────────────────────── */
   "hero.eyebrow": {

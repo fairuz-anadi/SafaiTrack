@@ -1006,9 +1006,11 @@ html[data-lang="bn"] .stat-content strong { font-family: 'Space Grotesk', sans-s
 .auth-aside .brand-lockup-v2 .brand-text small,
 .driver-top .brand-lockup-v2 .brand-text small { color: rgba(243, 247, 239, .45); }
 
-/* The mark tilts a touch toward the cursor on hover — a small sign of life. */
-.brand-lockup-v2 svg { transition: transform .3s cubic-bezier(.2, .7, .3, 1); }
-.brand-lockup-v2:hover svg { transform: rotate(-6deg) scale(1.05); }
+/* The mark tilts a touch toward the cursor on hover — a small sign of life.
+   The `.live` lockup runs the real pointer-tracked tilt instead, so it opts
+   out here rather than fighting two transforms on the same element. */
+.brand-lockup-v2:not(.live) svg { transition: transform .3s cubic-bezier(.2, .7, .3, 1); }
+.brand-lockup-v2:not(.live):hover svg { transform: rotate(-6deg) scale(1.05); }
 
 /* ── Landing brand statement band ───────────────────────────────────────── */
 .brand-band {
@@ -2250,3 +2252,207 @@ html[data-lang="bn"] .figure {
   .nav-item:before { transition: none; }
   .nav-scrim { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LIVE LOGO
+   Static until approached. The tilt reads two custom properties written by a
+   pointermove handler, so the browser interpolates and React never re-renders.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.logo-live {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  position: relative;
+  flex-shrink: 0;
+  perspective: 340px;
+}
+
+.logo-live-btn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+.logo-live-btn:active { transform: none; } /* the tilt layer owns the press */
+/* The arrival pop lives here rather than on the tilt layer: an animation with
+   `fill: both` keeps its last keyframe forever, which would have pinned that
+   layer's transform and silently killed the pointer tilt. */
+.logo-live-btn { animation: logo-arrive .62s cubic-bezier(.18, 1.5, .4, 1) both; }
+.logo-live-btn:focus-visible {
+  outline: 2px solid var(--lime-deep);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* Everything that moves lives on this one layer, so the badge, lid and halo
+   stay locked together while it leans. */
+.logo-live-tilt {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform .35s cubic-bezier(.2, .7, .3, 1);
+}
+.logo-live:hover .logo-live-tilt { transition: transform .08s linear; }
+.logo-live-btn:active .logo-live-tilt { transform: scale(.93); transition: transform .1s ease; }
+
+@keyframes logo-arrive {
+  0% { opacity: 0; transform: scale(.55) rotate(-14deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.logo-live-mark {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transform: translateZ(8px);
+  transition: filter .3s ease;
+}
+.logo-live:hover .logo-live-mark { filter: drop-shadow(0 6px 14px rgba(104, 173, 52, .3)); }
+
+/* The lid sits exactly over the mark's own lid, then lifts and tips — the
+   bin opening is the single gesture the whole brand rests on. */
+.logo-live-lid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform: translateZ(10px);
+  transform-origin: 30% 55%;
+  transition: transform .4s cubic-bezier(.2, 1.4, .4, 1);
+}
+.logo-live:hover .logo-live-lid { transform: translateZ(14px) translateY(-13%) rotate(-11deg); }
+
+/* Idle breathing on the halo; hover widens it. */
+.logo-halo {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  border-radius: 30%;
+  background: radial-gradient(circle, rgba(183, 239, 93, .5), transparent 66%);
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity .3s ease, transform .45s cubic-bezier(.2, .7, .3, 1);
+}
+.logo-live:hover .logo-halo { opacity: 1; transform: scale(1); }
+.logo-live.open .logo-halo { opacity: .8; transform: scale(1.06); }
+
+/* ── the click burst ─────────────────────────────────────────────────────── */
+
+.logo-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.logo-burst i {
+  position: absolute;
+  inset: 0;
+  border-radius: 32%;
+  border: 2px solid var(--lime-deep);
+  opacity: 0;
+  animation: logo-ring .85s cubic-bezier(.15, .7, .3, 1) forwards;
+}
+.logo-burst i:nth-child(2) { animation-delay: .11s; }
+.logo-burst i:nth-child(3) { animation-delay: .22s; }
+
+@keyframes logo-ring {
+  0% { opacity: .75; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.5); }
+}
+
+/* ── the card that pops open ─────────────────────────────────────────────── */
+
+.logo-card {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: -6px;
+  z-index: 80;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 22px 48px rgba(23, 33, 30, .16);
+  transform-origin: 26px -10px;
+  animation: logo-card-pop .34s cubic-bezier(.18, 1.35, .4, 1) both;
+  cursor: default;
+}
+/* The little beak, pointing back at the mark that opened it. */
+.logo-card:before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 11px;
+  height: 11px;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  transform: rotate(45deg);
+  border-radius: 2px 0 0 0;
+}
+
+@keyframes logo-card-pop {
+  0% { opacity: 0; transform: scale(.86) translateY(-8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.logo-card-top { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
+.logo-card-top small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .02em;
+}
+.logo-card-meaning {
+  margin: 0 0 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: #4a544f;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+.logo-card-parts { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.logo-card-parts li {
+  display: flex;
+  gap: 10px;
+  color: #5a635e;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+.logo-card-parts b {
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--lime-deep);
+  padding-top: 2px;
+}
+
+/* On dark chrome the card keeps the light surface — it is a document about
+   the brand, and documents are on paper. Only the beak needs to know. */
+.sidebar .logo-card, .auth-aside .logo-card { color: var(--ink); }
+
+/* Nothing here is load-bearing for comprehension, so it can all stand down. */
+@media (prefers-reduced-motion: reduce) {
+  .logo-live-btn { animation: none; }
+  .logo-live-tilt { transform: none !important; transition: none; }
+  .logo-live-lid, .logo-halo { transition: none; }
+  .logo-live:hover .logo-live-lid { transform: none; }
+  .logo-burst { display: none; }
+  .logo-card { animation: none; }
+}
+
+/* The auth aside paints an ambient canvas behind everything; the lockup has
+   to sit above it, and the brand card above that. */
+.auth-aside .brand-lockup-v2 { position: relative; z-index: 2; }
+
+/* Only the name half is a link now — it should not look like plain text. */
+.brand-text-link { text-decoration: none; color: inherit; }
+.brand-text-link .wordmark { transition: opacity .18s ease; }
+.brand-text-link:hover .wordmark { opacity: .78; }

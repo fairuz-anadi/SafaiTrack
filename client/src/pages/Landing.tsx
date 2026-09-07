@@ -31,7 +31,8 @@ import {
   Zap,
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
-import { BrandLockup, BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
+import { BrandMark, BrandStatement, Wordmark } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { Figure, type SceneName } from "@/components/media/Figure";
 import { RouteEngineSection } from "@/components/landing/RouteEngineSection";
 import { useRevealOnScroll, usePointerGlow } from "@/hooks/useMotion";
@@ -110,9 +111,7 @@ export default function Landing() {
       }}
     >
       <header className="public-nav">
-        <Link href="/" className="public-brand">
-          <BrandLockup size={34} />
-        </Link>
+        <LiveBrandLockup size={34} className="public-brand" />
 
         <nav className={`public-links ${mobileOpen ? "open" : ""}`}>
           <Link href="/about" onClick={() => setMobileOpen(false)}>

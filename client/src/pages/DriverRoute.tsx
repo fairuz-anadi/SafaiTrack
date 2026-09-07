@@ -13,7 +13,7 @@ import {
   Navigation,
   Play,
 } from "lucide-react";
-import { BrandLockup } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
@@ -113,7 +113,7 @@ export default function DriverRoute() {
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}
         >
-          <BrandLockup size={32} tone="dark" tagline={t("driver.role")} />
+          <LiveBrandLockup size={32} tone="dark" tagline={t("driver.role")} popover={false} href={false} />
           <button
             onClick={() => void logout()}
             style={{

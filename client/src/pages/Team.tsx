@@ -18,7 +18,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
-import { BrandLockup, BrandMark, Wordmark } from "@/components/brand/Brand";
+import { BrandMark, Wordmark } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { useRevealOnScroll } from "@/hooks/useMotion";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
 
@@ -101,9 +102,7 @@ export default function Team() {
   return (
     <div className="public-site is-ready" ref={revealRef}>
       <header className="public-nav">
-        <Link href="/" className="public-brand">
-          <BrandLockup size={34} />
-        </Link>
+        <LiveBrandLockup size={34} className="public-brand" />
         <div className="public-nav-actions">
           <LanguageToggle compact />
           <Link href="/" className="back-link">

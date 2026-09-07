@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, ArrowRight, Check, MapPin, MessageSquare, ShieldCheck } from "lucide-react";
-import { BrandLockup } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
@@ -98,9 +98,7 @@ export default function Report() {
   return (
     <div className="report-page">
       <header className="report-nav">
-        <Link href="/" className="public-brand">
-          <BrandLockup size={34} />
-        </Link>
+        <LiveBrandLockup size={34} className="public-brand" />
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <LanguageToggle />
           <Link href="/" className="back-link">

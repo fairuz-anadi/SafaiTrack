@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { ArrowRight, MapPin, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
-import { BrandLockup } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
 
@@ -63,9 +63,7 @@ export default function Register() {
     <div className="auth-page">
       <aside className="auth-aside ambient-host">
         <AmbientNetwork tone="dark" intensity={0.85} density={0.75} />
-        <Link href="/" className="public-brand" style={{ position: "relative", zIndex: 2 }}>
-          <BrandLockup size={34} tone="dark" />
-        </Link>
+        <LiveBrandLockup size={34} tone="dark" className="public-brand" popover={false} />
 
         <div style={{ position: "relative", zIndex: 2 }}>
           <h2>

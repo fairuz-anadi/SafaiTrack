@@ -23,7 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
-import { BrandLockup } from "@/components/brand/Brand";
+import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
 import type { Role } from "@shared/types";
@@ -127,9 +127,9 @@ export default function Login() {
       <aside className="auth-aside ambient-host">
         <AmbientNetwork tone="dark" intensity={0.85} density={0.75} />
 
-        <Link href="/" className="public-brand" style={{ position: "relative", zIndex: 2 }}>
-          <BrandLockup size={34} tone="dark" />
-        </Link>
+        {/* `.auth-aside` clips its overflow to contain the ambient canvas, so the
+            brand card stays on the public pages where it has room. */}
+        <LiveBrandLockup size={34} tone="dark" className="public-brand" popover={false} />
 
         {/* The panel answers "what will I see?" for whichever role is selected. */}
         <div style={{ position: "relative", zIndex: 2 }} key={selected?.role ?? "none"} className="aside-swap">
