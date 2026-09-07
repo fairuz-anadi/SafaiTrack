@@ -12,34 +12,74 @@ import {
   Route as RouteIcon,
   Search,
   Settings2,
-  UserRound,
   TrendingUp,
   Truck,
+  UserRound,
   X,
 } from "lucide-react";
 import { BrandLockup } from "@/components/brand/Brand";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
-import { relativeTime } from "@/lib/format";
+import { clockTime, relativeTime } from "@/lib/format";
 
 interface NavItem {
   labelKey: StringKey;
   href: string;
   icon: typeof Grid2X2;
   roles: string[];
+  /** Which live figure to show as a badge, if any. */
+  badge?: "critical" | "openComplaints" | "activeRoutes";
 }
 
-const NAV: NavItem[] = [
-  { labelKey: "nav.overview", href: "/dashboard", icon: Grid2X2, roles: ["staff"] },
-  { labelKey: "nav.liveBins", href: "/bins", icon: Boxes, roles: ["staff", "officer"] },
-  { labelKey: "nav.routes", href: "/routes", icon: RouteIcon, roles: ["staff"] },
-  { labelKey: "nav.impactProof", href: "/impact", icon: TrendingUp, roles: ["staff", "officer"] },
-  { labelKey: "nav.complaints", href: "/complaints", icon: FileText, roles: ["staff", "officer"] },
-  { labelKey: "nav.fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
-  { labelKey: "nav.analytics", href: "/analytics", icon: Gauge, roles: ["staff", "officer"] },
-  { labelKey: "nav.profile", href: "/profile", icon: UserRound, roles: ["staff", "officer"] },
-  { labelKey: "nav.settings", href: "/settings", icon: Settings2, roles: ["staff", "officer"] },
+interface NavGroup {
+  labelKey: StringKey;
+  items: NavItem[];
+}
+
+const NAV: NavGroup[] = [
+  {
+    labelKey: "nav.operations",
+    items: [
+      { labelKey: "nav.overview", href: "/dashboard", icon: Grid2X2, roles: ["staff"] },
+      {
+        labelKey: "nav.liveBins",
+        href: "/bins",
+        icon: Boxes,
+        roles: ["staff", "officer"],
+        badge: "critical",
+      },
+      {
+        labelKey: "nav.routes",
+        href: "/routes",
+        icon: RouteIcon,
+        roles: ["staff"],
+        badge: "activeRoutes",
+      },
+      {
+        labelKey: "nav.complaints",
+        href: "/complaints",
+        icon: FileText,
+        roles: ["staff", "officer"],
+        badge: "openComplaints",
+      },
+      { labelKey: "nav.fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
+    ],
+  },
+  {
+    labelKey: "nav.insight",
+    items: [
+      { labelKey: "nav.impactProof", href: "/impact", icon: TrendingUp, roles: ["staff", "officer"] },
+      { labelKey: "nav.analytics", href: "/analytics", icon: Gauge, roles: ["staff", "officer"] },
+    ],
+  },
+  {
+    labelKey: "nav.account",
+    items: [
+      { labelKey: "nav.profile", href: "/profile", icon: UserRound, roles: ["staff", "officer"] },
+      { labelKey: "nav.settings", href: "/settings", icon: Settings2, roles: ["staff", "officer"] },
+    ],
+  },
 ];
 
 interface NotificationRow {
@@ -49,6 +89,17 @@ interface NotificationRow {
   notificationType: string;
   deliveryStatus: string;
   createdAt: string;
+}
+
+/** The handful of live figures the sidebar surfaces. */
+interface SidebarCounts {
+  critical: number;
+  openComplaints: number;
+  activeRoutes: number;
+  simClock: string | null;
+  ticksElapsed: number;
+  isRunning: boolean;
+  lastSync: string;
 }
 
 export function AppShell({
@@ -67,22 +118,39 @@ export function AppShell({
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(0);
+  const [counts, setCounts] = useState<SidebarCounts | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
     const load = async () => {
       try {
-        const res = await api.get<{ notifications: NotificationRow[]; unread: number }>(
-          "/notifications"
-        );
-        if (!cancelled) {
-          setNotifications(res.notifications);
-          setUnread(res.unread);
-        }
+        const [notif, overview] = await Promise.all([
+          api.get<{ notifications: NotificationRow[]; unread: number }>("/notifications"),
+          api.get<{
+            bins: { critical: number };
+            complaints: { open: number };
+            routes: { active: number };
+            simulation: { simClock: string; ticksElapsed: number; isRunning: boolean };
+          }>("/analytics/overview"),
+        ]);
+        if (cancelled) return;
+        setNotifications(notif.notifications);
+        setUnread(notif.unread);
+        setCounts({
+          critical: overview.bins.critical,
+          openComplaints: overview.complaints.open,
+          activeRoutes: overview.routes.active,
+          simClock: overview.simulation.simClock,
+          ticksElapsed: overview.simulation.ticksElapsed,
+          isRunning: overview.simulation.isRunning,
+          lastSync: new Date().toISOString(),
+        });
       } catch {
-        /* notifications are non-critical */
+        /* the sidebar is chrome — it should never take the page down */
       }
     };
+
     void load();
     const timer = window.setInterval(load, 20000);
     return () => {
@@ -93,7 +161,6 @@ export function AppShell({
 
   if (!user) return null;
 
-  const items = NAV.filter(n => n.roles.includes(user.role));
   const initials = user.fullName
     .split(" ")
     .map(p => p[0])
@@ -102,6 +169,12 @@ export function AppShell({
     .toUpperCase();
 
   const roleLabel = t(`role.${user.role}` as StringKey);
+
+  const badgeValue = (kind: NavItem["badge"]): number | null => {
+    if (!kind || !counts) return null;
+    const n = counts[kind];
+    return n > 0 ? n : null;
+  };
 
   const openNotifications = async () => {
     const next = !showNotifications;
@@ -127,38 +200,74 @@ export function AppShell({
         </button>
 
         <div className="workspace-switcher">
-          <div className="ward-avatar">D</div>
+          <div className="ward-avatar">{user.wardId ? String(user.wardId) : "D"}</div>
           <div>
             <small>{t("nav.signedInAs")}</small>
             <strong>{roleLabel}</strong>
           </div>
         </div>
 
+        {/* The nav scrolls on its own so the profile row below can never be
+            clipped off the bottom on a short viewport. */}
         <nav className="nav-list">
-          <p className="nav-label">{t("nav.operations")}</p>
-          {items.map(({ labelKey, href, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`nav-item ${location === href ? "active" : ""}`}
-              onClick={() => setMobileNav(false)}
-            >
-              <Icon size={18} />
-              <span>{t(labelKey)}</span>
-            </Link>
-          ))}
+          {NAV.map((group, gi) => {
+            const items = group.items.filter(n => n.roles.includes(user.role));
+            if (items.length === 0) return null;
+            return (
+              <div key={group.labelKey}>
+                <p className={`nav-label ${gi > 0 ? "secondary-label" : ""}`}>{t(group.labelKey)}</p>
+                {items.map(({ labelKey, href, icon: Icon, badge }) => {
+                  const count = badgeValue(badge);
+                  const active = location === href;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`nav-item ${active ? "active" : ""}`}
+                      onClick={() => setMobileNav(false)}
+                    >
+                      <Icon size={18} />
+                      <span>{t(labelKey)}</span>
+                      {count !== null && (
+                        <em className={badge === "critical" ? "hot" : ""}>{count}</em>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="sidebar-bottom">
-          <div style={{ padding: "0 6px 12px" }}>
-            <LanguageToggle compact />
-          </div>
-          <div className="profile-row">
-            <div className="profile-avatar">{initials}</div>
-            <div>
-              <strong>{user.fullName}</strong>
-              <small>{roleLabel}</small>
+          {/* Live status: the simulation clock is the one thing on screen that
+              proves the numbers are actually moving. */}
+          <div className="system-card">
+            <div className={`system-pulse ${counts && !counts.isRunning ? "idle" : ""}`}>
+              <span />
             </div>
+            <div>
+              <strong>{t(counts && !counts.isRunning ? "nav.simPaused" : "nav.simActive")}</strong>
+              <small>
+                {counts?.simClock ? clockTime(counts.simClock) : "—"} · {t("sim.tick")}{" "}
+                {counts?.ticksElapsed ?? 0}
+              </small>
+            </div>
+          </div>
+
+          <div className="sidebar-lang">
+            <LanguageToggle compact />
+            {counts && <span className="sync-note">{relativeTime(counts.lastSync)}</span>}
+          </div>
+
+          <div className="profile-row">
+            <Link href="/profile" className="profile-id" onClick={() => setMobileNav(false)}>
+              <div className="profile-avatar">{initials}</div>
+              <div>
+                <strong>{user.fullName}</strong>
+                <small>{roleLabel}</small>
+              </div>
+            </Link>
             <button onClick={() => void logout()} aria-label={t("common.signOut")}>
               <LogOut size={16} />
             </button>
@@ -236,6 +345,9 @@ export function AppShell({
 
         <div className="page-wrap">{children}</div>
       </main>
+
+      {/* Tapping outside closes the drawer on mobile. */}
+      {mobileNav && <div className="nav-scrim" onClick={() => setMobileNav(false)} />}
     </div>
   );
 }

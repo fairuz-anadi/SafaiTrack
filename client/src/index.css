@@ -2033,3 +2033,220 @@ html[data-lang="bn"] .figure {
   .engine-node:hover { transform: translate(-50%, -50%); }
   .engine-cta:hover { transform: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SIDEBAR
+   The base system sketched a sidebar; this makes it hold up to a long session.
+
+   Three things it fixes and three it adds:
+     · `.sidebar` was `overflow: hidden` at `min-height: 100vh` — with three
+       nav groups the profile row fell off the bottom of a short laptop
+       screen. The nav now scrolls inside itself and the footer is pinned.
+     · Active state was a flat lime slab. It now carries a left indicator that
+       slides in, so the eye can find "where am I" without reading.
+     · Count badges (`.nav-item em`) had no shape. They read as live figures.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A soft lime bloom at the top mirrors the existing bottom-left circle, so the
+   panel reads as lit rather than flat black. */
+.sidebar:before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -90px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(183, 239, 93, .16), transparent 68%);
+  pointer-events: none;
+}
+
+.sidebar { background: linear-gradient(180deg, #1a2521 0%, #17211e 46%, #141d1a 100%); }
+
+/* `min-height: 100vh` let the panel grow to fit its content, so the nav child
+   never had a reason to shrink and the footer slid below the fold. A sticky
+   sidebar wants a fixed height: pin it, and the overflow below engages. */
+.sidebar { height: 100vh; max-height: 100vh; }
+
+/* The whole point of the scroll fix: nav flexes, footer never moves.
+   `min-height: 0` is load-bearing — without it a flex child refuses to
+   shrink below its content and the overflow never engages. */
+.nav-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  margin-right: -4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .14) transparent;
+}
+.nav-list::-webkit-scrollbar { width: 5px; }
+.nav-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .13); border-radius: 4px; }
+.nav-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .22); }
+.nav-list::-webkit-scrollbar-track { background: transparent; }
+
+.sidebar-bottom { flex: 0 0 auto; padding-top: 14px; }
+
+/* Group headings get a hairline that runs out to the panel edge — cheap
+   structure, and it keeps three groups from reading as one long list. */
+.nav-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #6d7b74;
+}
+.nav-label:after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .11), transparent);
+}
+.secondary-label { margin-top: 22px; }
+
+/* ── nav items ───────────────────────────────────────────────────────────── */
+
+.nav-item {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
+  letter-spacing: -.01em;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+/* The indicator lives on a pseudo-element so it can animate height from the
+   centre out; a border-left would just snap on. */
+.nav-item:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 3px;
+  background: var(--lime);
+  transform: translateY(-50%);
+  transition: height .22s cubic-bezier(.2, .7, .3, 1);
+}
+.nav-item:hover:before { height: 15px; opacity: .5; }
+.nav-item.active:before { height: 22px; opacity: 1; }
+/* On the lime active slab a lime bar would vanish — flip it dark. */
+.nav-item.active:before { background: #2c4a17; }
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, .07);
+  border-color: rgba(255, 255, 255, .07);
+  color: #f5faf3;
+}
+
+.nav-item.active {
+  background: linear-gradient(100deg, var(--lime), #a5e04a);
+  border-color: transparent;
+  color: #17211e;
+}
+.nav-item.active svg { color: #2c4a17; }
+.nav-item.active:hover { background: linear-gradient(100deg, #c2f472, #a9e451); }
+
+/* Keyboard users get the same affordance as the mouse. */
+.nav-item:focus-visible {
+  outline: 2px solid rgba(183, 239, 93, .6);
+  outline-offset: 2px;
+}
+
+/* ── live count badges ───────────────────────────────────────────────────── */
+
+.nav-item em {
+  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, .09);
+  color: #cdd8d1;
+  opacity: 1;
+  line-height: 1.35;
+}
+/* Critical bins are the one number that should interrupt you. */
+.nav-item em.hot {
+  background: rgba(255, 113, 95, .17);
+  color: #ff9d8f;
+  box-shadow: 0 0 0 1px rgba(255, 113, 95, .22) inset;
+}
+.nav-item.active em {
+  background: rgba(23, 33, 30, .13);
+  color: #2c4a17;
+  box-shadow: none;
+}
+.nav-item.active em.hot { background: rgba(180, 40, 20, .16); color: #8a2c17; }
+
+/* ── workspace + footer ──────────────────────────────────────────────────── */
+
+.workspace-switcher { transition: border-color .2s ease, background .2s ease; }
+.workspace-switcher:hover { border-color: rgba(183, 239, 93, .25); background: rgba(255, 255, 255, .09); }
+.ward-avatar { box-shadow: 0 0 0 1px rgba(183, 239, 93, .18); font-variant-numeric: tabular-nums; }
+
+/* A quiet breath on the pulse dot: it is the only thing on the panel that
+   says the simulation is genuinely running rather than a static screenshot. */
+.system-pulse span { animation: sidebar-pulse 2.4s ease-in-out infinite; }
+.system-pulse.idle { background: rgba(255, 255, 255, .07); }
+.system-pulse.idle span { background: #7e8c84; animation: none; box-shadow: none; }
+@keyframes sidebar-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(183, 239, 93, .15); }
+  50% { box-shadow: 0 0 0 7px rgba(183, 239, 93, .04); }
+}
+.system-card { margin-bottom: 12px; }
+.system-card small { font-variant-numeric: tabular-nums; }
+
+.sidebar-lang {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+.sync-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #6d7b74;
+  white-space: nowrap;
+}
+
+.profile-row { border-radius: 12px; padding: 6px; gap: 0; }
+/* Only the identity half is a link; the sign-out button sits beside it. */
+.profile-id {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  padding: 3px;
+  border-radius: 9px;
+  color: inherit;
+  text-decoration: none;
+  transition: background .2s ease;
+}
+.profile-id:hover { background: rgba(255, 255, 255, .07); }
+.profile-id strong { display: block; font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.profile-row small { color: #8c9891; font-size: 9px; }
+.profile-row button:hover { color: var(--coral); }
+
+/* ── mobile drawer ───────────────────────────────────────────────────────── */
+
+.nav-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(23, 33, 30, .42);
+  backdrop-filter: blur(2px);
+  animation: scrim-in .2s ease;
+}
+@keyframes scrim-in { from { opacity: 0; } to { opacity: 1; } }
+@media (min-width: 851px) { .nav-scrim { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .system-pulse span { animation: none; }
+  .nav-item:before { transition: none; }
+  .nav-scrim { animation: none; }
+}
