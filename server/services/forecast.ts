@@ -23,6 +23,21 @@ export interface Forecast {
   predictedOverflowAt: string | null;
   confidence: number;
   sampleSize: number;
+  /** The last fill level anybody actually reported, and when. */
+  observedFillPercent: number | null;
+  observedAt: string | null;
+  /** How long the bin has gone unobserved. Null when it has no readings. */
+  hoursSinceObservation: number | null;
+  /**
+   * The observation carried forward at the fitted rate.
+   *
+   * Nothing measures a bin between reports, so any fill level quoted for
+   * "now" is inference. Making that inference explicit — and projecting the
+   * overflow from it rather than from a stored column that only the
+   * simulation advances — is what stops the displayed level and the forecast
+   * being able to describe two different bins.
+   */
+  estimatedFillPercent: number;
 }
 
 /** Fill rate assumed for a bin with too little history to fit. */
@@ -37,15 +52,40 @@ export function forecastBin(
 ): Forecast {
   const segment = latestFillSegment(readings);
 
+  // `latestFillSegment` sorts ascending, so the last entry is the most recent
+  // thing anyone reported about this bin.
+  const newest = segment[segment.length - 1];
+  const observedFillPercent = newest?.fillLevelPercent ?? null;
+  const observedAt = newest?.recordedAt ?? null;
+  const hoursSinceObservation = newest
+    ? Math.max(0, (asOf.getTime() - new Date(newest.recordedAt).getTime()) / 3_600_000)
+    : null;
+
+  /**
+   * Carry the observation forward at `rate`. With no reading to anchor to
+   * there is nothing to extrapolate from, so the stored level is all we have
+   * — and a fresh reading extrapolates by zero hours, which is why this is a
+   * no-op whenever a bin was just reported or just ticked.
+   */
+  const estimateFrom = (rate: number) =>
+    observedFillPercent === null
+      ? currentFillPercent
+      : clamp(round1(observedFillPercent + rate * (hoursSinceObservation ?? 0)), 0, 100);
+
   if (segment.length < 3) {
     // Not enough history — fall back to the default rate, and say so through
     // a low confidence rather than pretending to a prediction.
     const rate = DEFAULT_RATE_PCT_PER_HOUR;
+    const estimatedFillPercent = estimateFrom(rate);
     return {
-      ...projectOverflow(currentFillPercent, rate, asOf),
+      ...projectOverflow(estimatedFillPercent, rate, asOf),
       fillRatePctPerHour: rate,
       confidence: 0.25,
       sampleSize: segment.length,
+      observedFillPercent,
+      observedAt,
+      hoursSinceObservation: hoursSinceObservation === null ? null : round2(hoursSinceObservation),
+      estimatedFillPercent,
     };
   }
 
@@ -66,11 +106,17 @@ export function forecastBin(
   const sampleWeight = Math.min(1, points.length / 12);
   const confidence = clamp(0.15 + r2 * 0.6 * sampleWeight + sampleWeight * 0.25, 0, 0.97);
 
+  const estimatedFillPercent = estimateFrom(rate);
+
   return {
-    ...projectOverflow(currentFillPercent, rate, asOf),
+    ...projectOverflow(estimatedFillPercent, rate, asOf),
     fillRatePctPerHour: round3(rate),
     confidence: round3(confidence),
     sampleSize: points.length,
+    observedFillPercent,
+    observedAt,
+    hoursSinceObservation: hoursSinceObservation === null ? null : round2(hoursSinceObservation),
+    estimatedFillPercent,
   };
 }
 
@@ -145,6 +191,10 @@ function linearRegression(points: { x: number; y: number }[]): {
 function clamp(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n));
 }
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }

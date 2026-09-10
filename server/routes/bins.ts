@@ -87,7 +87,21 @@ binRoutes.get("/bins/:id", optionalAuth, async c => {
     .limit(60);
 
   const fresh = (await readOperationalBins(row.wardId)).bins.find(b => b.binId === binId)?.forecast;
-  return c.json({ bin: { ...row, hoursToOverflow: fresh?.hoursToOverflow ?? null, predictedOverflowAt: fresh?.predictedOverflowAt ?? null, forecastConfidence: fresh?.confidence ?? null }, readings: readings.reverse() });
+  return c.json({
+    bin: {
+      ...row,
+      hoursToOverflow: fresh?.hoursToOverflow ?? null,
+      predictedOverflowAt: fresh?.predictedOverflowAt ?? null,
+      forecastConfidence: fresh?.confidence ?? null,
+      // Provenance for the fill level: what was last reported, when, and what
+      // that becomes once carried forward at the fitted rate.
+      observedFillPercent: fresh?.observedFillPercent ?? null,
+      observedAt: fresh?.observedAt ?? null,
+      hoursSinceObservation: fresh?.hoursSinceObservation ?? null,
+      estimatedFillPercent: fresh?.estimatedFillPercent ?? null,
+    },
+    readings: readings.reverse(),
+  });
 });
 
 /**

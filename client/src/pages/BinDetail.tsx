@@ -113,8 +113,17 @@ export default function BinDetail() {
           <div className="stat-content">
             <span>{t("dash.fillLevel")}</span>
             <strong>{bin.currentFillPercent}%</strong>
+            {/* Nothing measures a bin between reports, so this number is only
+                as current as the last person who looked. Saying when that was
+                stops it reading as a live gauge. */}
             <small className="muted">
-              {bin.capacityLiters} L · {bin.categoryName}
+              {bin.hoursSinceObservation == null
+                ? t("bins.neverObserved")
+                : bin.hoursSinceObservation < 1
+                  ? t("bins.observedRecently")
+                  : t("bins.observedAgo", { hours: Math.round(bin.hoursSinceObservation) })}
+              {" · "}
+              {bin.capacityLiters} L
             </small>
           </div>
         </div>

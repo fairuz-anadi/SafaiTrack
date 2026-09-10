@@ -131,6 +131,18 @@ export interface BinView {
   hoursToOverflow: number | null;
   predictedOverflowAt: string | null;
   forecastConfidence: number | null;
+  /**
+   * Provenance for `currentFillPercent`.
+   *
+   * Nothing measures a bin between reports, so the level quoted for "now" is
+   * the last observation carried forward at the fitted rate. These say what
+   * was actually seen and how long ago, so a consumer can tell evidence from
+   * inference. Present on the single-bin read; absent from list endpoints.
+   */
+  observedFillPercent?: number | null;
+  observedAt?: string | null;
+  hoursSinceObservation?: number | null;
+  estimatedFillPercent?: number | null;
 }
 
 export interface RouteStopView {
