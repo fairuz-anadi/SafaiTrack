@@ -124,7 +124,7 @@ export default function Landing() {
             {t("nav.howItWorks")}
           </a>
           <a href="#faq" onClick={() => setMobileOpen(false)}>
-            {t("faq.kicker")}
+            {t("nav.faq")}
           </a>
           <a href="#impact" onClick={() => setMobileOpen(false)}>
             {t("nav.impact")}
@@ -133,7 +133,7 @@ export default function Landing() {
             {t("nav.forCities")}
           </a>
           <Link href="/report" onClick={() => setMobileOpen(false)}>
-            {t("nav.report")}
+            {t("nav.reportShort")}
           </Link>
         </nav>
 

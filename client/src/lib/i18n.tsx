@@ -66,10 +66,12 @@ const strings = {
 
   /* ── navigation ──────────────────────────────────────────────────────── */
   "nav.howItWorks": { en: "How it works", bn: "কীভাবে কাজ করে" },
-  "nav.impact": { en: "Impact", bn: "প্রভাব" },
-  "nav.forCities": { en: "For city teams", bn: "সিটি কর্পোরেশনের জন্য" },
+  "nav.impact": { en: "Results", bn: "ফলাফল" },
+  "nav.forCities": { en: "For cities", bn: "সিটির জন্য" },
   "nav.problem": { en: "The problem", bn: "সমস্যা" },
   "nav.report": { en: "Report a bin issue", bn: "সমস্যা জানান" },
+  "nav.faq": { en: "Questions", bn: "প্রশ্ন" },
+  "nav.reportShort": { en: "Report a bin", bn: "সমস্যা জানান" },
   "nav.signIn": { en: "Sign in", bn: "সাইন ইন" },
   "nav.dashboard": { en: "Open dashboard", bn: "ড্যাশবোর্ড খুলুন" },
   "nav.overview": { en: "Overview", bn: "সারসংক্ষেপ" },

@@ -3387,3 +3387,60 @@ html[data-lang="bn"] .final-cta h2 em {
   .streams-outro { grid-template-columns: 1fr; }
   .streams-yard { max-width: none; }
 }
+
+/* ── Header: sit lower, and make the links read as controls ─────────────────
+   The lockup was vertically centred in a 76px bar, which put it hard against
+   the top of the window with the tagline almost touching the browser chrome.
+   An asymmetric bar — more room above than below — drops it to where it has
+   air, without pushing the hero down a corresponding amount. */
+.public-nav {
+  height: auto;
+  min-height: 104px;
+  padding-top: 30px;
+  padding-bottom: 18px;
+  align-items: flex-start;
+}
+.public-brand { margin-top: 2px; }
+/* The links and the actions align to the wordmark rather than to the tagline
+   under it, so the whole row reads off one baseline. */
+.public-links, .public-nav-actions { margin-top: 6px; }
+
+/* The links were bare text with a colour change on hover — fine, but they are
+   the page's primary navigation and read as an afterthought next to the CTA
+   beside them. Each is a pill now: its own hit area, a lime wash on hover
+   that ties it to the brand rather than to a generic grey. */
+.public-links { gap: 2px; margin-left: 34px; }
+.public-links a {
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #5c6862;
+  line-height: 1;
+  transition: background .18s ease, color .18s ease;
+}
+.public-links a:hover {
+  background: rgba(183, 239, 93, .34);
+  color: var(--ink);
+}
+.public-links a:focus-visible {
+  outline: 2px solid var(--lime-deep);
+  outline-offset: 2px;
+  background: rgba(183, 239, 93, .22);
+  color: var(--ink);
+}
+
+/* The mobile drawer sets its own padding, and its rule sits earlier in the
+   sheet — so it has to be restated here or the pills would win at every
+   width and the drawer rows would come out too tight. */
+@media (max-width: 860px) {
+  .public-nav {
+    min-height: 0;
+    padding-top: 16px;
+    padding-bottom: 14px;
+    align-items: center;
+  }
+  .public-links, .public-nav-actions { margin-top: 0; }
+  .public-links { gap: 0; margin-left: 0; }
+  .public-links a { padding: 12px 13px; border-radius: 9px; }
+  .public-links a:hover { background: rgba(183, 239, 93, .28); }
+}
