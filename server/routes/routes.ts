@@ -24,6 +24,10 @@ import {
   optimizeRoute,
   type GeoNode,
 } from "../services/routing.js";
+import { readClock } from "../services/operational-data.js";
+import { calculateRoutePlan } from "../services/route-plan.js";
+import { rememberPreview } from "../services/route-briefing-context.js";
+import { assertRouteAccess, authorizedWard, resolveOperator } from "../services/access.js";
 import { emptyBin, getSimulationState } from "../services/simulation.js";
 
 const {
@@ -52,84 +56,9 @@ routeRoutes.post(
     const user = c.get("user");
     const { wardId, thresholdPercent, maxStops, lookaheadHours } = c.req.valid("json");
 
-    const [ward] = await db.select().from(wards).where(eq(wards.wardId, wardId)).limit(1);
-    if (!ward) throw new HTTPException(404, { message: "Ward not found" });
-
-    const wardBins = await db
-      .select({
-        binId: bins.binId,
-        binCode: bins.binCode,
-        landmark: bins.landmark,
-        latitude: bins.latitude,
-        longitude: bins.longitude,
-        currentFillPercent: bins.currentFillPercent,
-        hoursToOverflow: binForecasts.hoursToOverflow,
-      })
-      .from(bins)
-      .leftJoin(binForecasts, eq(bins.binId, binForecasts.binId))
-      .where(and(eq(bins.wardId, wardId), eq(bins.operationalStatus, "active")));
-
-    if (wardBins.length === 0) {
-      throw new HTTPException(400, { message: "This ward has no active bins to collect" });
-    }
-
-    const depot: GeoNode = {
-      id: -1,
-      lat: ward.depotLat,
-      lng: ward.depotLng,
-      fillPercent: 0,
-      label: "Depot",
-    };
-    const disposal: GeoNode = {
-      id: -2,
-      lat: ward.disposalLat,
-      lng: ward.disposalLng,
-      fillPercent: 0,
-      label: "Amin Bazar landfill",
-    };
-
-    const toNode = (b: (typeof wardBins)[number]): GeoNode => ({
-      id: b.binId,
-      lat: b.latitude,
-      lng: b.longitude,
-      fillPercent: b.currentFillPercent,
-      label: b.binCode,
-    });
-
-    // Eligible = already full enough, OR forecast to overflow inside the
-    // lookahead window. The second clause is what makes the system proactive
-    // rather than purely reactive.
-    const candidates = wardBins.filter(
-      b =>
-        b.currentFillPercent >= thresholdPercent ||
-        (b.hoursToOverflow !== null && b.hoursToOverflow <= lookaheadHours)
-    );
-
-    if (candidates.length === 0) {
-      throw new HTTPException(400, {
-        message: `No bin in ${ward.name} is above ${thresholdPercent}% or due to overflow within ${lookaheadHours}h. Nothing to collect right now.`,
-      });
-    }
-
-    const optimized = optimizeRoute(depot, disposal, candidates.map(toNode), maxStops);
-    // The baseline visits every bin in the ward, full or not — the fixed
-    // schedule the city runs today.
-    const baseline = baselineFixedScheduleRoute(depot, disposal, wardBins.map(toNode));
-
-    const [truck] = await db
-      .select()
-      .from(trucks)
-      .where(and(eq(trucks.homeWardId, wardId), eq(trucks.status, "available")))
-      .limit(1);
-    const fuelLitresPerKm = truck?.fuelLitresPerKm ?? 0.35;
-
-    const comparison = compareRoutes({
-      baseline,
-      optimized,
-      allBins: wardBins.map(toNode),
-      fuelLitresPerKm,
-      thresholdPercent,
-    });
+    const plan = await calculateRoutePlan(c.req.valid("json"));
+    const { ward, optimized, baseline, comparison, fuelLitresPerKm, depot, disposal } = plan;
+    if (!optimized.order.length) throw new HTTPException(400, { message: "No eligible bins to collect" });
 
     const routeCode = `R-${ward.wardCode.replace("DNCC-", "")}-${Date.now().toString().slice(-5)}`;
     const simState = await getSimulationState();
@@ -220,7 +149,7 @@ routeRoutes.post(
 routeRoutes.get("/route-preview", async c => {
   const wardIdParam = c.req.query("wardId");
   const mode = c.req.query("mode") === "nearest" ? "nearest" : "shortest";
-  const threshold = Number(c.req.query("threshold") ?? 55);
+  const input = generateRouteSchema.parse({ wardId: wardIdParam || 1, thresholdPercent: c.req.query("threshold") ?? 55, maxStops: c.req.query("maxStops") ?? 20, lookaheadHours: c.req.query("lookaheadHours") ?? 6 });
 
   // Default to whichever ward is under the most pressure, so the section has
   // something worth showing without the visitor choosing anything.
@@ -237,56 +166,16 @@ routeRoutes.get("/route-preview", async c => {
   }
   if (!wardId) throw new HTTPException(404, { message: "No wards with active bins" });
 
-  const [ward] = await db.select().from(wards).where(eq(wards.wardId, wardId)).limit(1);
-  if (!ward) throw new HTTPException(404, { message: "Ward not found" });
-
-  const wardBins = await db
-    .select()
-    .from(bins)
-    .where(and(eq(bins.wardId, wardId), eq(bins.operationalStatus, "active")));
-  if (wardBins.length === 0) throw new HTTPException(400, { message: "Ward has no active bins" });
-
-  const toNode = (b: (typeof wardBins)[number]): GeoNode => ({
-    id: b.binId,
-    lat: b.latitude,
-    lng: b.longitude,
-    fillPercent: b.currentFillPercent,
-    label: b.binCode,
-  });
-  const depot: GeoNode = { id: -1, lat: ward.depotLat, lng: ward.depotLng, fillPercent: 0, label: "Depot" };
-  const disposal: GeoNode = {
-    id: -2,
-    lat: ward.disposalLat,
-    lng: ward.disposalLng,
-    fillPercent: 0,
-    label: "Landfill",
-  };
-
-  const candidates = wardBins.filter(b => b.currentFillPercent >= threshold);
-  const source = candidates.length > 0 ? candidates : wardBins;
-
-  // The two modes differ in the refinement stage, not the construction:
-  // `nearest` stops at the raw greedy walk, `shortest` runs 2-opt over it.
-  // Dropping the priority weighting instead makes no difference here — 2-opt
-  // converges to the same tour from either starting order at ward scale.
-  const optimized = optimizeRoute(depot, disposal, source.map(toNode), 20, new Set(), {
-    priorityWeighted: true,
-    refine: mode === "shortest",
-  });
-  const baseline = baselineFixedScheduleRoute(depot, disposal, wardBins.map(toNode));
-
-  const comparison = compareRoutes({
-    baseline,
-    optimized,
-    allBins: wardBins.map(toNode),
-    fuelLitresPerKm: 0.35,
-    thresholdPercent: threshold,
-  });
+  const plan = await calculateRoutePlan({ ...input, wardId }, mode === "shortest");
+  const { ward, wardBins, optimized, baseline, comparison, depot, disposal } = plan;
+  const previewId = rememberPreview(plan);
 
   const byId = new Map(wardBins.map(b => [b.binId, b]));
 
   return c.json({
     mode,
+    previewId,
+    planningInput: plan.input,
     ward: { wardId: ward.wardId, name: ward.name, wardCode: ward.wardCode },
     algorithmName: optimized.algorithmName,
     stops: optimized.order.map((n, i) => {
@@ -316,7 +205,8 @@ routeRoutes.get("/route-preview", async c => {
 /* ────────────────────────────  READ / LIST  ────────────────────────────── */
 
 routeRoutes.get("/routes", requireAuth, async c => {
-  const user = c.get("user");
+  const session = c.get("user");
+  const user = session.role === "driver" ? session : await resolveOperator(session);
   const status = c.req.query("status");
 
   const conditions = [];
@@ -358,6 +248,7 @@ routeRoutes.get("/routes", requireAuth, async c => {
 
 routeRoutes.get("/routes/:id", requireAuth, async c => {
   const routeId = Number(c.req.param("id"));
+  await assertRouteAccess(c.get("user"), routeId);
 
   const [route] = await db
     .select({
@@ -527,7 +418,7 @@ routeRoutes.post(
 
     const [bin] = await db.select().from(bins).where(eq(bins.binId, binId)).limit(1);
     const fillAtCollection = fillPercentAtCollection ?? bin?.currentFillPercent ?? 0;
-    const at = new Date();
+    const at = new Date((await readClock()).simClock);
 
     await db
       .update(routeStops)
@@ -563,6 +454,10 @@ routeRoutes.post(
 
 routeRoutes.post("/routes/:id/complete", requireRole("driver", "staff"), async c => {
   const routeId = Number(c.req.param("id"));
+  const route = await assertRouteAccess(c.get("user"), routeId);
+  if (route.status !== "in_progress") throw new HTTPException(409, { message: "Route must be in progress" });
+  const [remaining] = await db.select({ count: sql<number>`count(*)` }).from(routeStops).where(and(eq(routeStops.routeId, routeId), eq(routeStops.stopStatus, "pending")));
+  if (remaining.count) throw new HTTPException(409, { message: "Collect all pending stops first" });
   await finishRoute(routeId);
   return c.json({ ok: true, status: "completed" });
 });
@@ -572,10 +467,10 @@ async function finishRoute(routeId: number): Promise<void> {
   const [route] = await db.select().from(routes).where(eq(routes.routeId, routeId)).limit(1);
   if (!route) throw new HTTPException(404, { message: "Route not found" });
 
-  await db
-    .update(routes)
-    .set({ status: "completed", completedAt: new Date().toISOString() })
-    .where(eq(routes.routeId, routeId));
+  if (route.status === "completed") return;
+  if (route.status !== "in_progress") throw new HTTPException(409, { message: "Route must be in progress" });
+  const changed = await db.update(routes).set({ status: "completed", completedAt: new Date().toISOString() }).where(and(eq(routes.routeId, routeId), eq(routes.status, "in_progress"))).returning({ id: routes.routeId });
+  if (!changed.length) return;
 
   if (route.assignedTruckId) {
     await db

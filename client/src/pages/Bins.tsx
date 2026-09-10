@@ -34,7 +34,7 @@ export default function Bins() {
   const [forecasts, setForecasts] = useState<Forecast[]>([]);
   const [wards, setWards] = useState<WardRow[]>([]);
   const [wardFilter, setWardFilter] = useState<string>("");
-  const [band, setBand] = useState<"all" | "critical" | "high" | "watch" | "healthy">("all");
+  const [band, setBand] = useState<"all" | "critical" | "high" | "watch" | "healthy">(new URLSearchParams(window.location.search).get("band") === "critical" ? "critical" : "all");
   const [selected, setSelected] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 

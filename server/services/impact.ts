@@ -32,15 +32,13 @@ export function compareRoutes({
   const optimizedFuelLitres = optimizedDistanceKm * fuelLitresPerKm;
   const fuelSavedLitres = baselineFuelLitres - optimizedFuelLitres;
 
-  // Stops the fixed schedule spends on bins that did not need emptying.
+  const optimizedIds = new Set(optimized.order.map(n => n.id));
+  // Count only below-threshold stops actually omitted by this plan.
   const wastedStopsAvoided = baseline.order.filter(
-    b => b.fillPercent < thresholdPercent
+    b => b.fillPercent < thresholdPercent && !optimizedIds.has(b.id)
   ).length;
 
-  // Critical bins the baseline never reaches within a single shift. A fixed
-  // route that visits every bin runs long; anything past the shift cap is
-  // left overflowing until tomorrow.
-  const optimizedIds = new Set(optimized.order.map(n => n.id));
+  // Legacy database field name: this is critical bins included, NOT prevention.
   const overflowsPrevented = allBins.filter(
     b => b.fillPercent >= 85 && optimizedIds.has(b.id)
   ).length;

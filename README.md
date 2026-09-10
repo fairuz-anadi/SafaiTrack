@@ -62,8 +62,8 @@ The competition venue may have no usable internet. Nothing in the demo needs it:
 
 - **Database** — a local SQLite file. No server to install, no migration to run.
 - **AI assistant** — falls back to a local rule-based advisor and says so in the
-  UI. Set `ANTHROPIC_API_KEY` to enable Claude; leave it unset and everything
-  still works.
+  UI. Set `OPENAI_API_KEY` (or optionally `ANTHROPIC_API_KEY`) to enable the live
+  explainer; leave it unset and the deterministic fallback still works.
 - **Map** — Leaflet detects dead OpenStreetMap tiles and keeps rendering exact
   bin positions and route lines without the street artwork.
 
@@ -139,7 +139,10 @@ Copy `.env.example` to `.env` to change anything.
 | `DATABASE_AUTH_TOKEN` | — | Turso only |
 | `JWT_SECRET` | dev fallback | **Change before deploying** |
 | `PORT` | `8080` | |
-| `ANTHROPIC_API_KEY` | — | Unset ⇒ offline advisor |
+| `LLM_PROVIDER` | `openai` | `openai`, `anthropic`, or `none` |
+| `OPENAI_API_KEY` | — | Primary LLM provider key |
+| `OPENAI_MODEL` | `gpt-4o-mini` | |
+| `ANTHROPIC_API_KEY` | — | Optional secondary provider key |
 | `ANTHROPIC_MODEL` | `claude-opus-5` | |
 
 ---

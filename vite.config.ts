@@ -13,6 +13,9 @@ export default defineConfig({
       "@shared": path.resolve(import.meta.dirname, "shared"),
     },
   },
+  // Tailwind runs as a Vite plugin, so no PostCSS config is wanted. Declaring an inline one
+  // stops Vite searching parent directories and picking up an unrelated config above the project.
+  css: { postcss: { plugins: [] } },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,

@@ -1,3 +1,4 @@
+import "../lib/env.js";
 /**
  * Database connection.
  *

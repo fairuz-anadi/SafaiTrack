@@ -98,16 +98,19 @@ if (existsSync(publicDir)) {
   });
 }
 
+import { providerConfig } from "./ai/client.js";
+
 const port = Number(process.env.PORT ?? 8080);
 
 serve({ fetch: app.fetch, port }, info => {
   const mode = existsSync(publicDir) ? "production (serving SPA)" : "development (API only)";
   console.log(`\n  SafaiTrack API — ${mode}`);
   console.log(`  http://localhost:${info.port}/api/health`);
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.log(`  AI assistant: offline advisor (no ANTHROPIC_API_KEY set)`);
+  const cfg = providerConfig();
+  if (cfg.provider === "none") {
+    console.log(`  AI engine: deterministic advisor (no LLM key configured)`);
   } else {
-    console.log(`  AI assistant: ${process.env.ANTHROPIC_MODEL ?? "claude-opus-5"}`);
+    console.log(`  AI engine: ${cfg.provider} (${cfg.model})`);
   }
   console.log("");
 });

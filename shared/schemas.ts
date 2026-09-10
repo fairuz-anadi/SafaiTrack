@@ -112,3 +112,37 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export type GenerateRouteInput = z.infer<typeof generateRouteSchema>;
 export type SmsIntakeInput = z.infer<typeof smsIntakeSchema>;
+
+const explanationOptions = {
+  language: z.enum(["en", "bn"]).default("en"),
+  question: z.string().trim().max(1000).default(""),
+  // Allows a useful immediate explanation without a paid first-render request.
+  mode: z.enum(["auto", "deterministic"]).default("auto"),
+};
+export const routeBriefingSchema = z.object({
+  target: z.discriminatedUnion("kind", [
+    generateRouteSchema.extend({ kind: z.literal("preview"), previewId: z.string().uuid().optional() }).strict(),
+    z.object({ kind: z.literal("saved_route"), routeId: z.number().int().positive() }).strict(),
+  ]),
+  ...explanationOptions,
+}).strict();
+export const DASHBOARD_METRICS = [
+  "bins_monitored", "bins_need_attention", "active_routes", "avg_resolution",
+  "forecast_window", "route_savings", "complaints_open", "ward_pressure",
+] as const;
+/**
+ * What the reader selected, never what the card was showing. `.strict()` rejects any
+ * attempt to pass a metric value, so a stale figure on screen cannot become evidence.
+ */
+export const dashboardFocusSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("dashboard") }).strict(),
+  z.object({ type: z.literal("metric"), metric: z.enum(DASHBOARD_METRICS) }).strict(),
+  z.object({ type: z.literal("bin"), binId: z.number().int().positive() }).strict(),
+]);
+export const dashboardBriefingSchema = z.object({
+  scope: z.object({ kind: z.literal("current_dashboard"), wardId: z.number().int().positive().optional() }).strict(),
+  focus: dashboardFocusSchema.optional(),
+  ...explanationOptions,
+}).strict();
+export type RouteBriefingInput = z.infer<typeof routeBriefingSchema>;
+export type DashboardBriefingInput = z.infer<typeof dashboardBriefingSchema>;

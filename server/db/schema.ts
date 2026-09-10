@@ -470,8 +470,8 @@ export const agentMessages = sqliteTable(
     content: text("content").notNull(),
     /** JSON array of {name, input, result} for tools the assistant invoked. */
     toolCallsJson: text("tool_calls_json"),
-    /** `claude` when the API answered, `offline` when the local advisor did. */
-    source: text("source", { enum: ["claude", "offline"] })
+    /** `openai` or `claude` when the API answered, `offline` when the local advisor did. */
+    source: text("source", { enum: ["claude", "openai", "offline"] })
       .notNull()
       .default("claude"),
     createdAt: text("created_at").notNull().default(now),

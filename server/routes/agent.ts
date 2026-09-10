@@ -5,23 +5,30 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { agentAskSchema } from "../../shared/schemas.js";
 import { db, schema } from "../db/client.js";
-import { ask, isClaudeConfigured } from "../ai/agent.js";
+import { ask, isClaudeConfigured, isLlmConfigured } from "../ai/agent.js";
 import { TOOL_NAMES } from "../ai/tools.js";
+import { providerConfig } from "../ai/client.js";
 import { type AppEnv, requireRole } from "../middleware/auth.js";
+import { createBriefingRoutes } from "./briefings.js";
+import { resolveOperator } from "../services/access.js";
 
 const { agentConversations, agentMessages } = schema;
 
 export const agentRoutes = new Hono<AppEnv>();
+agentRoutes.route("/", createBriefingRoutes());
 
 /** Engine status, so the UI can say honestly which advisor is answering. */
-agentRoutes.get("/agent/status", c =>
-  c.json({
-    claudeConfigured: isClaudeConfigured(),
-    model: process.env.ANTHROPIC_MODEL ?? "claude-opus-5",
+agentRoutes.get("/agent/status", c => {
+  const config = providerConfig();
+  return c.json({
+    claudeConfigured: isLlmConfigured(),
+    llmConfigured: isLlmConfigured(),
+    provider: config.provider,
+    model: config.model,
     tools: TOOL_NAMES,
     offlineFallback: true,
-  })
-);
+  });
+});
 
 agentRoutes.get("/agent/conversations", requireRole("staff", "officer"), async c => {
   const user = c.get("user");
@@ -37,7 +44,6 @@ agentRoutes.get("/agent/conversations", requireRole("staff", "officer"), async c
 agentRoutes.get("/agent/conversations/:id", requireRole("staff", "officer"), async c => {
   const user = c.get("user");
   const conversationId = Number(c.req.param("id"));
-
   const [convo] = await db
     .select()
     .from(agentConversations)
@@ -62,7 +68,7 @@ agentRoutes.post(
   requireRole("staff", "officer"),
   zValidator("json", agentAskSchema),
   async c => {
-    const user = c.get("user");
+    const user = await resolveOperator(c.get("user"));
     const { message, conversationId } = c.req.valid("json");
 
     // Resolve or open a conversation thread.
@@ -92,7 +98,7 @@ agentRoutes.post(
       .select({ role: agentMessages.role, content: agentMessages.content })
       .from(agentMessages)
       .where(eq(agentMessages.conversationId, convoId))
-      .orderBy(asc(agentMessages.messageId))
+      .orderBy(desc(agentMessages.messageId))
       .limit(20);
 
     await db.insert(agentMessages).values({
@@ -101,7 +107,7 @@ agentRoutes.post(
       content: message,
     });
 
-    const reply = await ask(message, prior);
+    const reply = await ask(message, prior.reverse(), user);
 
     await db.insert(agentMessages).values({
       conversationId: convoId,

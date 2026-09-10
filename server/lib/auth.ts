@@ -1,3 +1,4 @@
+import "./env.js";
 /** Password hashing and stateless session tokens. */
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
