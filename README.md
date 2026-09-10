@@ -10,6 +10,26 @@ single bin.
 Aligned with **UN SDG 11** (Sustainable Cities and Communities), secondary
 **SDG 12**.
 
+### Why sensor-free
+
+A bin that reports its own fill level is the obvious design and the wrong one
+for Dhaka. Three consequences follow from not building it:
+
+| | |
+|---|---|
+| **৳0 in sensor hardware** | A per-bin ultrasonic unit plus its connectivity contract is the single largest line in a smart-waste budget, and it recurs. SafaiTrack spends nothing on it, which is why a ward can run this on the software alone. |
+| **Nothing to steal or break** | Hardware in an unattended public bin is exposed to theft, vandalism and weather, and every dead unit is a blind spot in the data. There is no device on the street to fail. |
+| **Works from a ৳1,500 phone** | Reports arrive by web *and* by SMS/USSD, so a resident with no smartphone and no data plan files the same tracked record as anyone else. Coverage is a function of who lives there, not who owns what. |
+
+Fill data therefore comes from residents reporting, ward officers logging
+inspections on their rounds, drivers logging each collection, and a diurnal
+simulation standing in for the reading history a deployment would accumulate.
+All four write to one table with the source taken from the reporter's role, so
+an inspection is never mistaken for a passer-by's estimate — and swapping in
+real hardware later is a change of `readingSource`, not a redesign. See
+[`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) for what is measured and what is
+modelled.
+
 > Built for IEEE SEU SB presents **REACT 2026** — Project Showcasing (Senior).
 > Team: Lab C1 Group 05 — Fairuz Anadi, Easteak Ahmed, Saleh Mahmud Sami.
 
@@ -21,7 +41,7 @@ Aligned with **UN SDG 11** (Sustainable Cities and Communities), secondary
 |---|---|
 | **Demand-driven routing** | Dijkstra shortest paths + priority-weighted nearest neighbour + 2-opt. Measured at **~31% shorter** than the fixed schedule it replaces. |
 | **Proves its own value** | Every generated route is scored against a fixed-schedule baseline over the same ward, with fuel, BDT and CO₂. The arithmetic is published in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md). |
-| **Predicts overflow** | Per-bin OLS regression on reading history projects hours-to-overflow with a confidence score, so routes are planned *before* waste hits the street. |
+| **Predicts overflow** | Ordinary least-squares regression, fitted per bin over its citizen reports, collection logs and simulated history, projects hours-to-overflow with an r² confidence and a sample size — so routes are planned *before* waste hits the street, with no device in the bin. |
 | **Citizen-in-the-loop** | Web portal in English and বাংলা, plus an SMS/USSD channel for residents without a smartphone. Every complaint has an append-only, attributable audit trail. |
 | **AI operations assistant** | Claude with read-only tool access to the live database — and a deterministic offline advisor that answers the same questions with no internet at all. |
 | **Runs a whole day in 20 seconds** | A simulation clock drives the network into crisis on realistic diurnal fill curves, so the system can be seen working rather than described. |

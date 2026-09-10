@@ -178,8 +178,8 @@ const strings = {
   },
   "story.step1": { en: "Signals arrive", bn: "তথ্য আসে" },
   "story.step1body": {
-    en: "Bin fill data comes from a simulated sensor feed and from residents reporting by web, SMS or USSD. Both are written to the same table a real ultrasonic sensor would use, so a hardware retrofit needs no redesign.",
-    bn: "বিনের তথ্য আসে সিমুলেটেড সেন্সর এবং ওয়েব, SMS বা USSD-এ নাগরিকদের রিপোর্ট থেকে। দুটোই একই টেবিলে লেখা হয় যা প্রকৃত সেন্সরও ব্যবহার করত — তাই যন্ত্র বসালে নতুন করে ডিজাইন লাগবে না।",
+    en: "Residents report a full bin from the web or by SMS and USSD from a basic phone, ward officers log what they find on their rounds, and drivers log every collection. A diurnal simulation stands in for the reading history a live deployment would accumulate. All three write to one table — the same shape a real ultrasonic sensor would use — so no bin needs hardware and a retrofit needs no redesign.",
+    bn: "নাগরিকরা ওয়েব বা সাধারণ ফোনে SMS/USSD-এ ভরা বিনের খবর দেন, চালকরা প্রতিটি সংগ্রহ লিপিবদ্ধ করেন। দিনভিত্তিক সিমুলেশন বাকি ইতিহাস পূরণ করে। তিনটিই একই টেবিলে লেখে — কোনো বিনে যন্ত্র লাগে না।",
   },
   "story.step2": { en: "The system predicts", bn: "সিস্টেম পূর্বাভাস দেয়" },
   "story.step2body": {
@@ -418,7 +418,7 @@ const strings = {
   "bins.lastEmptied": { en: "Last emptied", bn: "শেষ খালি" },
   "bins.readingHistory": { en: "Reading history", bn: "তথ্যের ইতিহাস" },
   "bins.detailKicker": { en: "BIN DETAIL", bn: "বিনের বিবরণ" },
-  "bins.recentReadings": { en: "Recent sensor readings", bn: "সাম্প্রতিক সেন্সর তথ্য" },
+  "bins.recentReadings": { en: "Recent fill reports", bn: "সাম্প্রতিক প্রতিবেদন" },
   "bins.source": { en: "Source", bn: "উৎস" },
   "bins.recordedAt": { en: "Recorded", bn: "নথিভুক্ত" },
   "bins.backToBins": { en: "Back to all bins", bn: "সব বিনে ফিরুন" },
@@ -546,8 +546,8 @@ const strings = {
   "an.fillTrend": { en: "FILL TREND", bn: "ভরাটের প্রবণতা" },
   "an.filled72": { en: "How the network filled over 72 hours", bn: "৭২ ঘণ্টায় নেটওয়ার্ক কীভাবে ভরেছে" },
   "an.trendNote": {
-    en: "Every point is an hourly aggregate of real sensor readings. The morning and evening peaks are the market and meal-prep cycles the simulation models.",
-    bn: "প্রতিটি বিন্দু প্রকৃত সেন্সর তথ্যের ঘণ্টাভিত্তিক গড়। সকাল ও সন্ধ্যার শীর্ষ বাজার ও রান্নার সময়ের প্রতিফলন।",
+    en: "Every point is an hourly aggregate of the fill reports on record — citizen submissions, officer inspections, driver collections and simulated ticks. The morning and evening peaks are the market and meal-prep cycles the model reproduces.",
+    bn: "প্রতিটি বিন্দু রেকর্ডে থাকা প্রতিবেদনের ঘণ্টাভিত্তিক গড় — নাগরিক প্রতিবেদন, চালকের সংগ্রহ ও সিমুলেটেড টিক। সকাল ও সন্ধ্যার শীর্ষ বাজার ও রান্নার সময়ের প্রতিফলন।",
   },
   "an.avgFill": { en: "Average fill", bn: "গড় ভরাট" },
   "an.fullestBin": { en: "Fullest bin", bn: "সবচেয়ে ভরা বিন" },
@@ -758,8 +758,8 @@ const strings = {
   },
   "faq.q2": { en: "Why not use real sensors?", bn: "প্রকৃত সেন্সর কেন নয়?" },
   "faq.a2": {
-    en: "Cost is the most cited barrier in the IoT waste literature, and it is why Dhaka still runs on paper. Our readings table is shaped exactly like a real ultrasonic feed — a retrofit changes one enum value, not the schema.",
-    bn: "খরচই প্রধান বাধা, আর সে কারণেই ঢাকা এখনো কাগজে চলে। আমাদের তথ্য-টেবিল প্রকৃত সেন্সরের মতোই — যন্ত্র বসালে স্কিমা বদলাতে হবে না।",
+    en: "Cost is the most cited barrier in the IoT waste literature, and it is why Dhaka still runs on paper — but it is not the only one. A unit in an unattended public bin is exposed to theft, vandalism and monsoon, and every dead unit is a blind spot nobody notices. Residents reporting by web and SMS cost nothing per bin and cannot be prised off a wall. The readings table is shaped exactly like a real ultrasonic feed, so a retrofit changes one enum value, not the schema.",
+    bn: "খরচই প্রধান বাধা, আর সে কারণেই ঢাকা এখনো কাগজে চলে — কিন্তু একমাত্র বাধা নয়। প্রকাশ্য বিনে বসানো যন্ত্র চুরি, ভাংচুর ও বর্ষার মুখে পড়ে, আর নষ্ট যন্ত্র একটি অদৃশ্য শূন্যতা তৈরি করে। ওয়েব ও SMS-এ নাগরিকদের প্রতিবেদনে প্রতি বিনে খরচ নেই। তথ্য-টেবিল প্রকৃত সেনসরের মতোই, তাই রিট্রোফিটে শুধু একটি মান বদলায়।",
   },
   "faq.q3": { en: "What happens if the internet drops?", bn: "ইন্টারনেট না থাকলে কী হয়?" },
   "faq.a3": {
