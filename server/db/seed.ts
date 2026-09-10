@@ -321,6 +321,8 @@ async function main() {
   });
 
   const officerIds: number[] = [];
+  /** Ward → the officer who walks it, so an inspection is filed by the right one. */
+  const officerIdByWard = new Map<number, number>();
   const officerSeed = [
     { name: "Nusrat Jahan", email: "officer27@safaitrack.gov.bd", ward: "DNCC-27", emp: "WO-27-001" },
     { name: "Saleh Mahmud Sami", email: "officer16@safaitrack.gov.bd", ward: "DNCC-16", emp: "WO-16-001" },
@@ -336,6 +338,7 @@ async function main() {
       officeContact: "+8802-9" + (100000 + officerIds.length),
     });
     officerIds.push(id);
+    officerIdByWard.set(wardIdByCode.get(o.ward)!, id);
   }
 
   const driverIds: number[] = [];
@@ -460,18 +463,44 @@ async function main() {
     const readings: (typeof binSensorReadings.$inferInsert)[] = [];
     let readingNo = 0;
     const steps = Math.max(3, Math.floor(hoursSinceCollection / 3));
+
+    /*
+     * A ward officer walks a round rather than checking one bin at random, so
+     * the inspection is placed at whichever reading sits closest to a fixed
+     * hour rather than scattered. Every bin in a ward then carries an officer
+     * reading from about the same moment, which is what a round looks like in
+     * the data — and it gives the bin page a real inspection to show without
+     * anyone having to file one live.
+     */
+    const officerId = officerIdByWard.get(wardId);
+    const roundHoursAgo = 9;
+    let inspectionStep = -1;
+    if (officerId !== undefined) {
+      let best = Infinity;
+      for (let s = 0; s <= steps; s++) {
+        const hoursAgo = hoursSinceCollection - (s * hoursSinceCollection) / steps;
+        const gap = Math.abs(hoursAgo - roundHoursAgo);
+        if (gap < best) {
+          best = gap;
+          inspectionStep = s;
+        }
+      }
+    }
+
     for (let s = 0; s <= steps; s++) {
       const hoursAgo = hoursSinceCollection - (s * hoursSinceCollection) / steps;
       const trueFill = b.base - hoursAgo * b.rate;
-      const noise = (random() - 0.5) * 4; // ±2 points of sensor noise
+      const noise = (random() - 0.5) * 4; // ±2 points of reporting noise
       readingNo++;
+      const isInspection = s === inspectionStep;
       readings.push({
         binId: binRow.binId,
         readingNo,
         recordedAt: new Date(now - hoursAgo * HOUR).toISOString(),
         fillLevelPercent: clamp(round1(trueFill + noise), 0, 100),
-        readingSource: random() < 0.15 ? "citizen" : "simulated",
-        reportedByCitizenId: null,
+        readingSource: isInspection ? "officer" : random() < 0.15 ? "citizen" : "simulated",
+        // Inspections are attributed; the anonymous reports stay anonymous.
+        reportedByCitizenId: isInspection ? officerId! : null,
         isValid: true,
       });
     }
