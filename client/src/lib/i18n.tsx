@@ -46,6 +46,12 @@ const strings = {
   "common.wards": { en: "wards", bn: "ওয়ার্ড" },
   "common.bins": { en: "bins", bn: "বিন" },
   "common.stops": { en: "stops", bn: "স্টপ" },
+  /* Singular forms, for `tn()`. Bangla does not inflect these nouns for
+     number, so only the English differs — but a call site should not have
+     to know which languages that is true of. */
+  "common.wardOne": { en: "ward", bn: "ওয়ার্ড" },
+  "common.binOne": { en: "bin", bn: "বিন" },
+  "common.stopOne": { en: "stop", bn: "স্টপ" },
   "common.critical": { en: "Critical", bn: "সংকটাপন্ন" },
   "common.watch": { en: "Watch", bn: "নজরে" },
   "common.high": { en: "High", bn: "উচ্চ" },
@@ -840,6 +846,14 @@ interface I18nValue {
   setLang: (l: Lang) => void;
   /** Translate a key. Supports `{name}` placeholders via `vars`. */
   t: (key: StringKey, vars?: Record<string, string | number>) => string;
+  /**
+   * Pick a label that agrees with a count: `1 bin`, `21 bins`.
+   *
+   * Interpolating a number in front of a plural-only string is fine until the
+   * number is one, and several counts here legitimately reach one — a ward
+   * with a single medical-waste bin, a route with a single stop.
+   */
+  tn: (n: number, one: StringKey, many: StringKey) => string;
   /** True when the current language is Bangla — for conditional layout. */
   isBn: boolean;
 }
@@ -889,7 +903,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     [lang]
   );
 
-  const value = useMemo(() => ({ lang, setLang, t, isBn: lang === "bn" }), [lang, setLang, t]);
+  const tn = useCallback(
+    (n: number, one: StringKey, many: StringKey) => t(n === 1 ? one : many),
+    [t]
+  );
+
+  const value = useMemo(
+    () => ({ lang, setLang, t, tn, isBn: lang === "bn" }),
+    [lang, setLang, t, tn]
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

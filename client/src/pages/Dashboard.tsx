@@ -171,7 +171,7 @@ function StatCard({
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   const [, navigate] = useLocation();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [bins, setBins] = useState<BinView[]>([]);
@@ -331,7 +331,7 @@ export default function Dashboard() {
           icon={Boxes}
           label={t("dash.binsMonitored")}
           value={overview?.bins.total ?? 0}
-          detail={`${t("dash.binsMonitoredSub")} ${wards.length} ${t("common.wards")}`}
+          detail={`${t("dash.binsMonitoredSub")} ${wards.length} ${tn(wards.length, "common.wardOne", "common.wards")}`}
           trend={`${overview?.bins.avgFill ?? 0}%`}
         />
         <StatCard
@@ -569,7 +569,7 @@ export default function Dashboard() {
                 <h3>{t("dash.next8")}</h3>
               </div>
               <span className="soft-badge">
-                {forecasts.length} {t("common.bins")}
+                {forecasts.length} {tn(forecasts.length, "common.binOne", "common.bins")}
               </span>
             </div>
             {forecasts.length === 0 ? (
@@ -678,7 +678,8 @@ export default function Dashboard() {
                   <div>
                     <strong>{w.name}</strong>
                     <span>
-                      {w.binCount} {t("common.bins")} · {w.criticalCount} {t("common.critical")}
+                      {w.binCount} {tn(w.binCount, "common.binOne", "common.bins")} · {w.criticalCount}{" "}
+                      {t("common.critical")}
                     </span>
                   </div>
                   <time>{pct(w.avgFill, 0)}</time>

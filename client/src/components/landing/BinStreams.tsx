@@ -48,7 +48,7 @@ const PHOTO: Record<string, string> = {
 };
 
 export function BinStreams() {
-  const { t, lang } = useI18n();
+  const { t, tn, lang } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function BinStreams() {
                 {typeof c.binCount === "number" && (
                   <div className="stream-meta">
                     <span>
-                      <b>{c.binCount}</b> {t("common.bins")}
+                      <b>{c.binCount}</b> {tn(c.binCount, "common.binOne", "common.bins")}
                     </span>
                     {typeof c.avgFill === "number" && c.binCount > 0 && (
                       <span>

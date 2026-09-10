@@ -46,7 +46,7 @@ interface Stop {
 
 export default function DriverRoute() {
   const { user, logout } = useAuth();
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [active, setActive] = useState<RouteRow | null>(null);
   const [stops, setStops] = useState<Stop[]>([]);
@@ -135,7 +135,8 @@ export default function DriverRoute() {
         {active && (
           <>
             <p style={{ color: "rgba(243,247,239,.66)", fontSize: 15.5, margin: "0 0 14px" }}>
-              {active.wardName} · {active.optimizedStopCount} {t("common.stops")} ·{" "}
+              {active.wardName} · {active.optimizedStopCount}{" "}
+              {tn(active.optimizedStopCount, "common.stopOne", "common.stops")} ·{" "}
               {active.totalDistanceKm} km ·{" "}
               {duration(active.estimatedMinutes)}
               {active.plateNumber && ` · ${active.plateNumber}`}

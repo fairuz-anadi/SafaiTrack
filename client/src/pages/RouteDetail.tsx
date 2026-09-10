@@ -64,7 +64,7 @@ interface Fleet {
 export default function RouteDetail() {
   const [, params] = useRoute("/routes/:id");
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   const routeId = Number(params?.id);
 
   const [route, setRoute] = useState<RouteInfo | null>(null);
@@ -223,7 +223,7 @@ export default function RouteDetail() {
               )}
             </div>
             <span className="map-updated">
-              {duration(route.estimatedMinutes)} · {stops.length} {t("common.stops")}
+              {duration(route.estimatedMinutes)} · {stops.length} {tn(stops.length, "common.stopOne", "common.stops")}
             </span>
           </div>
 
