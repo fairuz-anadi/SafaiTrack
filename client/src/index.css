@@ -3591,3 +3591,102 @@ html[data-lang="bn"] .final-cta h2 em {
   .agent-body { min-height: 0; }
   .explainer-suggestions { padding-bottom: 8px; }
 }
+
+/* ── Every page on the shared shell ──────────────────────────────────────────
+   The landing page moved onto `--shell`/`--gutter`; the rest of the product
+   did not, so the signed-in screens were still capped at 1600px and the
+   citizen pages at 1050–1184px with the same stranded-column problem on a
+   wide monitor. Same tokens, applied everywhere.
+
+   Where a column exists to be *read* or *filled in* rather than scanned, it
+   keeps a sane measure inside the wider page — a 1500px-wide text input is
+   not an improvement on a 700px one. */
+.page-wrap {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+/* The topbar has to move with it or the page title stops sitting above the
+   content it titles. */
+.topbar { padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* ── Citizen portal ──────────────────────────────────────────────────────── */
+.report-nav,
+.report-layout,
+.report-footer {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+/* The form is the one thing here that must not stretch: fields get unusable
+   long before the page does. The column widens a little and then stops. */
+.report-layout { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; }
+.report-form-card { max-width: 760px; }
+.report-stack { max-width: 1100px; }
+
+/* ── Driver ──────────────────────────────────────────────────────────────────
+   Built for a phone in a truck cab, so this one does not go to full shell —
+   but at 720px on a laptop it read as a strip down the middle of the screen. */
+.driver-stops, .driver-top, .driver-bar > * { max-width: 1100px; margin-left: auto; margin-right: auto; }
+.driver-top, .driver-stops { padding-left: max(16px, calc((100% - 1100px) / 2)); padding-right: max(16px, calc((100% - 1100px) / 2)); }
+
+@media (max-width: 900px) {
+  .report-layout { grid-template-columns: 1fr; gap: 32px; }
+  .report-form-card, .report-stack { max-width: none; }
+}
+
+/* ── Track a report by phone ─────────────────────────────────────────────────
+   The citizen portal page no longer caps itself at 780px inline, so it needs a
+   container of its own — wide like every other page, with the reading column
+   held to a sane measure. */
+.report-track {
+  width: 100%;
+  padding: 40px var(--gutter) 70px;
+}
+.report-track > * { max-width: 900px; }
+
+.track-form {
+  max-width: 900px;
+  margin: 0 0 28px;
+  padding: 22px 24px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(150deg, rgba(183, 239, 93, .16) 0%, rgba(255, 255, 255, 0) 58%), var(--surface);
+  box-shadow: var(--shadow);
+}
+.track-form label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #55625b;
+}
+.track-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.track-row input {
+  flex: 1 1 220px;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: #fbfcf8;
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  letter-spacing: .04em;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.track-row input:focus {
+  border-color: var(--lime-deep);
+  box-shadow: 0 0 0 3px rgba(183, 239, 93, .3);
+}
+.track-row .public-primary { height: 46px; flex-shrink: 0; }
+.track-row .public-primary:disabled { opacity: .6; cursor: wait; }
+.track-hint { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+.track-error { margin: 10px 0 0; color: var(--coral); font-size: 13px; }
