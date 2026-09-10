@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowUpRight, Route as RouteIcon, Sliders, Zap } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { BriefingPanel } from "@/components/agent/BriefingPanel";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -49,6 +50,7 @@ export default function RoutesPage() {
   const [threshold, setThreshold] = useState(55);
   const [maxStops, setMaxStops] = useState(20);
   const [lookahead, setLookahead] = useState(6);
+  const [preview, setPreview] = useState<{ previewId: string; planningInput: { wardId: number; thresholdPercent: number; maxStops: number; lookaheadHours: number }; totalDistanceKm: number; totalStops: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -260,6 +262,17 @@ export default function RoutesPage() {
         )}
       </div>
 
+      <div className="panel-card padded" style={{ marginTop: 18 }}>
+        <button className="outline-button" disabled={busy || !wardId} onClick={() => {
+          setBusy(true); setPreview(null);
+          api.get<NonNullable<typeof preview>>(`/route-preview?wardId=${wardId}&threshold=${threshold}&maxStops=${maxStops}&lookaheadHours=${lookahead}`)
+            .then(setPreview).catch(e=>setMessage({ok:false,text:e.message})).finally(()=>setBusy(false));
+        }}>{t("routes.previewExplain")}</button>
+        {preview && <>
+          <p>{preview.totalStops} {t("common.stops")} · {preview.totalDistanceKm} km · {t("routes.previewOnly")}</p>
+          <BriefingPanel feature="route" initial target={{ kind: "preview", previewId: preview.previewId, ...preview.planningInput }} />
+        </>}
+      </div>
       <AgentPanel />
     </AppShell>
   );

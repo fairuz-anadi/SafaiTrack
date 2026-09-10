@@ -79,10 +79,10 @@ function projectOverflow(
   ratePctPerHour: number,
   asOf: Date
 ): Pick<Forecast, "hoursToOverflow" | "predictedOverflowAt"> {
-  if (ratePctPerHour <= 0) return { hoursToOverflow: null, predictedOverflowAt: null };
   if (currentFillPercent >= 100) {
     return { hoursToOverflow: 0, predictedOverflowAt: asOf.toISOString() };
   }
+  if (ratePctPerHour <= 0) return { hoursToOverflow: null, predictedOverflowAt: null };
   const hours = (100 - currentFillPercent) / ratePctPerHour;
   // Beyond a week the projection is meaningless at this granularity.
   if (hours > 168) return { hoursToOverflow: null, predictedOverflowAt: null };

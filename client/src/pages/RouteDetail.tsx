@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { CheckCircle2, MapPin, Play, Truck, UserRound } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { BriefingPanel } from "@/components/agent/BriefingPanel";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { BinMap, type MapPath } from "@/components/map/BinMap";
 import { api } from "@/lib/api";
@@ -75,7 +76,7 @@ export default function RouteDetail() {
   const [driverId, setDriverId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [showBaseline, setShowBaseline] = useState(true);
+  const [showBaseline, setShowBaseline] = useState(false);
 
   const load = useCallback(async () => {
     const [r, f] = await Promise.all([
@@ -237,7 +238,7 @@ export default function RouteDetail() {
                 longitude: s.longitude,
                 currentFillPercent: s.currentFillPercent,
               }))}
-              paths={showBaseline ? [baselinePath, optimizedPath] : [optimizedPath]}
+              paths={[optimizedPath]}
               depot={depot}
               disposal={disposal}
               tall
@@ -361,6 +362,7 @@ export default function RouteDetail() {
         </div>
       </section>
 
+      <BriefingPanel feature="route" target={{ kind: "saved_route", routeId }} revision={JSON.stringify({ route, stops, comparison })} />
       <AgentPanel />
     </AppShell>
   );

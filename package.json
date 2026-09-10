@@ -20,7 +20,8 @@
     "db:reset": "npm run db:push && npm run db:seed",
     "setup": "npm run db:reset",
     "check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node --import tsx --test tests/explainers.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

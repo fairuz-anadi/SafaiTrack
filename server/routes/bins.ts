@@ -7,6 +7,7 @@ import { reportFillSchema } from "../../shared/schemas.js";
 import type { BinView } from "../../shared/types.js";
 import { db, schema } from "../db/client.js";
 import { type AppEnv, optionalAuth, requireAuth } from "../middleware/auth.js";
+import { readOperationalBins, readClock } from "../services/operational-data.js";
 import { refreshAllForecasts } from "../services/simulation.js";
 
 const {
@@ -61,7 +62,8 @@ binRoutes.get("/bins", optionalAuth, async c => {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(bins.currentFillPercent));
 
-  return c.json({ bins: rows as BinView[] });
+  const fresh = new Map((await readOperationalBins(wardId ? Number(wardId) : undefined)).bins.map(b => [b.binId,b.forecast]));
+  return c.json({ bins: rows.map(b => ({ ...b, hoursToOverflow: fresh.get(b.binId)?.hoursToOverflow ?? null, predictedOverflowAt: fresh.get(b.binId)?.predictedOverflowAt ?? null, forecastConfidence: fresh.get(b.binId)?.confidence ?? null })) });
 });
 
 binRoutes.get("/bins/:id", optionalAuth, async c => {
@@ -84,7 +86,8 @@ binRoutes.get("/bins/:id", optionalAuth, async c => {
     .orderBy(desc(binSensorReadings.recordedAt))
     .limit(60);
 
-  return c.json({ bin: row, readings: readings.reverse() });
+  const fresh = (await readOperationalBins(row.wardId)).bins.find(b => b.binId === binId)?.forecast;
+  return c.json({ bin: { ...row, hoursToOverflow: fresh?.hoursToOverflow ?? null, predictedOverflowAt: fresh?.predictedOverflowAt ?? null, forecastConfidence: fresh?.confidence ?? null }, readings: readings.reverse() });
 });
 
 /**
@@ -107,7 +110,7 @@ binRoutes.post("/bins/report-fill", requireAuth, zValidator("json", reportFillSc
   await db.insert(binSensorReadings).values({
     binId,
     readingNo: Number(maxNo) + 1,
-    recordedAt: new Date().toISOString(),
+    recordedAt: (await readClock()).simClock,
     fillLevelPercent,
     readingSource: "citizen",
     reportedByCitizenId: user.userId,
@@ -125,6 +128,7 @@ binRoutes.post("/bins/report-fill", requireAuth, zValidator("json", reportFillSc
       .where(eq(citizens.userId, user.userId));
   }
 
+  await refreshAllForecasts(binId);
   return c.json({ ok: true, binId, fillLevelPercent }, 201);
 });
 
@@ -204,31 +208,10 @@ binRoutes.get("/forecasts", optionalAuth, async c => {
   const hours = Number(c.req.query("hours") ?? 12);
   const wardId = c.req.query("wardId");
 
-  const conditions = [sql`${binForecasts.hoursToOverflow} is not null`, sql`${binForecasts.hoursToOverflow} <= ${hours}`];
-  if (wardId) conditions.push(eq(bins.wardId, Number(wardId)));
-
-  const rows = await db
-    .select({
-      binId: bins.binId,
-      binCode: bins.binCode,
-      landmark: bins.landmark,
-      wardName: wards.name,
-      latitude: bins.latitude,
-      longitude: bins.longitude,
-      currentFillPercent: bins.currentFillPercent,
-      fillRatePctPerHour: binForecasts.fillRatePctPerHour,
-      hoursToOverflow: binForecasts.hoursToOverflow,
-      predictedOverflowAt: binForecasts.predictedOverflowAt,
-      confidence: binForecasts.confidence,
-      sampleSize: binForecasts.sampleSize,
-    })
-    .from(binForecasts)
-    .innerJoin(bins, eq(binForecasts.binId, bins.binId))
-    .innerJoin(wards, eq(bins.wardId, wards.wardId))
-    .where(and(...conditions))
-    .orderBy(binForecasts.hoursToOverflow);
-
-  return c.json({ forecasts: rows, horizonHours: hours });
+  if (!Number.isFinite(hours) || hours < 0 || hours > 168) return c.json({ error: "Invalid horizon" }, 400);
+  const { bins: current } = await readOperationalBins(wardId ? Number(wardId) : undefined);
+  const wardRows = await db.select().from(wards);
+  return c.json({ forecasts: current.filter(b => b.forecast.hoursToOverflow !== null && b.forecast.hoursToOverflow <= hours).sort((a,b) => a.forecast.hoursToOverflow! - b.forecast.hoursToOverflow!).map(b => ({ binId: b.binId, binCode: b.binCode, landmark: b.landmark, wardName: wardRows.find(w => w.wardId === b.wardId)?.name, latitude: b.latitude, longitude: b.longitude, currentFillPercent: b.currentFillPercent, ...b.forecast })), horizonHours: hours });
 });
 
 binRoutes.post("/forecasts/refresh", requireAuth, async c => {

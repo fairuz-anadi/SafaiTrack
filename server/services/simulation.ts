@@ -15,6 +15,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import { forecastBin } from "./forecast.js";
+import { readClock, readOperationalBins } from "./operational-data.js";
 
 const { bins, binSensorReadings, binForecasts, simulationState, notifications, users } = schema;
 
@@ -71,7 +72,7 @@ export async function tick(): Promise<TickResult> {
   for (const bin of activeBins) {
     const wasCritical = bin.currentFillPercent >= 85;
 
-    const factor = diurnalFactor(to.getHours());
+    const factor = diurnalFactor((to.getUTCHours() + 6) % 24);
     // ±15% variance so no two ticks look mechanically identical.
     const variance = 0.85 + Math.random() * 0.3;
     const delta = bin.fillRatePctPerHour * hours * factor * variance;
@@ -163,60 +164,21 @@ export async function fastForward(ticks: number): Promise<TickResult> {
 }
 
 /** Refit every bin's overflow forecast against its stored reading history. */
-export async function refreshAllForecasts(): Promise<number> {
-  const activeBins = await db.select().from(bins).where(eq(bins.operationalStatus, "active"));
-  const state = await getSimulationState();
-  const asOf = new Date(state.simClock);
-
-  for (const bin of activeBins) {
-    const readings = await db
-      .select({
-        recordedAt: binSensorReadings.recordedAt,
-        fillLevelPercent: binSensorReadings.fillLevelPercent,
-      })
-      .from(binSensorReadings)
-      .where(and(eq(binSensorReadings.binId, bin.binId), eq(binSensorReadings.isValid, true)))
-      .orderBy(desc(binSensorReadings.recordedAt))
-      .limit(40);
-
-    const f = forecastBin(bin.currentFillPercent, readings, asOf);
-
-    // Feed the learned rate back onto the bin so routing can use it directly.
-    if (f.fillRatePctPerHour > 0 && f.confidence > 0.4) {
-      await db
-        .update(bins)
-        .set({ fillRatePctPerHour: f.fillRatePctPerHour })
-        .where(eq(bins.binId, bin.binId));
-    }
-
-    const existing = await db
-      .select()
-      .from(binForecasts)
-      .where(eq(binForecasts.binId, bin.binId))
-      .limit(1);
-
-    const payload = {
-      binId: bin.binId,
-      computedAt: new Date().toISOString(),
-      currentFillPercent: bin.currentFillPercent,
-      fillRatePctPerHour: f.fillRatePctPerHour,
-      hoursToOverflow: f.hoursToOverflow,
-      predictedOverflowAt: f.predictedOverflowAt,
-      confidence: f.confidence,
-      sampleSize: f.sampleSize,
-    };
-
-    if (existing.length > 0) {
-      await db.update(binForecasts).set(payload).where(eq(binForecasts.binId, bin.binId));
-    } else {
-      await db.insert(binForecasts).values(payload);
-    }
+export async function refreshAllForecasts(binId?: number): Promise<number> {
+  const data = await readOperationalBins();
+  const active = data.bins.filter(b => binId === undefined || b.binId === binId);
+  for (const bin of active) {
+    const f = bin.forecast;
+    const payload = { binId: bin.binId, computedAt: data.clock.simClock, currentFillPercent: bin.currentFillPercent, ...f };
+    await db.insert(binForecasts).values(payload).onConflictDoUpdate({ target: binForecasts.binId, set: payload });
+    if (f.fillRatePctPerHour > 0 && f.confidence > 0.4) await db.update(bins).set({ fillRatePctPerHour: f.fillRatePctPerHour }).where(eq(bins.binId, bin.binId));
   }
-  return activeBins.length;
+  return active.length;
 }
 
 /** Empty a bin — used when a driver logs a collection. */
-export async function emptyBin(binId: number, at: Date = new Date()): Promise<void> {
+export async function emptyBin(binId: number, at?: Date): Promise<void> {
+  at = at ?? new Date((await readClock()).simClock);
   const [{ maxNo }] = await db
     .select({ maxNo: sql<number>`coalesce(max(${binSensorReadings.readingNo}), 0)` })
     .from(binSensorReadings)
@@ -235,6 +197,7 @@ export async function emptyBin(binId: number, at: Date = new Date()): Promise<vo
     readingSource: "driver",
     isValid: true,
   });
+  await refreshAllForecasts(binId);
 }
 
 /** Reset the world clock without touching bin data. */

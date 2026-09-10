@@ -14,6 +14,9 @@ import {
 import { COMPLAINT_TRANSITIONS, type ComplaintStatus } from "../../shared/types.js";
 import { db, schema } from "../db/client.js";
 import { type AppEnv, requireAuth, requireRole } from "../middleware/auth.js";
+import { assertComplaintWard, resolveOperator } from "../services/access.js";
+import { readClock } from "../services/operational-data.js";
+import { refreshAllForecasts } from "../services/simulation.js";
 import { haversineKm } from "../services/routing.js";
 
 const {
@@ -146,13 +149,14 @@ async function fileComplaint(input: {
     await db.insert(binSensorReadings).values({
       binId: bin.binId,
       readingNo: Number(maxNo) + 1,
-      recordedAt: new Date().toISOString(),
+      recordedAt: (await readClock()).simClock,
       fillLevelPercent: 100,
       readingSource: "citizen",
       reportedByCitizenId: input.citizenId,
       isValid: true,
     });
     await db.update(bins).set({ currentFillPercent: 100 }).where(eq(bins.binId, bin.binId));
+    await refreshAllForecasts(bin.binId);
   }
 
   if (assignedOfficerId) {
@@ -172,7 +176,8 @@ async function fileComplaint(input: {
 /* ────────────────────────────────  READ  ───────────────────────────────── */
 
 complaintRoutes.get("/complaints", requireAuth, async c => {
-  const user = c.get("user");
+  const session = c.get("user");
+  const user = session.role === "officer" ? await resolveOperator(session) : session;
   const status = c.req.query("status");
 
   const conditions = [];
@@ -226,6 +231,7 @@ complaintRoutes.get("/complaints/:id", requireAuth, async c => {
     .where(eq(complaints.complaintId, complaintId))
     .limit(1);
   if (!row) throw new HTTPException(404, { message: "Complaint not found" });
+  if (user.role === "officer") await assertComplaintWard(user, row);
   if (user.role === "citizen" && row.citizenId !== user.userId) {
     throw new HTTPException(403, { message: "You can only view your own complaints" });
   }
@@ -266,6 +272,7 @@ complaintRoutes.patch(
       .limit(1);
     if (!row) throw new HTTPException(404, { message: "Complaint not found" });
 
+    await assertComplaintWard(user, row);
     const allowed = COMPLAINT_TRANSITIONS[row.status as ComplaintStatus];
     if (!allowed.includes(status)) {
       throw new HTTPException(409, {

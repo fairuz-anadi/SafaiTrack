@@ -26,6 +26,33 @@ const STORAGE_KEY = "safaitrack_lang";
 
 /** Every user-visible string in the product. */
 const strings = {
+  "routes.previewExplain": { en: "Preview and explain this plan", bn: "পরিকল্পনার প্রিভিউ ও ব্যাখ্যা" },
+  "routes.previewOnly": { en: "Unsaved preview · modeled distance", bn: "অসংরক্ষিত প্রিভিউ · মডেলভিত্তিক দূরত্ব" },
+
+  /* ── explainer mode ──────────────────────────────────────────────────── */
+  "explainer.mode": { en: "Explainer mode", bn: "ব্যাখ্যা মোড" },
+  "explainer.on": { en: "On", bn: "চালু" },
+  "explainer.off": { en: "Off", bn: "বন্ধ" },
+  "explainer.explaining": { en: "Explaining", bn: "ব্যাখ্যা করছি" },
+  "explainer.clear": { en: "Clear selection", bn: "নির্বাচন মুছুন" },
+  "explainer.hint": {
+    en: "Explainer mode is on. Click any highlighted number or section to ask about it.",
+    bn: "ব্যাখ্যা মোড চালু। যেকোনো চিহ্নিত সংখ্যা বা অংশে ক্লিক করে সেটি নিয়ে জিজ্ঞাসা করুন।",
+  },
+  "explainer.pickAnother": {
+    en: "Click anything you'd like explained, or just ask about the dashboard.",
+    bn: "যা বুঝতে চান তাতে ক্লিক করুন, অথবা ড্যাশবোর্ড নিয়েই জিজ্ঞাসা করুন।",
+  },
+  "explainer.reading": { en: "Looking at this number…", bn: "সংখ্যাটি দেখা হচ্ছে…" },
+  "explainer.readingBoard": { en: "Looking at the dashboard…", bn: "ড্যাশবোর্ডটি দেখা হচ্ছে…" },
+  "explainer.askMetric": { en: "Ask about this number…", bn: "এই সংখ্যাটি নিয়ে জিজ্ঞাসা করুন…" },
+  "explainer.askBoard": { en: "Ask about this dashboard…", bn: "এই ড্যাশবোর্ড নিয়ে জিজ্ঞাসা করুন…" },
+  "explainer.forecastPanel": { en: "Overflow outlook", bn: "ভরে যাওয়ার আউটলুক" },
+  "explainer.impactPanel": { en: "Distance saved", bn: "সাশ্রয় হওয়া দূরত্ব" },
+  "explainer.complaintsPanel": { en: "Open complaints", bn: "খোলা অভিযোগ" },
+  "explainer.pressurePanel": { en: "Where the pressure is", bn: "চাপ কোথায়" },
+  "agent.unavailable": { en: "The assistant is unavailable right now.", bn: "সহকারী এখন পাওয়া যাচ্ছে না।" },
+
   /* ── generic ─────────────────────────────────────────────────────────── */
   "common.back": { en: "Back to home", bn: "হোমে ফিরুন" },
   "common.cancel": { en: "Cancel", bn: "বাতিল" },
@@ -182,8 +209,8 @@ const strings = {
   "cities.measured": { en: "Measured to date", bn: "এ পর্যন্ত পরিমাপকৃত" },
   "cities.routesScored": { en: "routes scored", bn: "রুট মূল্যায়িত" },
   "cities.distanceSaved": { en: "Distance saved", bn: "দূরত্ব সাশ্রয়" },
-  "cities.costAvoided": { en: "Cost avoided", bn: "খরচ সাশ্রয়" },
-  "cities.co2Avoided": { en: "CO₂ avoided", bn: "CO₂ সাশ্রয়" },
+  "cities.costAvoided": { en: "Modeled cost reduction", bn: "খরচ সাশ্রয়" },
+  "cities.co2Avoided": { en: "Modeled CO₂ reduction", bn: "CO₂ সাশ্রয়" },
 
   "final.kicker": { en: "READY WHEN YOU ARE", bn: "আপনি প্রস্তুত হলেই" },
   "final.title": { en: "Aligned with", bn: "সামঞ্জস্যপূর্ণ" },
@@ -334,8 +361,8 @@ const strings = {
   "dash.averagedOver": { en: "averaged over", bn: "গড়," },
   "dash.scoredRoutes": { en: "scored routes", bn: "মূল্যায়িত রুট" },
   "dash.fuelNotBurned": { en: "Fuel not burned", bn: "জ্বালানি সাশ্রয়" },
-  "dash.costAvoided": { en: "Cost avoided", bn: "খরচ সাশ্রয়" },
-  "dash.co2Avoided": { en: "CO₂ avoided", bn: "CO₂ সাশ্রয়" },
+  "dash.costAvoided": { en: "Modeled cost reduction", bn: "খরচ সাশ্রয়" },
+  "dash.co2Avoided": { en: "Modeled CO₂ reduction", bn: "CO₂ সাশ্রয়" },
   "dash.seeProof": { en: "See the full proof", bn: "সম্পূর্ণ প্রমাণ দেখুন" },
   "dash.forecastKicker": { en: "OVERFLOW FORECAST", bn: "উপচে পড়ার পূর্বাভাস" },
   "dash.next8": { en: "Next 8 hours", bn: "পরবর্তী ৮ ঘণ্টা" },
@@ -447,7 +474,7 @@ const strings = {
     bn: "এখনো কোনো রুট মূল্যায়িত হয়নি। ড্যাশবোর্ড থেকে একটি রুট তৈরি করুন, তুলনা এখানে দেখা যাবে।",
   },
   "impact.lessDistance": { en: "less distance driven than the fixed schedule, averaged across", bn: "নির্ধারিত সূচির চেয়ে কম দূরত্ব, গড়" },
-  "impact.fuelSaved": { en: "Fuel saved", bn: "জ্বালানি সাশ্রয়" },
+  "impact.fuelSaved": { en: "Modeled fuel saving", bn: "জ্বালানি সাশ্রয়" },
   "impact.wastedStops": { en: "Wasted stops skipped", bn: "অপ্রয়োজনীয় স্টপ বাদ" },
   "impact.todayPractice": { en: "Today's practice — fixed schedule", bn: "বর্তমান পদ্ধতি — নির্ধারিত সূচি" },
   "impact.todayPracticeSub": {
@@ -640,7 +667,7 @@ const strings = {
   "live.ledgerBaseline": { en: "Fixed schedule", bn: "নির্ধারিত সূচি" },
   "live.ledgerSaved": { en: "Distance saved", bn: "দূরত্ব সাশ্রয়" },
   "live.ledgerFuel": { en: "Fuel avoided", bn: "জ্বালানি সাশ্রয়" },
-  "live.ledgerCost": { en: "Cost avoided", bn: "খরচ সাশ্রয়" },
+  "live.ledgerCost": { en: "Modeled cost reduction", bn: "খরচ সাশ্রয়" },
   "live.ledgerTime": { en: "Estimated time", bn: "আনুমানিক সময়" },
 
   /* ── landing: the route engine ───────────────────────────────────────── */

@@ -3387,3 +3387,151 @@ html[data-lang="bn"] .final-cta h2 em {
   .streams-outro { grid-template-columns: 1fr; }
   .streams-yard { max-width: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Contextual explainers.
+
+   These sit inside pages that are already dense with numbers, so the panel
+   reads as a written note rather than another card of metrics: one takeaway,
+   a short paragraph, labelled sections, and the caveat that actually matters.
+   Nothing about the machinery behind it appears here.
+--------------------------------------------------------------------------- */
+.briefing { margin: 17px 0; }
+.briefing-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 0 2px; }
+.briefing-head h3 { font: 600 15px 'Space Grotesk'; letter-spacing: -.3px; margin: 0; display: flex; align-items: center; gap: 7px; }
+.briefing-mark { color: var(--lime-deep); font-size: 12px; }
+
+.briefing-asked { color: #8b958f; font-size: 11px; font-style: italic; margin: 12px 0 0; }
+.briefing-waiting { display: flex; align-items: center; gap: 8px; color: #7e8983; font-size: 12px; margin: 14px 0 4px; }
+
+.briefing-headline { font: 600 17px 'Space Grotesk'; letter-spacing: -.4px; line-height: 1.32; margin: 13px 0 0; }
+.briefing-summary { color: #56635c; font-size: 12.5px; line-height: 1.65; margin: 7px 0 0; max-width: 66ch; }
+
+.briefing-highlights { display: flex; flex-wrap: wrap; gap: 9px; margin: 14px 0 0; }
+.briefing-highlights div { flex: 1 1 165px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fafcf7; padding: 11px 13px; }
+.briefing-highlights strong { display: block; font: 600 19px 'Space Grotesk'; letter-spacing: -.6px; color: var(--lime-deep); }
+.briefing-highlights span { display: block; color: #86918a; font-size: 10px; margin-top: 3px; line-height: 1.4; }
+
+.briefing-section { margin: 15px 0 0; max-width: 66ch; }
+.briefing-section h4 { color: #909b93; font: 500 9px 'DM Mono'; letter-spacing: .09em; text-transform: uppercase; margin: 0 0 4px; }
+.briefing-section p { color: #56635c; font-size: 12.5px; line-height: 1.65; margin: 0; }
+
+.briefing-limit { color: #6d7972; font-size: 12px; line-height: 1.6; margin: 13px 0 0; max-width: 66ch; }
+
+.briefing-note { border-left: 2px solid #e4ebda; padding: 1px 0 1px 12px; margin: 16px 0 0; max-width: 66ch; }
+.briefing-note h4 { color: #909b93; font: 500 9px 'DM Mono'; letter-spacing: .09em; text-transform: uppercase; margin: 0 0 4px; }
+.briefing-note p { color: #78837c; font-size: 11.5px; line-height: 1.6; margin: 0 0 3px; }
+
+.briefing-links { margin: 15px 0 0; }
+.briefing-links .text-button { padding: 0; }
+
+.briefing-ask { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 14px; }
+.briefing-chip { border: 1px solid var(--line); border-radius: 999px; background: transparent; color: #66726b; font-size: 10.5px; padding: 6px 11px; cursor: pointer; transition: background .16s, color .16s, border-color .16s; }
+.briefing-chip:hover:not(:disabled) { background: #f4f7f0; color: var(--ink); border-color: #d8e2cd; }
+.briefing-chip:disabled { opacity: .5; cursor: default; }
+.briefing-ask form { display: flex; gap: 8px; margin-top: 11px; }
+.briefing-ask input { flex: 1; min-width: 0; height: 37px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 0 12px; font-size: 12px; outline: none; transition: border-color .16s; }
+.briefing-ask input:focus { border-color: #cfdec0; }
+.briefing-ask input::placeholder { color: #a6afa8; }
+
+.briefing-foot { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: #a3ada6; font: 9px 'DM Mono'; letter-spacing: .02em; }
+.briefing-foot details { color: inherit; }
+.briefing-foot summary { cursor: pointer; color: #97a29b; }
+.briefing-foot summary:hover { color: #6d7972; }
+.briefing-foot ul { margin: 8px 0 0; padding-left: 15px; max-width: 74ch; }
+.briefing-foot li { color: #7d8880; font-family: 'DM Sans', sans-serif; font-size: 11px; line-height: 1.6; margin-bottom: 5px; }
+
+@media (max-width: 560px) {
+  .briefing-head { flex-direction: column; align-items: flex-start; gap: 9px; }
+  .briefing-ask form { flex-direction: column; }
+  .briefing-ask .outline-button { justify-content: center; }
+}
+
+/* ---------------------------------------------------------------------------
+   Explainer Mode.
+
+   The dashboard is a dashboard first. Off, the wrapper is invisible and every
+   card behaves exactly as it did. On, explainable elements pick up a quiet
+   dashed edge and a sparkle — enough to be discoverable, not enough to turn
+   the board into a christmas tree.
+--------------------------------------------------------------------------- */
+.explainable { display: flex; min-width: 0; position: relative; }
+.explainable > * { flex: 1 1 auto; min-width: 0; }
+
+.explainable.is-active {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  outline: 1px dashed #cfdec0;
+  outline-offset: 3px;
+  transition: outline-color .18s ease, background .18s ease;
+}
+.explainable.is-active:hover { outline-color: var(--lime-deep); background: rgba(183, 239, 93, .07); }
+.explainable.is-active:focus-visible { outline: 2px solid var(--lime-deep); outline-offset: 3px; }
+.explainable.is-selected { outline: 2px solid var(--lime-deep); outline-offset: 3px; background: rgba(183, 239, 93, .1); }
+
+.explainable-cue {
+  position: absolute; top: -7px; right: -7px; z-index: 4;
+  width: 18px; height: 18px; display: grid; place-items: center;
+  border-radius: 50%; background: var(--lime-deep); color: #fff;
+  font-size: 9px; line-height: 1; box-shadow: 0 2px 6px rgba(39, 55, 43, .22);
+}
+.explainable.is-active:hover .explainable-cue, .explainable.is-selected .explainable-cue { transform: scale(1.12); }
+.explainable-cue { transition: transform .18s ease; }
+
+/* Mode switch inside the assistant */
+.explainer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.explainer-bar-label { color: #6f7b74; font-size: 11px; font-weight: 600; }
+.explainer-switch {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; background: transparent;
+  padding: 4px 11px 4px 7px; color: #77837c; font-size: 10px; font-weight: 700;
+  transition: color .16s, border-color .16s, background .16s;
+}
+.explainer-switch > span { width: 8px; height: 8px; border-radius: 50%; background: #c8d1c9; transition: background .16s, box-shadow .16s; }
+.explainer-switch.is-on { color: var(--lime-deep); border-color: #cfe3b4; background: #f3f9ea; }
+.explainer-switch.is-on > span { background: var(--lime-deep); box-shadow: 0 0 0 3px rgba(104, 173, 52, .16); }
+
+.explainer-chip-row { padding: 10px 16px 0; }
+.explainer-chip {
+  display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
+  border: 1px solid #dfe9d3; border-radius: 999px; background: #f4f9ec;
+  padding: 5px 6px 5px 11px; color: var(--ink); font-size: 11px; font-weight: 600;
+}
+.explainer-chip em { color: #7d8a80; font-style: normal; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; }
+.explainer-chip button { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: transparent; color: #7f8b83; cursor: pointer; }
+.explainer-chip button:hover { background: rgba(23, 33, 30, .07); color: var(--ink); }
+
+.explainer-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
+.explainer-suggestions button {
+  border: 1px solid var(--line); border-radius: 999px; background: transparent;
+  color: #66726b; font-size: 10.5px; padding: 6px 11px; cursor: pointer; text-align: left;
+  transition: background .16s, color .16s, border-color .16s;
+}
+.explainer-suggestions button:hover { background: #f4f7f0; color: var(--ink); border-color: #d8e2cd; }
+
+/* A grounded answer, sized for a bubble rather than a page */
+.agent-msg.briefing-turn { display: block; }
+.briefing-turn strong { display: block; font: 600 13px 'Space Grotesk'; letter-spacing: -.2px; margin-bottom: 5px; }
+.briefing-turn p { margin: 0 0 7px; line-height: 1.6; }
+.briefing-turn p:last-child { margin-bottom: 0; }
+.briefing-turn-section em { display: block; color: #8a958d; font: 500 9px 'DM Mono'; font-style: normal; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+.briefing-turn-note { color: #7d8880; font-size: 11px; border-left: 2px solid #e4ebda; padding-left: 9px; }
+.briefing-turn-limit { color: #6d7972; font-size: 11.5px; }
+.agent-thinking { display: flex; gap: 9px; align-items: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .explainable.is-active, .explainable-cue, .explainer-switch, .explainer-switch > span { transition: none; }
+}
+
+/* On a phone the assistant becomes a bottom sheet rather than a full takeover: in Explainer
+   Mode the reader still has to reach the cards behind it to choose what to ask about. */
+@media (max-width: 520px) {
+  .agent-drawer {
+    top: auto; height: 68vh; border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: 0 -18px 50px rgba(23, 33, 30, .16);
+  }
+  .agent-body { min-height: 0; }
+  .explainer-suggestions { padding-bottom: 8px; }
+}

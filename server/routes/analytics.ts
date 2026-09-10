@@ -6,6 +6,8 @@ import { simulationControlSchema } from "../../shared/schemas.js";
 import { IMPACT_CONSTANTS } from "../../shared/types.js";
 import { db, schema } from "../db/client.js";
 import { type AppEnv, optionalAuth, requireRole } from "../middleware/auth.js";
+import { readDashboard } from "../services/dashboard-data.js";
+import { authorizedWard, resolveOperator } from "../services/access.js";
 import { projectAnnual } from "../services/impact.js";
 import {
   fastForward,
@@ -34,113 +36,12 @@ export const analyticsRoutes = new Hono<AppEnv>();
 /* ───────────────────────────  HEADLINE NUMBERS  ────────────────────────── */
 
 analyticsRoutes.get("/analytics/overview", optionalAuth, async c => {
-  const wardId = c.req.query("wardId");
-  const wardFilter = wardId ? eq(bins.wardId, Number(wardId)) : undefined;
-
-  const [binStats] = await db
-    .select({
-      total: sql<number>`count(*)`,
-      avgFill: sql<number>`coalesce(avg(${bins.currentFillPercent}), 0)`,
-      critical: sql<number>`sum(case when ${bins.currentFillPercent} >= 85 then 1 else 0 end)`,
-      overflowing: sql<number>`sum(case when ${bins.currentFillPercent} >= 100 then 1 else 0 end)`,
-      overflowHours: sql<number>`coalesce(sum(${bins.overflowHoursTotal}), 0)`,
-    })
-    .from(bins)
-    .where(and(eq(bins.operationalStatus, "active"), wardFilter));
-
-  const [complaintStats] = await db
-    .select({
-      total: sql<number>`count(*)`,
-      open: sql<number>`sum(case when ${complaints.status} in ('pending','assigned','in_progress') then 1 else 0 end)`,
-      resolved: sql<number>`sum(case when ${complaints.status} = 'resolved' then 1 else 0 end)`,
-      urgent: sql<number>`sum(case when ${complaints.priority} = 'urgent' and ${complaints.status} != 'resolved' then 1 else 0 end)`,
-    })
-    .from(complaints);
-
-  // Mean hours from filing to resolution — the accountability metric.
-  const [resolution] = await db
-    .select({
-      avgHours: sql<number>`coalesce(avg((julianday(${complaints.resolvedAt}) - julianday(${complaints.createdAt})) * 24), 0)`,
-    })
-    .from(complaints)
-    .where(sql`${complaints.resolvedAt} is not null`);
-
-  const [routeStats] = await db
-    .select({
-      total: sql<number>`count(*)`,
-      active: sql<number>`sum(case when ${routes.status} in ('assigned','in_progress') then 1 else 0 end)`,
-      completed: sql<number>`sum(case when ${routes.status} = 'completed' then 1 else 0 end)`,
-      distanceKm: sql<number>`coalesce(sum(${routes.totalDistanceKm}), 0)`,
-    })
-    .from(routes);
-
-  const [impact] = await db
-    .select({
-      routesScored: sql<number>`count(*)`,
-      totalBaselineKm: sql<number>`coalesce(sum(${routeComparisons.baselineDistanceKm}), 0)`,
-      totalOptimizedKm: sql<number>`coalesce(sum(${routeComparisons.optimizedDistanceKm}), 0)`,
-      avgSavedPercent: sql<number>`coalesce(avg(${routeComparisons.distanceSavedPercent}), 0)`,
-      fuelSaved: sql<number>`coalesce(sum(${routeComparisons.fuelSavedLitres}), 0)`,
-      costSaved: sql<number>`coalesce(sum(${routeComparisons.costSavedBdt}), 0)`,
-      co2Saved: sql<number>`coalesce(sum(${routeComparisons.co2SavedKg}), 0)`,
-      wastedStopsAvoided: sql<number>`coalesce(sum(${routeComparisons.wastedStopsAvoided}), 0)`,
-    })
-    .from(routeComparisons);
-
-  const [{ wardCount }] = await db.select({ wardCount: sql<number>`count(*)` }).from(wards);
-
-  const routesScored = Number(impact?.routesScored ?? 0);
-  const annual =
-    routesScored > 0
-      ? projectAnnual(
-          Number(impact.costSaved) / routesScored,
-          Number(impact.co2Saved) / routesScored,
-          Number(wardCount)
-        )
-      : { runsPerYear: 0, annualCostSavedBdt: 0, annualCo2SavedTonnes: 0 };
-
-  const state = await getSimulationState();
-
-  return c.json({
-    bins: {
-      total: Number(binStats?.total ?? 0),
-      avgFill: round1(Number(binStats?.avgFill ?? 0)),
-      critical: Number(binStats?.critical ?? 0),
-      overflowing: Number(binStats?.overflowing ?? 0),
-      overflowHours: round1(Number(binStats?.overflowHours ?? 0)),
-    },
-    complaints: {
-      total: Number(complaintStats?.total ?? 0),
-      open: Number(complaintStats?.open ?? 0),
-      resolved: Number(complaintStats?.resolved ?? 0),
-      urgent: Number(complaintStats?.urgent ?? 0),
-      avgResolutionHours: round1(Number(resolution?.avgHours ?? 0)),
-    },
-    routes: {
-      total: Number(routeStats?.total ?? 0),
-      active: Number(routeStats?.active ?? 0),
-      completed: Number(routeStats?.completed ?? 0),
-      distanceKm: round1(Number(routeStats?.distanceKm ?? 0)),
-    },
-    impact: {
-      routesScored,
-      totalBaselineKm: round1(Number(impact?.totalBaselineKm ?? 0)),
-      totalOptimizedKm: round1(Number(impact?.totalOptimizedKm ?? 0)),
-      avgSavedPercent: round1(Number(impact?.avgSavedPercent ?? 0)),
-      fuelSavedLitres: round1(Number(impact?.fuelSaved ?? 0)),
-      costSavedBdt: Math.round(Number(impact?.costSaved ?? 0)),
-      co2SavedKg: round1(Number(impact?.co2Saved ?? 0)),
-      wastedStopsAvoided: Number(impact?.wastedStopsAvoided ?? 0),
-      annual,
-    },
-    simulation: {
-      simClock: state.simClock,
-      ticksElapsed: state.ticksElapsed,
-      minutesPerTick: state.minutesPerTick,
-      isRunning: state.isRunning,
-    },
-    constants: IMPACT_CONSTANTS,
-  });
+  const requested = c.req.query("wardId");
+  const wardId = requested === undefined ? undefined : Number(requested);
+  if (wardId !== undefined && (!Number.isInteger(wardId) || wardId <= 0)) return c.json({ error: "Invalid ward ID" }, 400);
+  const session = c.get("user");
+  const scope = session?.role === "officer" ? authorizedWard(await resolveOperator(session), wardId) : wardId;
+  return c.json(await readDashboard(scope));
 });
 
 /** Ward-by-ward league table. */
