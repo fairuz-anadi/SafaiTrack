@@ -35,6 +35,56 @@ modelled.
 
 ---
 
+## The loop, in four steps
+
+Every figure below is what the running system actually returns — the numbers
+are from one pass over ward 27 on seeded data.
+
+**1. Log.** A resident texts `BIN W27-B001 FULL` from any phone, or an officer
+records what they find on a round. The SMS gateway answers with a tracking
+reference in both languages:
+
+```
+{"ok": true, "complaintCode": "CMP-2087",
+ "reply": "SafaiTrack: report CMP-2087 received. Track by replying STATUS CMP-2087. / অভিযোগ গৃহীত হয়েছে।"}
+```
+
+**2. Predict.** Each bin's own fill history is fitted by ordinary least squares
+and carried forward from the last observation. The projection ships with the
+evidence behind it, never as a bare claim:
+
+```
+W27-B001   +4.189 %/h   overflow in 0h      confidence 0.786   n=9
+W32-B004   +6.112 %/h   overflow in 0.33h   confidence 0.575   n=6
+```
+
+> The regression fits a straight line through that bin's readings. It does
+> **not** model time of day — the diurnal market-and-meal curve lives in the
+> simulation that generates fill data, not in the forecaster that predicts
+> overflow. Claiming otherwise is a claim the code will not support.
+
+**3. Optimize.** The engine takes the eligible bins in one ward — already over
+threshold, or forecast to cross it inside the lookahead — and builds a tour:
+Dijkstra over the ward road graph, priority-weighted nearest neighbour, then
+2-opt. It is scored against the fixed schedule it replaces:
+
+```
+R-27-84429   7 stops   13.99 km  vs  20.47 km fixed schedule
+             −31.66 %   2.46 L fuel   ৳258.55   6.6 kg CO₂
+```
+
+**4. Collect.** The driver opens the route on a phone, empties each bin and
+logs it. The bin drops to 0% and the stop is marked collected. The reading
+trail on that one bin is the whole loop in three rows:
+
+```
+simulated   94.4     the diurnal model, standing in for hardware
+citizen    100.0     the SMS from step 1
+driver       0.0     the collection from step 4
+```
+
+---
+
 ## What it does
 
 | | |
