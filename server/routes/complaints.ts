@@ -19,6 +19,7 @@ import { assertComplaintWard, resolveOperator } from "../services/access.js";
 import { readClock } from "../services/operational-data.js";
 import { refreshAllForecasts } from "../services/simulation.js";
 import { haversineKm } from "../services/routing.js";
+import { hashPassword } from "../lib/auth.js";
 
 const {
   complaints,
@@ -421,12 +422,66 @@ complaintRoutes.patch(
 complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c => {
   const { from, text, channel } = c.req.valid("json");
 
+  const command = parseCommand(text);
+
   const [citizen] = await db
     .select({ userId: users.userId, wardId: citizens.wardId })
     .from(users)
     .innerJoin(citizens, eq(users.userId, citizens.userId))
     .where(eq(users.phone, from))
     .limit(1);
+
+  /* ── REG <ward> ────────────────────────────────────────────────────────
+   * Sign-up over SMS, because the people this channel exists for are the
+   * ones who cannot complete a web form. The account carries no usable
+   * password: possession of the SIM is the credential, and there is nothing
+   * here worth a password anyway. */
+  if (command?.kind === "register") {
+    if (citizen) {
+      return c.json({
+        ok: true,
+        reply: "This number is already registered. Text BIN <code> FULL to report. / এই নম্বরটি আগে থেকেই নিবন্ধিত।",
+      });
+    }
+
+    const [ward] = await db
+      .select({ wardId: wards.wardId, name: wards.name })
+      .from(wards)
+      .where(sql`replace(${wards.wardCode}, 'DNCC-', '') = ${command.ward}`)
+      .limit(1);
+
+    if (!ward) {
+      const known = await db.select({ code: wards.wardCode }).from(wards);
+      const list = known.map(w => w.code.replace("DNCC-", "")).join(", ");
+      return c.json(
+        { ok: false, reply: `Ward ${command.ward} is not covered yet. Wards on SafaiTrack: ${list}. / এই ওয়ার্ড এখনো যুক্ত নয়।` },
+        404
+      );
+    }
+
+    const [created] = await db
+      .insert(users)
+      .values({
+        userType: "citizen",
+        fullName: `Resident ${from.slice(-4)}`,
+        email: `sms-${from}@sms.safaitrack.local`,
+        phone: from,
+        // Unguessable and never shared: this identity is the SIM, not a password.
+        passwordHash: await hashPassword(crypto.randomUUID() + crypto.randomUUID()),
+        preferredLanguage: "bn",
+        isActive: true,
+      })
+      .returning({ userId: users.userId });
+
+    await db.insert(citizens).values({ userId: created.userId, wardId: ward.wardId, address: null });
+
+    return c.json({
+      ok: true,
+      registered: true,
+      wardName: ward.name,
+      reply: `SafaiTrack: registered for ${ward.name}. Text BIN <code> FULL to report a bin. / নিবন্ধন সম্পন্ন হয়েছে।`,
+    });
+  }
 
   if (!citizen) {
     return c.json(
@@ -437,6 +492,41 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
       },
       404
     );
+  }
+
+  /* ── STATUS <code> ─────────────────────────────────────────────────────
+   * Scoped to complaints this number actually filed. Without that, the code
+   * is a four-digit number and anyone could walk the whole complaint log by
+   * texting increments of it. */
+  if (command?.kind === "status") {
+    const [row] = await db
+      .select({
+        complaintCode: complaints.complaintCode,
+        status: complaints.status,
+        createdAt: complaints.createdAt,
+        resolvedAt: complaints.resolvedAt,
+        landmark: bins.landmark,
+      })
+      .from(complaints)
+      .leftJoin(bins, eq(complaints.binId, bins.binId))
+      .where(and(eq(complaints.complaintCode, command.code), eq(complaints.citizenId, citizen.userId)))
+      .limit(1);
+
+    if (!row) {
+      return c.json(
+        { ok: false, reply: `No report ${command.code} found for this number. / এই নম্বরে ${command.code} পাওয়া যায়নি।` },
+        404
+      );
+    }
+
+    const where = row.landmark ? ` at ${row.landmark}` : "";
+    const closed = row.resolvedAt ? ` Resolved ${new Date(row.resolvedAt).toISOString().slice(0, 10)}.` : "";
+    return c.json({
+      ok: true,
+      complaintCode: row.complaintCode,
+      status: row.status,
+      reply: `SafaiTrack ${row.complaintCode}${where}: ${row.status.replace(/_/g, " ")}.${closed} / অবস্থা: ${row.status.replace(/_/g, " ")}।`,
+    });
   }
 
   const parsed = parseSmsBody(text);
@@ -491,6 +581,32 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
 });
 
 /** Very small keyword parser — deliberately tolerant of messy real messages. */
+/**
+ * Commands the gateway answers before treating a message as a new report.
+ *
+ * Both replies the system sends already tell people these exist — the receipt
+ * says "reply STATUS <code>" and the rejection says "reply REG <ward>" — so
+ * until now the service was advertising two things it did not do. Worse than
+ * absent: texting STATUS filed a second complaint, because any message that
+ * was not a command still looked like a report.
+ */
+function parseCommand(text: string): 
+  | { kind: "status"; code: string }
+  | { kind: "register"; ward: string }
+  | null {
+  const t = text.trim().toUpperCase();
+
+  // STATUS CMP-2085 — also tolerates "STATUS 2085" and a missing space.
+  const status = t.match(/^STATUS\s*[:\-]?\s*(?:CMP[\s-]*)?(\d{2,8})\b/);
+  if (status) return { kind: "status", code: `CMP-${status[1]}` };
+
+  // REG 27 — the ward number as a resident would say it, not the ward code.
+  const reg = t.match(/^REG(?:ISTER)?\s*[:\-]?\s*(\d{1,3})\b/);
+  if (reg) return { kind: "register", ward: reg[1] };
+
+  return null;
+}
+
 function parseSmsBody(text: string): {
   type: "overflow" | "missed_collection" | "damaged_bin" | "other";
   binCode?: string;
