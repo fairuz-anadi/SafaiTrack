@@ -6,6 +6,7 @@
  * whole system is one `node dist/server/index.js` process — one thing to
  * start at the venue, and one thing to deploy.
  */
+import "./lib/env.js";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";

@@ -11,11 +11,11 @@ export const modelBriefingSchema = z.object({
   sections: z.array(z.object({
     label: z.enum(LABELS),
     text: z.string().trim().min(15).max(340),
-    evidenceIds: z.array(z.string().max(120)).min(1).max(8),
-  }).strict()).min(1).max(4),
-  noteIds: z.array(z.string().max(80)).max(2),
+    evidenceIds: z.array(z.string().max(120)).max(16),
+  }).strict()).max(4),
+  noteIds: z.array(z.string().max(80)).max(8),
   recommendedViews: z.array(z.enum(VIEWS)).max(3),
-  cannotAnswer: z.array(z.enum(CANNOT_ANSWER)).max(3),
+  cannotAnswer: z.array(z.enum(CANNOT_ANSWER)).max(6),
 }).strict();
 
 /**
@@ -98,6 +98,7 @@ export function assertGrounded(text: string, snapshot: EvidenceSnapshot, languag
   for (const identity of [...snapshot.identities].sort((a, b) => b.length - a.length)) {
     remaining = remaining.split(identity).join(" ");
   }
+  remaining = remaining.replace(/\bCO[2₂]\b/gi, " ");
   const invented = remaining.match(IDENTITY_SHAPED);
   if (invented) throw new Error(`Unknown identifier: ${invented[0]}`);
 
@@ -137,19 +138,19 @@ export function modelJsonSchema(snapshot: EvidenceSnapshot): Record<string, unkn
       headline: { type: "string", maxLength: 90 },
       summary: { type: "string", maxLength: 420 },
       sections: {
-        type: "array", maxItems: 4, minItems: 1,
+        type: "array", maxItems: 4, minItems: 0,
         items: {
           type: "object", additionalProperties: false, required: ["label", "text", "evidenceIds"],
           properties: {
             label: { type: "string", enum: snapshot.sectionLabels },
             text: { type: "string", maxLength: 340 },
-            evidenceIds: { type: "array", minItems: 1, maxItems: 8, items: { type: "string", enum: Object.keys(snapshot.evidence) } },
+            evidenceIds: { type: "array", maxItems: 16, items: { type: "string", enum: Object.keys(snapshot.evidence) } },
           },
         },
       },
-      noteIds: { type: "array", maxItems: 2, items: { type: "string", enum: Object.keys(snapshot.notes) } },
+      noteIds: { type: "array", maxItems: 8, items: { type: "string", enum: Object.keys(snapshot.notes) } },
       recommendedViews: { type: "array", maxItems: 3, items: { type: "string", enum: snapshot.allowedViews } },
-      cannotAnswer: { type: "array", maxItems: 3, items: { type: "string", enum: CANNOT_ANSWER } },
+      cannotAnswer: { type: "array", maxItems: 6, items: { type: "string", enum: CANNOT_ANSWER } },
     },
   };
 }

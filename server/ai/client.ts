@@ -40,8 +40,8 @@ export function providerConfig() {
     model: provider === "openai"
       ? process.env.OPENAI_MODEL || "gpt-4o-mini"
       : process.env.ANTHROPIC_MODEL || "claude-opus-5",
-    timeoutMs: boundedInteger(process.env.LLM_TIMEOUT_MS, 8000, 50, 20000),
-    maxOutputTokens: boundedInteger(process.env.LLM_MAX_OUTPUT_TOKENS, 900, 128, 1500),
+    timeoutMs: boundedInteger(process.env.LLM_TIMEOUT_MS, 15000, 50, 20000),
+    maxOutputTokens: boundedInteger(process.env.LLM_MAX_OUTPUT_TOKENS, 1200, 128, 1500),
   };
 }
 export function createAnthropicClient() {
@@ -66,7 +66,7 @@ export const anthropicProvider: BriefingProvider = async (request, signal) => {
 };
 
 /**
- * OpenAI's strict structured-output mode accepts only a subset of JSON Schema: it rejects
+ * Strips JSON-schema keywords that OpenAI strict mode rejects. OpenAI strict rejects
  * length and range keywords, and requires every declared property to be required. Dropping
  * those hints costs nothing here, because `validateBriefing` re-checks all of them in Zod
  * before a single word reaches the reader.
@@ -98,15 +98,18 @@ export class OpenAiHttpError extends Error {
 
 /** One bounded POST to chat completions, shared by the explainers and the assistant loop. */
 export async function openAiChat(body: Record<string, unknown>, signal: AbortSignal): Promise<Record<string, any>> {
+  const payload = { ...body };
   const response = await fetch(`${OPENAI_BASE()}/chat/completions`, {
     method: "POST",
     signal,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
-    // The provider's own error text can quote the prompt back, so it is never propagated.
-    await response.body?.cancel();
+    const errText = await response.text().catch(() => "");
+    if (response.status === 400 && errText.includes("reasoning_effort") && !payload.reasoning_effort) {
+      return openAiChat({ ...payload, reasoning_effort: "none" }, signal);
+    }
     throw new OpenAiHttpError(response.status, `OpenAI request failed with ${response.status}`);
   }
   return await response.json();
@@ -128,7 +131,10 @@ export const openaiProvider: BriefingProvider = async (request, signal) => {
     // No tools are offered on this request, so the model has no way to reach the database.
   }, signal);
   const choice = body.choices?.[0];
-  if (!choice || choice.finish_reason !== "stop" || choice.message?.refusal) throw new BoundedProviderError("invalid_output");
+  if (!choice || choice.finish_reason !== "stop" || choice.message?.refusal) {
+    console.warn("[openai] rejected finish_reason:", choice?.finish_reason, "refusal:", choice?.message?.refusal);
+    throw new BoundedProviderError("invalid_output");
+  }
   return {
     text: choice.message?.content ?? "",
     usage: { inputTokens: body.usage?.prompt_tokens ?? 0, outputTokens: body.usage?.completion_tokens ?? 0 },
