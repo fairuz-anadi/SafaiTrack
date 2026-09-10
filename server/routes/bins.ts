@@ -91,9 +91,12 @@ binRoutes.get("/bins/:id", optionalAuth, async c => {
 });
 
 /**
- * Citizen-reported fill level. Recorded through the same table the simulated
- * feed writes to, with `readingSource: "citizen"` — so a citizen report and a
- * sensor reading are interchangeable inputs to the router.
+ * A reported fill level, from whoever is standing at the bin.
+ *
+ * Recorded through the same table the simulated feed writes to, so a report
+ * and a sensor reading are interchangeable inputs to the router. The source is
+ * taken from the caller's role rather than passed in the body — a client
+ * cannot claim to be an inspection.
  */
 binRoutes.post("/bins/report-fill", requireAuth, zValidator("json", reportFillSchema), async c => {
   const user = c.get("user");
@@ -107,18 +110,30 @@ binRoutes.post("/bins/report-fill", requireAuth, zValidator("json", reportFillSc
     .from(binSensorReadings)
     .where(eq(binSensorReadings.binId, binId));
 
+  /*
+   * Staff and ward officers reading a bin on a round are inspecting it, and an
+   * inspection is stronger evidence than a passer-by's estimate. Drivers get
+   * their own source so a collection is never mistaken for an observation.
+   */
+  const readingSource =
+    user.role === "officer" || user.role === "staff"
+      ? "officer"
+      : user.role === "driver"
+        ? "driver"
+        : "citizen";
+
   await db.insert(binSensorReadings).values({
     binId,
     readingNo: Number(maxNo) + 1,
     recordedAt: (await readClock()).simClock,
     fillLevelPercent,
-    readingSource: "citizen",
+    readingSource,
     reportedByCitizenId: user.userId,
     isValid: true,
   });
 
-  // A citizen standing at the bin is better evidence than an extrapolation,
-  // so the report becomes the bin's current state.
+  // Somebody standing at the bin is better evidence than an extrapolation, so
+  // the report becomes the bin's current state whoever filed it.
   await db.update(bins).set({ currentFillPercent: fillLevelPercent }).where(eq(bins.binId, binId));
 
   if (user.role === "citizen") {

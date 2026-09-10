@@ -39,6 +39,7 @@ interface Reading {
 const SOURCE_TONE: Record<string, string> = {
   simulated: "blue",
   citizen: "violet",
+  officer: "amber",
   driver: "green",
   sensor: "lime",
 };

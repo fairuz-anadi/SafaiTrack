@@ -179,10 +179,23 @@ export const binSensorReadings = sqliteTable(
     readingNo: integer("reading_no").notNull(),
     recordedAt: text("recorded_at").notNull().default(now),
     fillLevelPercent: real("fill_level_percent").notNull(),
-    /** `simulated` stands in for hardware; swap to `sensor` on a real retrofit. */
+    /**
+     * Where the number came from. `simulated` stands in for the reading history
+     * a live deployment would accumulate; swap to `sensor` on a real retrofit.
+     *
+     * `officer` is a ward officer's inspection during a routine check. It is
+     * kept distinct from `citizen` because the two carry different weight: an
+     * officer reads the bin as part of the job, on a round, and their reading
+     * is the one to trust when the two disagree.
+     */
     readingSource: text("reading_source", {
-      enum: ["simulated", "citizen", "driver", "sensor"],
+      enum: ["simulated", "citizen", "officer", "driver", "sensor"],
     }).notNull(),
+    /**
+     * Who filed it. Named for citizens because they were the only reporters
+     * when the column was added; it is a plain `users` reference and now also
+     * holds the officer who logged an inspection.
+     */
     reportedByCitizenId: integer("reported_by_citizen_id").references(() => users.userId),
     isValid: integer("is_valid", { mode: "boolean" }).notNull().default(true),
   },
