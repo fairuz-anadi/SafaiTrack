@@ -1,4 +1,12 @@
-/** A citizen's own reports and where each one stands. */
+/**
+ * A citizen's own reports and where each one stands.
+ *
+ * Reachable two ways. A signed-in citizen sees their reports directly; anyone
+ * else can type the phone number they filed from and get the same view. That
+ * second path is the important one — a resident who reported by SMS never had
+ * an account, and requiring them to make one just to read the answer would
+ * undo the reason the SMS channel exists.
+ */
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Check, FileText, LogOut } from "lucide-react";
@@ -19,6 +27,12 @@ interface Row {
   createdAt: string;
   resolvedAt: string | null;
   binCode: string | null;
+}
+
+/** The tracked shape carries its trail inline; the signed-in one fetches it. */
+interface TrackedRow extends Row {
+  binLandmark: string | null;
+  history: HistoryStep[];
 }
 
 interface HistoryStep {
@@ -44,16 +58,51 @@ export default function MyReports() {
   const [openId, setOpenId] = useState<number | null>(null);
   const [history, setHistory] = useState<HistoryStep[]>([]);
 
+  /* Phone lookup, for the visitor who never signed in. `searched` separates
+     "nothing typed yet" from "typed a number and it has no reports", which are
+     very different things to show. */
+  const [phone, setPhone] = useState("");
+  const [looking, setLooking] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [tracked, setTracked] = useState<TrackedRow[]>([]);
+
   useEffect(() => {
+    if (!user) return;
     api
       .get<{ complaints: Row[] }>("/complaints")
       .then(r => setRows(r.complaints))
       .catch(() => setRows([]));
-  }, []);
+  }, [user]);
+
+  const lookUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLooking(true);
+    setLookupError(null);
+    try {
+      const r = await api.post<{ complaints: TrackedRow[] }>("/complaints/track", { phone });
+      setTracked(r.complaints);
+      setSearched(true);
+    } catch {
+      setLookupError(t("track.badNumber"));
+    } finally {
+      setLooking(false);
+    }
+  };
+
+  /** Whichever set this visitor is entitled to see. */
+  const visible: Row[] = user ? rows : tracked;
 
   const toggle = async (row: Row) => {
     if (openId === row.complaintId) {
       setOpenId(null);
+      return;
+    }
+    // A tracked report already carries its trail, and `/complaints/:id` needs
+    // a session this visitor does not have.
+    if (!user) {
+      setHistory(tracked.find(x => x.complaintId === row.complaintId)?.history ?? []);
+      setOpenId(row.complaintId);
       return;
     }
     setOpenId(row.complaintId);
@@ -70,17 +119,19 @@ export default function MyReports() {
           <Link href="/report" className="public-nav-cta">
             {t("nav.report")} <ArrowRight size={15} />
           </Link>
-          <button
-            className="back-link"
-            onClick={() => void logout()}
-            style={{ background: "transparent", cursor: "pointer" }}
-          >
-            <LogOut size={15} /> {t("common.signOut")}
-          </button>
+          {user && (
+            <button
+              className="back-link"
+              onClick={() => void logout()}
+              style={{ background: "transparent", cursor: "pointer" }}
+            >
+              <LogOut size={15} /> {t("common.signOut")}
+            </button>
+          )}
         </div>
       </header>
 
-      <main style={{ maxWidth: 780, margin: "0 auto", padding: "40px 24px 70px" }}>
+      <main className="report-track">
         <p className="public-kicker">{t("report.kicker")}</p>
         <h1
           style={{
@@ -93,14 +144,40 @@ export default function MyReports() {
           {t("myReports.title")}
         </h1>
         <p style={{ color: "var(--muted)", fontSize: 16.5, margin: "0 0 30px", lineHeight: 1.6 }}>
-          {t("myReports.sub")}
+          {user ? t("myReports.sub") : t("track.sub")}
         </p>
 
-        {rows.length === 0 && (
+        {/* No account? The number you texted from is the key. */}
+        {!user && (
+          <form className="track-form" onSubmit={lookUp}>
+            <label htmlFor="track-phone">{t("track.label")}</label>
+            <div className="track-row">
+              <input
+                id="track-phone"
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="01712345678"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                required
+              />
+              <button type="submit" className="public-primary" disabled={looking}>
+                {looking ? t("common.loading") : t("track.submit")}
+                {!looking && <ArrowRight size={15} />}
+              </button>
+            </div>
+            {lookupError && <p className="track-error">{lookupError}</p>}
+            <p className="track-hint">{t("track.hint")}</p>
+          </form>
+        )}
+
+        {visible.length === 0 && (user || searched) && (
           <div className="panel-card">
             <div className="empty-state">
               <FileText size={30} />
-              <p>{t("myReports.empty")}</p>
+              <p>{user ? t("myReports.empty") : t("track.noneFound")}</p>
               <Link href="/report" className="public-primary" style={{ marginTop: 16 }}>
                 {t("nav.report")} <ArrowRight size={15} />
               </Link>
@@ -109,7 +186,7 @@ export default function MyReports() {
         )}
 
         <div style={{ display: "grid", gap: 12 }}>
-          {rows.map(r => (
+          {visible.map(r => (
             <div className="panel-card" key={r.complaintId} style={{ padding: 0, overflow: "hidden" }}>
               <button
                 onClick={() => void toggle(r)}

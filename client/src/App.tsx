@@ -70,12 +70,13 @@ function Router() {
         </GuestOnly>
       </Route>
 
-      {/* Citizen */}
-      <Route path="/my-reports">
-        <Protected roles={["citizen"]}>
-          <MyReports />
-        </Protected>
-      </Route>
+      {/*
+       * Citizen. Public on purpose: the page asks for the phone number a
+       * report was filed from rather than for a password, because the SMS
+       * channel's whole premise is that reporting needs no account. A
+       * signed-in citizen still gets their own list without typing anything.
+       */}
+      <Route path="/my-reports" component={MyReports} />
 
       {/* Municipal staff */}
       <Route path="/dashboard">

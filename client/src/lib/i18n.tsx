@@ -616,6 +616,25 @@ const strings = {
   "report.footerNote": { en: "One report can move a whole route.", bn: "একটি রিপোর্ট পুরো রুট বদলে দিতে পারে।" },
 
   /* ── my reports ──────────────────────────────────────────────────────── */
+  /* ── track a report without an account ─────────────────────────────── */
+  "track.sub": {
+    en: "Reported a bin by SMS or from the web? Enter the phone number you used and we will show you exactly where it stands. No account needed.",
+    bn: "SMS বা ওয়েবে বিনের অভিযোগ করেছেন? যে নম্বর থেকে জানিয়েছিলেন সেটি দিন — কোনো অ্যাকাউন্ট লাগবে না।",
+  },
+  "track.label": { en: "Your phone number", bn: "আপনার ফোন নম্বর" },
+  "track.submit": { en: "Find my reports", bn: "আমার অভিযোগ দেখুন" },
+  "track.hint": {
+    en: "The same number you texted from. You can also reply STATUS <code> to 16263 from any phone.",
+    bn: "যে নম্বর থেকে SMS করেছিলেন সেটিই। যেকোনো ফোন থেকে 16263-এ STATUS <কোড> লিখেও জানা যায়।",
+  },
+  "track.noneFound": {
+    en: "No reports on file for that number. Check the digits, or file a new one.",
+    bn: "এই নম্বরে কোনো অভিযোগ নেই। নম্বরটি মিলিয়ে দেখুন।",
+  },
+  "track.badNumber": {
+    en: "That does not look like a Bangladeshi mobile number — try 11 digits starting 01.",
+    bn: "এটি বাংলাদেশি মোবাইল নম্বর মনে হচ্ছে না — 01 দিয়ে শুরু ১১ অঙ্ক।",
+  },
   "myReports.title": { en: "My reports", bn: "আমার রিপোর্ট" },
   "myReports.sub": {
     en: "Every report you have filed, and exactly where it stands.",

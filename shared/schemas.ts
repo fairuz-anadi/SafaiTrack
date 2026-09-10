@@ -100,6 +100,17 @@ export const agentAskSchema = z.object({
 });
 
 /** Inbound SMS/USSD webhook — the low-tech complaint channel. */
+/**
+ * Look a citizen's reports up by the phone they filed from.
+ *
+ * The whole point of the SMS channel is that filing needs no account, so
+ * checking back should not need one either — a resident with a ৳1,500 phone
+ * has no password to remember and no app to open.
+ */
+export const trackByPhoneSchema = z.object({
+  phone: z.string().regex(/^01[3-9]\d{8}$/, "Enter a Bangladeshi mobile number, e.g. 01712345678"),
+});
+
 export const smsIntakeSchema = z.object({
   from: z.string().regex(/^01[3-9]\d{8}$/, "Sender must be a Bangladeshi mobile number"),
   /** Raw message body, e.g. "BIN DHN-014 FULL" or Bangla free text. */
@@ -112,6 +123,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export type GenerateRouteInput = z.infer<typeof generateRouteSchema>;
 export type SmsIntakeInput = z.infer<typeof smsIntakeSchema>;
+export type TrackByPhoneInput = z.infer<typeof trackByPhoneSchema>;
 
 const explanationOptions = {
   language: z.enum(["en", "bn"]).default("en"),

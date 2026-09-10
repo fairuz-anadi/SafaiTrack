@@ -9,6 +9,7 @@ import { HTTPException } from "hono/http-exception";
 import {
   createComplaintSchema,
   smsIntakeSchema,
+  trackByPhoneSchema,
   updateComplaintStatusSchema,
 } from "../../shared/schemas.js";
 import { COMPLAINT_TRANSITIONS, type ComplaintStatus } from "../../shared/types.js";
@@ -172,6 +173,82 @@ async function fileComplaint(input: {
 
   return row;
 }
+
+/**
+ * Track reports by the phone they were filed from — no account, no password.
+ *
+ * A resident who reported by SMS never had an account to begin with; making
+ * them create one to see what happened to their report would undo the reason
+ * the SMS channel exists. This returns the same rows the citizen portal shows,
+ * with the audit trail attached, so one request answers "what happened to my
+ * complaint" completely.
+ *
+ * The response is deliberately uniform whether the number is unregistered or
+ * simply has nothing on file: both come back as an empty list, so the endpoint
+ * cannot be used to test which numbers are registered with the city.
+ *
+ * A phone number is a weak secret — anyone who knows it can read these rows.
+ * That is an acceptable trade for a municipal complaint log that already goes
+ * out by SMS in clear text, but it is a trade, and a deployment handling
+ * anything more sensitive wants a one-time code sent to the number instead.
+ */
+complaintRoutes.post("/complaints/track", zValidator("json", trackByPhoneSchema), async c => {
+  const { phone } = c.req.valid("json");
+
+  const [citizen] = await db
+    .select({ userId: users.userId })
+    .from(users)
+    .where(and(eq(users.phone, phone), eq(users.isActive, true)))
+    .limit(1);
+
+  if (!citizen) return c.json({ complaints: [] });
+
+  const rows = await db
+    .select({
+      complaintId: complaints.complaintId,
+      complaintCode: complaints.complaintCode,
+      complaintType: complaints.complaintType,
+      description: complaints.description,
+      status: complaints.status,
+      priority: complaints.priority,
+      channel: complaints.channel,
+      locationText: complaints.locationText,
+      createdAt: complaints.createdAt,
+      resolvedAt: complaints.resolvedAt,
+      binCode: bins.binCode,
+      binLandmark: bins.landmark,
+      wardName: wards.name,
+    })
+    .from(complaints)
+    .leftJoin(bins, eq(complaints.binId, bins.binId))
+    .leftJoin(wards, eq(bins.wardId, wards.wardId))
+    .where(eq(complaints.citizenId, citizen.userId))
+    .orderBy(desc(complaints.createdAt));
+
+  // The trail is the point — a status with no record of who moved it and when
+  // is exactly the opacity this channel exists to replace.
+  const withHistory = await Promise.all(
+    rows.map(async row => ({
+      ...row,
+      history: await db
+        .select({
+          changeNo: complaintStatusHistory.changeNo,
+          oldStatus: complaintStatusHistory.oldStatus,
+          newStatus: complaintStatusHistory.newStatus,
+          changedAt: complaintStatusHistory.changedAt,
+          remark: complaintStatusHistory.remark,
+          changedByName: users.fullName,
+          changedByRole: users.userType,
+        })
+        .from(complaintStatusHistory)
+        .leftJoin(users, eq(complaintStatusHistory.changedByUserId, users.userId))
+        .where(eq(complaintStatusHistory.complaintId, row.complaintId))
+        .orderBy(complaintStatusHistory.changeNo),
+    }))
+  );
+
+  return c.json({ complaints: withHistory });
+});
 
 /* ────────────────────────────────  READ  ───────────────────────────────── */
 
