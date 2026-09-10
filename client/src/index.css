@@ -3193,3 +3193,197 @@ html[data-lang="bn"] .final-cta h2 em {
   transition: opacity .3s ease, transform .5s cubic-bezier(.2, .7, .3, 1);
 }
 .figure-frame .figure-photo.is-loaded { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING — FULL-BLEED BANDS
+   ───────────────────────────────────────────────────────────────────────────
+   Every landing container was capped at 1184px and centred, which on a wide
+   monitor left the page as a narrow column of content stranded in a field of
+   paper. Two changes fix that together:
+
+   · A wider shell, so the content itself uses the screen.
+   · Backgrounds that run edge to edge, so a section reads as a band across
+     the page rather than as a floating card. A section can only do that if
+     the element carrying the background is full width, so the containers stop
+     using `max-width` + `auto` margins and instead go full width with a
+     centring gutter — the trick `.city-section` already used.
+
+   The bands then alternate down the page: a green ground, then paper lit by a
+   soft green radial, and so on, with the two deep-ink sections as the accents
+   they already were.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* How wide the content itself is allowed to get. */
+  --shell: 1560px;
+  /* Space either side of it. Below `--shell` the calc goes negative and the
+     clamp takes over, so one expression covers phone to ultrawide with no
+     media query — but the floor has to be a real margin, not the 28px it
+     started as, or a 1280px laptop ends up with body text against the window
+     edge. */
+  --gutter: max(clamp(20px, 4.5vw, 80px), calc((100% - var(--shell)) / 2));
+
+  --band-green: linear-gradient(180deg, #eef5e3 0%, #e7f0d9 55%, #edf4e2 100%);
+  --band-paper: radial-gradient(115% 65% at 50% 0%, rgba(183, 239, 93, .17), rgba(247, 248, 243, 0) 62%),
+    var(--paper);
+}
+
+/* ── The live wire, edge to edge ─────────────────────────────────────────────
+   It is the page's first horizontal rule between the hero and everything
+   under it, so it should touch both edges rather than float with rounded
+   corners in the middle. */
+.newswire {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(23, 33, 30, .12);
+}
+.newswire + .outcomes-strip { margin-top: 46px; }
+/* Wider strip, wider fade: 46px of dissolve looked like a nick out of the
+   headline once the track ran the full width of a monitor. */
+.newswire-track {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 72px, #000 calc(100% - 72px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 72px, #000 calc(100% - 72px), transparent 100%);
+}
+.newswire-label { padding: 0 26px; }
+@media (max-width: 860px) {
+  .newswire { margin: 0; border-radius: 0; }
+  .newswire-label { padding: 0 14px; }
+}
+
+/* ── Full-width sections on the shared gutter ───────────────────────────────
+   `max-width: none` puts the element edge to edge so its background can span;
+   the gutter keeps the content on the same centre line as every other band. */
+.story-section,
+.gallery-section,
+.day-section,
+.cap-section,
+.streams-section,
+.roles-section,
+.brand-band,
+.faq-section,
+.final-cta {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+/* These two carried their centring in `margin: auto`, which full width makes
+   meaningless — but they also used it for vertical rhythm, so it is restated. */
+.story-section { margin-top: 0; margin-bottom: 0; }
+.brand-band { margin-bottom: 0; padding-top: 78px; padding-bottom: 78px; }
+.final-cta { margin-top: 0; margin-bottom: 0; }
+
+/* The engine section was already full-bleed; only its inner shell widens. */
+.engine-inner { max-width: none; padding-left: var(--gutter); padding-right: var(--gutter); }
+.city-section { padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* The outcome strip and the numbers band stay cards rather than bands — they
+   are meant to sit on top of the ground, not be it — but they get the width. */
+.outcomes-strip, .numbers-band, .public-footer {
+  max-width: var(--shell);
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* The FAQ was a deliberately narrow reading column at 900px. It stays narrower
+   than the rest — a question list does not want a 1500px measure — but it no
+   longer looks stranded. */
+.faq-section > * { max-width: 1100px; margin-left: auto; margin-right: auto; }
+
+/* ── The alternation ────────────────────────────────────────────────────────
+   Green ground, then paper with a green radial, down the whole page. The two
+   ink sections (city teams, route engine) and the numbers band keep their own
+   dark treatment — they are the accents this rhythm is built around. */
+.story-section,
+.streams-section,
+.roles-section {
+  background: var(--band-green);
+}
+.landing-hero,
+.gallery-section,
+.day-section,
+.brand-band,
+.faq-section {
+  background: var(--band-paper);
+}
+/* The capability grid keeps the lime bloom it already had, now as the band
+   itself rather than as a floating pseudo-element behind the cards. */
+.cap-section { background: var(--band-green); }
+.cap-section:before { display: none; }
+
+/* The hero paints its own radials on top of the band; keep them from stacking
+   into a muddy double wash. */
+.landing-hero .hero-noise { opacity: .32; }
+
+/* The closing call to action is the last band before the footer, so it gets
+   the deeper end of the green to close the page rather than trail off. */
+.final-cta {
+  background: linear-gradient(180deg, #edf4e2 0%, #e3ecd4 100%);
+  padding-top: 110px;
+  padding-bottom: 118px;
+}
+
+/* Bands meet edge to edge, so the vertical padding is what separates them —
+   sections that only had bottom padding need the top back. */
+.gallery-section, .day-section, .cap-section, .streams-section { padding-top: 84px; }
+.roles-section { padding-top: 76px; }
+.faq-section { padding-top: 84px; }
+
+/* The footer sits on paper below the last green band. */
+.public-footer { background: var(--paper); }
+
+@media (max-width: 860px) {
+  .gallery-section, .day-section, .cap-section, .streams-section { padding-top: 58px; }
+  .roles-section, .faq-section { padding-top: 58px; }
+  .brand-band { padding-top: 54px; padding-bottom: 54px; }
+  .final-cta { padding-top: 72px; padding-bottom: 78px; }
+}
+
+/* The hero was still centred at 1240px, so its band stopped short of both
+   edges while the wire beneath it ran the full width — the seam between them
+   showed the old column. Full width with the shared gutter puts its two
+   columns on the same centre line as every band below. */
+.landing-hero {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* The header sat on the old 1240px column while everything under it moved to
+   the shell, so the wordmark no longer lined up with the headline beneath it.
+   Same gutter, same centre line. */
+.public-nav {
+  max-width: none;
+  width: 100%;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.public-footer {
+  max-width: none;
+  width: 100%;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* At shell width the two halves of the sorting-yard block came out at ~740px
+   each, which made a 320×220 illustration render half a metre wide. The copy
+   is the point of that block; the picture supports it. */
+.streams-outro { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); }
+.streams-yard { max-width: 560px; }
+
+/* The outcome strip is a card floating on paper between the wire and the
+   first green band. Without room underneath, its bottom edge butted straight
+   into the green and it read as a mis-clipped band rather than a card. */
+.outcomes-strip { margin-bottom: 54px; }
+@media (max-width: 860px) {
+  .outcomes-strip { margin-bottom: 34px; }
+  .streams-outro { grid-template-columns: 1fr; }
+  .streams-yard { max-width: none; }
+}
