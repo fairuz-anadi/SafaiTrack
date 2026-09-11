@@ -3,10 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { reportFillSchema } from "../../shared/schemas.js";
+import { createBinSchema, reportFillSchema } from "../../shared/schemas.js";
 import type { BinView } from "../../shared/types.js";
 import { db, schema } from "../db/client.js";
-import { type AppEnv, optionalAuth, requireAuth } from "../middleware/auth.js";
+import { type AppEnv, optionalAuth, requireAuth, requireRole } from "../middleware/auth.js";
 import { readOperationalBins, readClock } from "../services/operational-data.js";
 import { refreshAllForecasts } from "../services/simulation.js";
 
@@ -203,6 +203,74 @@ binRoutes.get("/wards/:id/zones", async c => {
  * from the database rather than being retyped into the markup — which is the
  * same claim the rest of the site makes about its numbers.
  */
+/**
+ * Register a newly installed bin.
+ *
+ * Everything downstream already copes with a bin it has never seen — the
+ * forecaster refuses to fit a trend under three readings and reports 0.25
+ * confidence instead of inventing one — so this is the only piece that was
+ * missing. Until now the sole way a bin entered the system was the seed file,
+ * which is not something a ward office can run.
+ *
+ * The code is generated, not accepted: `W27-B008` follows the ward and the
+ * next free sequence, so two people registering bins in the same ward on the
+ * same morning cannot collide.
+ */
+binRoutes.post("/bins", requireRole("staff"), zValidator("json", createBinSchema), async c => {
+  const input = c.req.valid("json");
+
+  const [ward] = await db
+    .select({ wardId: wards.wardId, wardCode: wards.wardCode })
+    .from(wards)
+    .where(eq(wards.wardId, input.wardId))
+    .limit(1);
+  if (!ward) throw new HTTPException(404, { message: "Ward not found" });
+
+  const [category] = await db
+    .select({ id: wasteCategories.wasteCategoryId })
+    .from(wasteCategories)
+    .where(eq(wasteCategories.wasteCategoryId, input.wasteCategoryId))
+    .limit(1);
+  if (!category) throw new HTTPException(404, { message: "Waste category not found" });
+
+  // `W` + the ward number, matching the codes already on the street.
+  const prefix = ward.wardCode.replace("DNCC-", "W");
+  const existing = await db
+    .select({ binCode: bins.binCode })
+    .from(bins)
+    .where(eq(bins.wardId, ward.wardId));
+  const highest = existing.reduce((max, b) => {
+    const n = Number(b.binCode.split("-B")[1] ?? 0);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  const binCode = `${prefix}-B${String(highest + 1).padStart(3, "0")}`;
+
+  const [created] = await db
+    .insert(bins)
+    .values({
+      binCode,
+      wardId: ward.wardId,
+      zoneNo: input.zoneNo,
+      wasteCategoryId: input.wasteCategoryId,
+      landmark: input.landmark,
+      landmarkBn: input.landmarkBn ?? null,
+      capacityLiters: input.capacityLiters,
+      // A bin is installed empty, and its fill rate is not known yet — the
+      // forecaster will learn it once reports start arriving rather than us
+      // guessing here. Until then it reports low confidence, which is true.
+      currentFillPercent: 0,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      operationalStatus: "active",
+      fillRatePctPerHour: 0,
+      overflowHoursTotal: 0,
+      installedAt: new Date().toISOString(),
+    })
+    .returning({ binId: bins.binId, binCode: bins.binCode });
+
+  return c.json({ ok: true, bin: created }, 201);
+});
+
 binRoutes.get("/waste-categories", async c => {
   const rows = await db
     .select({

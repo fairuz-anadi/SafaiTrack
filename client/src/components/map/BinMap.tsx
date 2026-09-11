@@ -8,7 +8,7 @@
  * relative geometry stay correct either way; only the street artwork is lost.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { binTone } from "@shared/types";
@@ -38,7 +38,33 @@ interface Props {
   selectedBinId?: number | null;
   onSelectBin?: (bin: MapBin) => void;
   tall?: boolean;
+  /**
+   * Placing a new bin: the map becomes a coordinate picker. Nobody at a ward
+   * office knows a bin sits at 23.746, 90.376 — but everyone can point at the
+   * corner it stands on.
+   */
+  picking?: boolean;
+  onPick?: (lat: number, lng: number) => void;
+  pin?: { lat: number; lng: number } | null;
 }
+
+/** Turns map clicks into coordinates while placement is active. */
+function PickHandler({ active, onPick }: { active: boolean; onPick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      if (active) onPick?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+/** The pin being placed, visually distinct from the bins already on the map. */
+const PICK_ICON = L.divIcon({
+  className: "",
+  html: '<div class="bin-marker pick-marker">+</div>',
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
 
 /** Dhanmondi–Mohammadpur, the area every seeded ward sits inside. */
 const DHAKA_CENTER: [number, number] = [23.7545, 90.3745];
@@ -85,6 +111,9 @@ export function BinMap({
   selectedBinId,
   onSelectBin,
   tall,
+  picking = false,
+  onPick,
+  pin,
 }: Props) {
   const [tilesFailed, setTilesFailed] = useState(false);
   // A tile server that never answers produces no error event, so a timeout is
@@ -112,8 +141,10 @@ export function BinMap({
         center={DHAKA_CENTER}
         zoom={14}
         scrollWheelZoom
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100%", width: "100%", cursor: picking ? "crosshair" : undefined }}
       >
+        <PickHandler active={picking} onPick={onPick} />
+        {pin && <Marker position={[pin.lat, pin.lng]} icon={PICK_ICON} />}
         {!tilesFailed && (
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

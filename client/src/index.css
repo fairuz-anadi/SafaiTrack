@@ -3690,3 +3690,79 @@ html[data-lang="bn"] .final-cta h2 em {
 .track-row .public-primary:disabled { opacity: .6; cursor: wait; }
 .track-hint { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 .track-error { margin: 10px 0 0; color: var(--coral); font-size: 13px; }
+
+/* ── Register an installed bin ───────────────────────────────────────────── */
+.add-bin-card { margin-bottom: 17px; }
+.add-bin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px 18px;
+  padding: 4px 0 6px;
+}
+.add-bin-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #55625b;
+}
+.add-bin-wide { grid-column: span 2; }
+.add-bin-grid input,
+.add-bin-grid select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fbfcf8;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.add-bin-grid input:focus,
+.add-bin-grid select:focus {
+  border-color: var(--lime-deep);
+  box-shadow: 0 0 0 3px rgba(183, 239, 93, .3);
+}
+/* The coordinate readout is output, not input — it reads as a value the map
+   filled in rather than another empty box to worry about. */
+.add-bin-coords {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(183, 239, 93, .16);
+  border: 1px dashed rgba(104, 173, 52, .45);
+}
+.add-bin-coords span { font-size: 11.5px; color: #55625b; letter-spacing: .04em; }
+.add-bin-coords b { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--ink); }
+.add-bin-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 16px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+@media (max-width: 760px) { .add-bin-wide { grid-column: span 1; } }
+
+/* The pin being placed: hollow and lime, so it cannot be mistaken for a bin
+   that already exists and already has a fill level. */
+.bin-marker.pick-marker {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: #17211e;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 14px rgba(23, 33, 30, .3);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}

@@ -60,6 +60,28 @@ export const updateComplaintStatusSchema = z.object({
   remark: z.string().max(500).optional(),
 });
 
+/**
+ * Register a bin that has just been installed on the street.
+ *
+ * No bin code: it is derived from the ward and the next free sequence, the
+ * same way the seed does it. A ward office typing `W27-B007` when `W27-B007`
+ * already exists is a failure mode worth designing out rather than validating.
+ *
+ * The coordinate bounds are greater Dhaka. They exist to catch a transposed
+ * lat/lng or a stray decimal — the two mistakes that put a bin in the Bay of
+ * Bengal and make the route engine plan a 3,000 km round trip.
+ */
+export const createBinSchema = z.object({
+  wardId: z.coerce.number().int().positive(),
+  zoneNo: z.coerce.number().int().min(1).max(99).default(1),
+  wasteCategoryId: z.coerce.number().int().positive(),
+  landmark: z.string().trim().min(3, "Give a landmark someone could find it by").max(120),
+  landmarkBn: z.string().trim().max(120).optional(),
+  capacityLiters: z.coerce.number().int().min(50).max(5000),
+  latitude: z.coerce.number().min(23.6, "Outside greater Dhaka").max(23.95, "Outside greater Dhaka"),
+  longitude: z.coerce.number().min(90.25, "Outside greater Dhaka").max(90.55, "Outside greater Dhaka"),
+});
+
 export const reportFillSchema = z.object({
   binId: z.coerce.number().int().positive(),
   fillLevelPercent: z.coerce.number().min(0).max(100),
@@ -124,6 +146,7 @@ export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export type GenerateRouteInput = z.infer<typeof generateRouteSchema>;
 export type SmsIntakeInput = z.infer<typeof smsIntakeSchema>;
 export type TrackByPhoneInput = z.infer<typeof trackByPhoneSchema>;
+export type CreateBinInput = z.infer<typeof createBinSchema>;
 
 const explanationOptions = {
   language: z.enum(["en", "bn"]).default("en"),
