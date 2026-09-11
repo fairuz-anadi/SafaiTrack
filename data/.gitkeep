@@ -1,0 +1,2 @@
+# Keeps the data/ folder in the repo. The SQLite database is created here by
+# `npm run setup`; the .db files themselves are ignored.

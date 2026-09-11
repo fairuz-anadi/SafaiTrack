@@ -301,6 +301,10 @@ const strings = {
   "auth.demoNote": { en: "Fills the form for you — no typing needed.", bn: "ফর্ম নিজেই পূরণ হবে — টাইপ করতে হবে না।" },
   "auth.changeRole": { en: "Change role", bn: "ভূমিকা বদলান" },
   "auth.wrong": { en: "Email or password is incorrect", bn: "ইমেইল বা পাসওয়ার্ড ভুল" },
+  "auth.serverDown": {
+    en: "Can't reach the SafaiTrack server right now. Check that it is running, then try again.",
+    bn: "এই মুহূর্তে SafaiTrack সার্ভারে পৌঁছানো যাচ্ছে না। সার্ভার চালু আছে কি না দেখে আবার চেষ্টা করুন।",
+  },
   "auth.registerKicker": { en: "CREATE ACCOUNT", bn: "অ্যাকাউন্ট খুলুন" },
   "auth.registerTitle": { en: "Join your ward.", bn: "আপনার ওয়ার্ডে যোগ দিন।" },
   "auth.registerSub": {

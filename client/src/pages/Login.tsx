@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { AmbientNetwork } from "@/components/ambient/AmbientNetwork";
 import { LiveBrandLockup } from "@/components/brand/InteractiveLogo";
+import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LanguageToggle, useI18n, type StringKey } from "@/lib/i18n";
 import type { Role } from "@shared/types";
@@ -116,8 +117,12 @@ export default function Login() {
     setError("");
     try {
       await login(email, password);
-    } catch {
-      setError(t("auth.wrong"));
+    } catch (err) {
+      // Only a 401 means the credentials were wrong. A 500, or no response at
+      // all, is the server's problem, and saying "wrong password" for that
+      // sends the person re-typing something that was never the issue.
+      const rejected = err instanceof ApiError && err.status === 401;
+      setError(t(rejected ? "auth.wrong" : "auth.serverDown"));
       setBusy(false);
     }
   };
