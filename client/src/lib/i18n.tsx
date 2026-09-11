@@ -647,8 +647,8 @@ const strings = {
   "track.label": { en: "Your phone number", bn: "আপনার ফোন নম্বর" },
   "track.submit": { en: "Find my reports", bn: "আমার অভিযোগ দেখুন" },
   "track.hint": {
-    en: "The same number you texted from. You can also reply STATUS <code> to 16263 from any phone.",
-    bn: "যে নম্বর থেকে SMS করেছিলেন সেটিই। যেকোনো ফোন থেকে 16263-এ STATUS <কোড> লিখেও জানা যায়।",
+    en: "The same number you texted from. You can also text your code to 16263 from any phone, like STATUS CMP-2087.",
+    bn: "যে নম্বর থেকে SMS করেছিলেন সেটিই। যেকোনো ফোন থেকে 16263-এ STATUS CMP-2087 লিখেও জানা যায়।",
   },
   "track.noneFound": {
     en: "No reports on file for that number. Check the digits, or file a new one.",

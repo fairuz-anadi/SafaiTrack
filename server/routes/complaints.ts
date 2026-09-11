@@ -460,7 +460,7 @@ export async function handleInboundMessage(input: {
     if (citizen) {
       return { status: 200, body: {
         ok: true,
-        reply: "This number is already registered. Text BIN <code> FULL to report. / এই নম্বরটি আগে থেকেই নিবন্ধিত।",
+        reply: `This number is already registered. Text BIN ${await exampleBinCode(citizen.wardId)} FULL to report. / এই নম্বরটি আগে থেকেই নিবন্ধিত।`,
       } };
     }
 
@@ -496,15 +496,21 @@ export async function handleInboundMessage(input: {
       ok: true,
       registered: true,
       wardName: ward.name,
-      reply: `SafaiTrack: registered for ${ward.name}. Text BIN <code> FULL to report a bin. / নিবন্ধন সম্পন্ন হয়েছে।`,
+      reply: `SafaiTrack: registered for ${ward.name}. Text BIN ${await exampleBinCode(ward.wardId)} FULL to report a bin. / নিবন্ধন সম্পন্ন হয়েছে।`,
     } };
   }
 
   if (!citizen) {
+    /* A worked example rather than a slot to fill in: the previous wording
+     * was "Reply REG <your ward number>", and people replied with the
+     * brackets still attached. */
+    const covered = await db.select({ code: wards.wardCode }).from(wards);
+    const list = covered.map(w => w.code.replace("DNCC-", "")).join(", ");
+    const sample = covered[0]?.code.replace("DNCC-", "") ?? "27";
     return { status: 404, body: {
         ok: false,
         reply:
-          "This number is not registered with SafaiTrack. Reply REG <your ward number> to register. / এই নম্বরটি নিবন্ধিত নয়।",
+          `This number is not registered with SafaiTrack. Reply REG and your ward number — for example REG ${sample}. Wards covered: ${list}. / এই নম্বরটি নিবন্ধিত নয়। উদাহরণ: REG ${sample}`,
       } };
   }
 
@@ -571,7 +577,7 @@ export async function handleInboundMessage(input: {
     return { status: 200, body: {
       ok: false,
       reply:
-        "Could not identify a bin. Send: BIN <code> FULL / বিন শনাক্ত করা যায়নি। পাঠান: BIN <কোড> FULL",
+        `Could not identify a bin. Send: BIN ${await exampleBinCode(citizen.wardId)} FULL / বিন শনাক্ত করা যায়নি। উদাহরণ: BIN ${await exampleBinCode(citizen.wardId)} FULL`,
     } };
   }
 
@@ -591,6 +597,25 @@ export async function handleInboundMessage(input: {
   } };
 }
 
+/**
+ * A real bin code from a ward, for use in an example.
+ *
+ * Every instruction this gateway sent used to carry an angle-bracket
+ * placeholder — "BIN <code> FULL" — and residents sent the brackets straight
+ * back. A code from the ward they are standing in cannot be mistaken for
+ * something to copy literally.
+ */
+async function exampleBinCode(wardId: number | null): Promise<string> {
+  if (wardId === null) return "W27-B001";
+  const [bin] = await db
+    .select({ binCode: bins.binCode })
+    .from(bins)
+    .where(eq(bins.wardId, wardId))
+    .orderBy(bins.binCode)
+    .limit(1);
+  return bin?.binCode ?? "W27-B001";
+}
+
 /** Very small keyword parser — deliberately tolerant of messy real messages. */
 /**
  * Commands the gateway answers before treating a message as a new report.
@@ -601,18 +626,23 @@ export async function handleInboundMessage(input: {
  * absent: texting STATUS filed a second complaint, because any message that
  * was not a command still looked like a report.
  */
-function parseCommand(text: string): 
+export function parseCommand(text: string): 
   | { kind: "status"; code: string }
   | { kind: "register"; ward: string }
   | null {
-  const t = text.trim().toUpperCase();
+  /* Residents copy the instruction back verbatim — "REG <16> to register" is
+   * a message this gateway really received, and it was rejected as gibberish.
+   * The brackets belong to the prompt, never to the answer, so they are
+   * treated as separators like any other punctuation. */
+  const t = text.trim().toUpperCase().replace(/[<>()\[\]]/g, " ");
 
   // STATUS CMP-2085 — also tolerates "STATUS 2085" and a missing space.
-  const status = t.match(/^STATUS\s*[:\-]?\s*(?:CMP[\s-]*)?(\d{2,8})\b/);
+  const status = t.match(/^STATUS[\s:.\-#]*(?:CMP[\s:.\-#]*)?(\d{2,8})\b/);
   if (status) return { kind: "status", code: `CMP-${status[1]}` };
 
   // REG 27 — the ward number as a resident would say it, not the ward code.
-  const reg = t.match(/^REG(?:ISTER)?\s*[:\-]?\s*(\d{1,3})\b/);
+  // "WARD" is allowed in between because a good half of them write it out.
+  const reg = t.match(/^REG(?:ISTER)?[\s:.\-#]*(?:WARD[\s:.\-#]*)?(\d{1,3})\b/);
   if (reg) return { kind: "register", ward: reg[1] };
 
   return null;
