@@ -23,13 +23,7 @@ services:
     # NODE_ENV=production on Node services, which makes npm skip
     # devDependencies — and vite, esbuild, typescript and the Tailwind plugin
     # all live there. Without this flag the build dies on "vite: not found".
-    # `npm run setup` creates and seeds the demo database as part of the build.
-    # When DATABASE_URL is left blank the app uses a local SQLite file, and
-    # that file is not in the repo — without this step the service comes up
-    # with an empty database and every request that touches it returns 500.
-    # Render's disk resets to the build snapshot on each restart, so the demo
-    # data comes back clean every time the free service wakes up.
-    buildCommand: npm install --include=dev && npm run build && npm run setup
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
 
     # Render restarts the service if this stops returning 200.
@@ -39,9 +33,11 @@ services:
       - key: NODE_VERSION
         value: "22"
 
-      # Turso connection — optional. Leave both blank and the service runs on
-      # the seeded SQLite file from the build step (data resets on restart).
-      # Fill them in for a persistent hosted database; see docs/DEPLOYMENT.md.
+      # Turso connection — optional. Leave both blank and the server builds
+      # and seeds a local SQLite file on its first start (server/db/bootstrap.ts);
+      # that data resets whenever the free instance restarts, which suits a
+      # demo. Fill them in for a persistent hosted database; the server seeds
+      # an empty Turso database the same way. See docs/DEPLOYMENT.md.
       - key: DATABASE_URL
         sync: false
       - key: DATABASE_AUTH_TOKEN

@@ -21,6 +21,7 @@ import { authRoutes } from "./routes/auth.js";
 import { binRoutes } from "./routes/bins.js";
 import { complaintRoutes } from "./routes/complaints.js";
 import { routeRoutes } from "./routes/routes.js";
+import { whatsappRoutes } from "./routes/whatsapp.js";
 import type { AppEnv } from "./middleware/auth.js";
 
 const app = new Hono<AppEnv>();
@@ -53,6 +54,7 @@ api.route("/auth", authRoutes);
 api.route("/", binRoutes);
 api.route("/", routeRoutes);
 api.route("/", complaintRoutes);
+api.route("/", whatsappRoutes);
 api.route("/", analyticsRoutes);
 api.route("/", agentRoutes);
 
@@ -100,8 +102,12 @@ if (existsSync(publicDir)) {
 }
 
 import { providerConfig } from "./ai/client.js";
+import { ensureDatabase } from "./db/bootstrap.js";
 
 const port = Number(process.env.PORT ?? 8080);
+
+// An empty database is built before the first request can hit it.
+await ensureDatabase();
 
 serve({ fetch: app.fetch, port }, info => {
   const mode = existsSync(publicDir) ? "production (serving SPA)" : "development (API only)";

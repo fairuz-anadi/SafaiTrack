@@ -131,6 +131,8 @@ npm start        # serves API + SPA on :8080
 The competition venue may have no usable internet. Nothing in the demo needs it:
 
 - **Database** — a local SQLite file. No server to install, no migration to run.
+- **Database** — if the file is missing, the server creates the schema and seeds
+  the demo data itself on first start. A fresh checkout runs with no setup step.
 - **AI assistant** — falls back to a local rule-based advisor and says so in the
   UI. Set `OPENAI_API_KEY` (or optionally `ANTHROPIC_API_KEY`) to enable the live
   explainer; leave it unset and the deterministic fallback still works.
@@ -139,12 +141,21 @@ The competition venue may have no usable internet. Nothing in the demo needs it:
 
 ---
 
-## Try the SMS channel
+## Try the SMS and WhatsApp channels
 
 Roughly a third of Dhaka residents would not use a smartphone app for civic
 reporting. The `POST /api/intake/sms` endpoint accepts a plain text message in
 English or Bangla, resolves it to a bin, and files an ordinary complaint — same
-record, same audit trail, same tracking reference.
+record, same audit trail, same tracking reference. `POST /api/intake/whatsapp`
+does the same for messages sent to the municipal WhatsApp number, in the
+payload shape Meta's Business Cloud API delivers; set the three `WHATSAPP_*`
+values in `.env` to connect a real number, and replies go back over WhatsApp.
+
+**For a demo, open <http://localhost:5173/phone>** — a phone on screen. Pick
+WhatsApp or SMS, tap a suggested message, and the report lands on the staff
+dashboard (which refreshes itself) with its channel tagged. It calls the same
+two webhooks; nothing is mocked. On the venue wifi it also works from a real
+phone's browser.
 
 ```bash
 curl -X POST http://localhost:8080/api/intake/sms -H "Content-Type: application/json" -d "{\"from\":\"01911000000\",\"text\":\"BIN W27-B001 FULL\",\"channel\":\"sms\"}"
@@ -180,14 +191,14 @@ client/src/
   components/   layout · map · agent · SimulationBar
   pages/        Landing · Login · Register · Report · MyReports
                 Dashboard · Bins · Routes · RouteDetail · Impact
-                Complaints · Fleet · Analytics · DriverRoute
+                Complaints · Fleet · Analytics · DriverRoute · Phone
   lib/          api · auth · i18n · format
   index.css     the design system
 
 server/
-  db/           schema.ts (18 entities + 5 extensions) · seed.ts · client.ts
+  db/           schema.ts (18 entities + 5 extensions) · seed-data.ts · bootstrap.ts · migrations/
   services/     routing · forecast · impact · simulation
-  routes/       auth · bins · routes · complaints · analytics · agent
+  routes/       auth · bins · routes · complaints · whatsapp · analytics · agent
   ai/           agent.ts (Claude + offline) · tools.ts
   middleware/   auth.ts (RBAC)
 

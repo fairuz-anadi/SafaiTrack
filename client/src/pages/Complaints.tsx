@@ -75,6 +75,9 @@ export default function Complaints() {
 
   useEffect(() => {
     void load();
+    // Same reason as the dashboard: a texted-in report should arrive unprompted.
+    const timer = window.setInterval(() => void load().catch(() => {}), 10000);
+    return () => window.clearInterval(timer);
   }, [load]);
 
   const open = async (row: Row) => {
@@ -154,7 +157,7 @@ export default function Complaints() {
                   <strong>{r.locationText ?? COMPLAINT_TYPE_LABELS[r.complaintType as ComplaintType][lang]}</strong>
                   <span>
                     {r.complaintCode} · {r.citizenName} · {relativeTime(r.createdAt)} ·{" "}
-                    <span className={`channel-tag ${r.channel === "web" ? "web" : ""}`}>
+                    <span className={`channel-tag ${r.channel}`}>
                       {r.channel}
                     </span>
                   </span>

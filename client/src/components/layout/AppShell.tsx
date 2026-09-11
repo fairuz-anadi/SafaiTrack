@@ -14,6 +14,8 @@ import {
   Settings2,
   TrendingUp,
   Truck,
+  Smartphone,
+  ExternalLink,
   UserRound,
   X,
 } from "lucide-react";
@@ -31,6 +33,8 @@ interface NavItem {
   roles: string[];
   /** Which live figure to show as a badge, if any. */
   badge?: "critical" | "openComplaints" | "activeRoutes";
+  /** Opens outside the shell, in a new tab — for pages meant to sit beside it. */
+  newTab?: boolean;
 }
 
 interface NavGroup {
@@ -65,6 +69,7 @@ const NAV: NavGroup[] = [
         badge: "openComplaints",
       },
       { labelKey: "nav.fleet", href: "/fleet", icon: Truck, roles: ["staff"] },
+      { labelKey: "nav.citizenPhone", href: "/phone", icon: Smartphone, roles: ["staff", "officer"], newTab: true },
     ],
   },
   {
@@ -223,9 +228,18 @@ export function AppShell({
             return (
               <div key={group.labelKey}>
                 <p className={`nav-label ${gi > 0 ? "secondary-label" : ""}`}>{t(group.labelKey)}</p>
-                {items.map(({ labelKey, href, icon: Icon, badge }) => {
+                {items.map(({ labelKey, href, icon: Icon, badge, newTab }) => {
                   const count = badgeValue(badge);
                   const active = location === href;
+                  if (newTab) {
+                    return (
+                      <a key={href} href={href} className="nav-item" target="_blank" rel="noreferrer">
+                        <Icon size={18} />
+                        <span>{t(labelKey)}</span>
+                        <ExternalLink size={13} className="nav-ext" />
+                      </a>
+                    );
+                  }
                   return (
                     <Link
                       key={href}

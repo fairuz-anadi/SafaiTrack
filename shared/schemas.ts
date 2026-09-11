@@ -137,7 +137,7 @@ export const smsIntakeSchema = z.object({
   from: z.string().regex(/^01[3-9]\d{8}$/, "Sender must be a Bangladeshi mobile number"),
   /** Raw message body, e.g. "BIN DHN-014 FULL" or Bangla free text. */
   text: z.string().min(1).max(320),
-  channel: z.enum(["sms", "ussd", "hotline"]).default("sms"),
+  channel: z.enum(["sms", "ussd", "hotline", "whatsapp"]).default("sms"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

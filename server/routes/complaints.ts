@@ -420,7 +420,27 @@ complaintRoutes.patch(
  *   <free text>            → nearest bin to the sender's registered address
  */
 complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c => {
-  const { from, text, channel } = c.req.valid("json");
+  const result = await handleInboundMessage(c.req.valid("json"));
+  return c.json(result.body, result.status);
+});
+
+export type InboundResult = {
+  status: 200 | 404;
+  body: { ok: boolean; reply: string; complaintCode?: string; status?: string; registered?: boolean; wardName?: string };
+};
+
+/**
+ * One inbound text message from any channel, answered in one reply. Shared by
+ * the SMS/USSD webhook above and the WhatsApp webhook in whatsapp.ts, so a
+ * WhatsApp report and an SMS report are the same record with a different
+ * `channel` tag.
+ */
+export async function handleInboundMessage(input: {
+  from: string;
+  text: string;
+  channel: "sms" | "ussd" | "hotline" | "whatsapp";
+}): Promise<InboundResult> {
+  const { from, text, channel } = input;
 
   const command = parseCommand(text);
 
@@ -438,10 +458,10 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
    * here worth a password anyway. */
   if (command?.kind === "register") {
     if (citizen) {
-      return c.json({
+      return { status: 200, body: {
         ok: true,
         reply: "This number is already registered. Text BIN <code> FULL to report. / এই নম্বরটি আগে থেকেই নিবন্ধিত।",
-      });
+      } };
     }
 
     const [ward] = await db
@@ -453,10 +473,7 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
     if (!ward) {
       const known = await db.select({ code: wards.wardCode }).from(wards);
       const list = known.map(w => w.code.replace("DNCC-", "")).join(", ");
-      return c.json(
-        { ok: false, reply: `Ward ${command.ward} is not covered yet. Wards on SafaiTrack: ${list}. / এই ওয়ার্ড এখনো যুক্ত নয়।` },
-        404
-      );
+      return { status: 404, body: { ok: false, reply: `Ward ${command.ward} is not covered yet. Wards on SafaiTrack: ${list}. / এই ওয়ার্ড এখনো যুক্ত নয়।` } };
     }
 
     const [created] = await db
@@ -475,23 +492,20 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
 
     await db.insert(citizens).values({ userId: created.userId, wardId: ward.wardId, address: null });
 
-    return c.json({
+    return { status: 200, body: {
       ok: true,
       registered: true,
       wardName: ward.name,
       reply: `SafaiTrack: registered for ${ward.name}. Text BIN <code> FULL to report a bin. / নিবন্ধন সম্পন্ন হয়েছে।`,
-    });
+    } };
   }
 
   if (!citizen) {
-    return c.json(
-      {
+    return { status: 404, body: {
         ok: false,
         reply:
           "This number is not registered with SafaiTrack. Reply REG <your ward number> to register. / এই নম্বরটি নিবন্ধিত নয়।",
-      },
-      404
-    );
+      } };
   }
 
   /* ── STATUS <code> ─────────────────────────────────────────────────────
@@ -513,20 +527,17 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
       .limit(1);
 
     if (!row) {
-      return c.json(
-        { ok: false, reply: `No report ${command.code} found for this number. / এই নম্বরে ${command.code} পাওয়া যায়নি।` },
-        404
-      );
+      return { status: 404, body: { ok: false, reply: `No report ${command.code} found for this number. / এই নম্বরে ${command.code} পাওয়া যায়নি।` } };
     }
 
     const where = row.landmark ? ` at ${row.landmark}` : "";
     const closed = row.resolvedAt ? ` Resolved ${new Date(row.resolvedAt).toISOString().slice(0, 10)}.` : "";
-    return c.json({
+    return { status: 200, body: {
       ok: true,
       complaintCode: row.complaintCode,
       status: row.status,
       reply: `SafaiTrack ${row.complaintCode}${where}: ${row.status.replace(/_/g, " ")}.${closed} / অবস্থা: ${row.status.replace(/_/g, " ")}।`,
-    });
+    } };
   }
 
   const parsed = parseSmsBody(text);
@@ -557,11 +568,11 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
   }
 
   if (!binId) {
-    return c.json({
+    return { status: 200, body: {
       ok: false,
       reply:
         "Could not identify a bin. Send: BIN <code> FULL / বিন শনাক্ত করা যায়নি। পাঠান: BIN <কোড> FULL",
-    });
+    } };
   }
 
   const complaint = await fileComplaint({
@@ -572,13 +583,13 @@ complaintRoutes.post("/intake/sms", zValidator("json", smsIntakeSchema), async c
     channel,
   });
 
-  return c.json({
+  return { status: 200, body: {
     ok: true,
     complaintCode: complaint.complaintCode,
     // Kept inside one 160-character SMS segment, bilingual.
     reply: `SafaiTrack: report ${complaint.complaintCode} received. Track by replying STATUS ${complaint.complaintCode}. / অভিযোগ গৃহীত হয়েছে।`,
-  });
-});
+  } };
+}
 
 /** Very small keyword parser — deliberately tolerant of messy real messages. */
 /**

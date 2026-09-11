@@ -21,7 +21,7 @@
     "setup": "npm run db:reset",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
-    "test": "node --import tsx --test tests/explainers.test.ts"
+    "test": "node --import tsx --test tests/explainers.test.ts tests/whatsapp.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

@@ -3,7 +3,7 @@
 The single source of truth for what this project is, what has been built, why
 each decision was made, and what is left. Read this first.
 
-**Last updated:** 7 September 2026
+**Last updated:** 11 September 2026
 **Competition:** IEEE SEU SB presents REACT 2026 — Project Showcasing (Senior)
 **Event:** 10 September 2026, Southeast University, Dhaka
 **Team:** Lab Section C1, Group 05 — Fairuz Anadi (20230104121), Easteak Ahmed
@@ -228,6 +228,14 @@ demo never depends on the venue's wifi.
 - [x] Overflow forecasting with confidence scores
 - [x] Simulation clock: tick / skip 6h / run a full day / reset
 - [x] SMS + USSD intake webhook, English and Bangla keyword parsing
+- [x] WhatsApp intake webhook (Meta Cloud API shape, verification handshake,
+      reply sending when `WHATSAPP_*` is configured), sharing the SMS handler
+- [x] `/phone` — an on-screen citizen handset that drives both webhooks for
+      the demo; the dashboard and complaint desk poll so the report appears
+      on its own
+- [x] First-start bootstrap: an empty database is created from the checked-in
+      migration and seeded by the server itself (`server/db/bootstrap.ts`),
+      so a fresh Render instance or a fresh laptop needs no setup command
 - [x] AI assistant with Claude tool-use and offline fallback
 - [x] Bilingual UI (EN / বাংলা) across the **entire** product — 413 keys covering
       navigation, dashboards, tables, empty states and error copy, with a
@@ -245,9 +253,11 @@ demo never depends on the venue's wifi.
 - **Photo upload is a filename field, not real object storage.** The complaint
   schema has `photo_path`; nothing writes a file. Wiring it needs a storage
   bucket, which is out of scope for an offline-first demo.
-- **The SMS webhook has no real gateway behind it.** The endpoint is real and
-  works; connecting it to an aggregator needs a paid shortcode. Demo it with
-  `curl` (see README) — that is an honest demonstration of the channel.
+- **The SMS and WhatsApp webhooks have no live gateway behind them.** Both
+  endpoints are real and work; an SMS aggregator needs a paid shortcode, and
+  WhatsApp needs a Meta Business account and a verified number (the code for
+  the reply path is written and switched on by three env values). Demo them
+  from `/phone`, which posts to the same endpoints a gateway would.
 - **The road-detour factor is a constant, not routed geometry.** Real road
   distances would need an OSRM instance; 1.35 is a documented, conservative
   stand-in and `docs/METHODOLOGY.md` says so.
@@ -279,9 +289,12 @@ demo never depends on the venue's wifi.
    the live database and lists the tools it queried.
 7. **Switch to the driver phone view** (30s) — Bangla landmarks, tap Collected,
    the bin empties in real time.
-8. **Citizen report + SMS** (40s) — file a report in Bangla, show it appear on
-   the officer's desk with an append-only audit trail. Then `curl` the SMS
-   endpoint to show the no-smartphone path.
+8. **Citizen report by WhatsApp** (40s) — open `/phone` in a second window (or
+   on an actual phone on the venue wifi), send `BIN W27-B001 FULL` on
+   WhatsApp, and watch it appear on the dashboard's Citizen signals panel
+   within 15 seconds, tagged WHATSAPP. Switch to SMS and send Bangla free
+   text to show the no-smartphone path. Open Complaints, assign it, and show
+   the audit trail. Reply `STATUS <code>` from the phone.
 
 Close on the SDG 11 line and the cost argument: *no hardware, runs on a laptop,
 saves a third of the distance.*

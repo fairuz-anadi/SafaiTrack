@@ -345,8 +345,8 @@ export const complaints = sqliteTable(
     })
       .notNull()
       .default("pending"),
-    /** Where the report arrived from — proves the SMS/USSD channel works. */
-    channel: text("channel", { enum: ["web", "sms", "ussd", "hotline"] })
+    /** Where the report arrived from — proves the SMS/USSD/WhatsApp channel works. */
+    channel: text("channel", { enum: ["web", "sms", "ussd", "hotline", "whatsapp"] })
       .notNull()
       .default("web"),
     createdAt: text("created_at").notNull().default(now),

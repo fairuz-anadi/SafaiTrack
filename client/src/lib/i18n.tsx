@@ -107,6 +107,7 @@ const strings = {
   "nav.impactProof": { en: "Impact proof", bn: "প্রমাণিত প্রভাব" },
   "nav.complaints": { en: "Complaints", bn: "অভিযোগ" },
   "nav.fleet": { en: "Fleet", bn: "যানবহর" },
+  "nav.citizenPhone": { en: "Citizen phone", bn: "নাগরিকের ফোন" },
   "nav.analytics": { en: "Analytics", bn: "বিশ্লেষণ" },
   "nav.operations": { en: "Operations", bn: "কার্যক্রম" },
   "nav.insight": { en: "Insight", bn: "বিশ্লেষণ" },

@@ -148,6 +148,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     void load();
+    // A report texted in from a phone should appear here on its own — the
+    // demo is a resident sending a message and the room watching this page.
+    const timer = window.setInterval(() => void load().catch(() => {}), 15000);
+    return () => window.clearInterval(timer);
   }, [load]);
 
   const notify = (msg: string) => {
@@ -494,7 +498,7 @@ export default function Dashboard() {
                     <strong>{item.locationText ?? item.complaintType.replace("_", " ")}</strong>
                     <span>
                       {item.complaintCode} · {relativeTime(item.createdAt)} ·{" "}
-                      <span className={`channel-tag ${item.channel === "web" ? "web" : ""}`}>
+                      <span className={`channel-tag ${item.channel}`}>
                         {item.channel}
                       </span>
                     </span>
